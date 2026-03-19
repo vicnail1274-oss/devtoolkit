@@ -1,0 +1,73 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import TimestampConverter from '../../components/tools/TimestampConverter';
+
+const faq = [
+  { question: "What is a Unix timestamp?", answer: "A Unix timestamp is the number of seconds that have elapsed since January 1, 1970 00:00:00 UTC (the Unix epoch). It is a standard way to represent time in programming and databases." },
+  { question: "How do I convert a timestamp to a date?", answer: "Paste your Unix timestamp (e.g., 1700000000) into the input field and the tool instantly displays the corresponding date and time in both UTC and your local timezone." },
+  { question: "What is the difference between seconds and milliseconds timestamps?", answer: "Unix timestamps in seconds are 10 digits (e.g., 1700000000). JavaScript and many APIs use millisecond timestamps which are 13 digits (e.g., 1700000000000). This tool handles both formats automatically." },
+  { question: "Can I convert a date to a timestamp?", answer: "Yes. Enter a date and time in the date picker and the tool generates the corresponding Unix timestamp in both seconds and milliseconds format." },
+];
+---
+
+<ToolLayout
+  title="Timestamp Converter"
+  description="Convert Unix timestamps to human-readable dates and vice versa. Free online tool."
+  slug="timestamp-converter"
+  toolName="Timestamp Converter"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Timestamp Converter
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Convert between Unix timestamps and human-readable dates. Live clock, auto-detection of seconds vs milliseconds.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <TimestampConverter client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Live Clock</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Real-time display of the current Unix timestamp, updated every second.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Two-Way Conversion</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Convert timestamps to dates or dates to timestamps with a single click.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Auto-Detect</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Automatically detects whether your input is in seconds or milliseconds.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

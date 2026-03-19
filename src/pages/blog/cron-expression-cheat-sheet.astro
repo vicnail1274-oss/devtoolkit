@@ -1,0 +1,317 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="Cron Expression Cheat Sheet & Examples"
+  description="The ultimate cron expression reference — syntax breakdown, real-world examples, special characters explained, and common scheduling patterns for every use case."
+  slug="cron-expression-cheat-sheet"
+  publishDate="2026-03-19"
+  readTime="14 min read"
+>
+
+<p>
+  Cron expressions are the backbone of scheduled tasks in Unix, Linux, macOS, CI/CD pipelines, cloud functions, and container orchestration. They look cryptic at first — <code>0 */6 * * 1-5</code> — but once you understand the five (or six) fields, you can schedule anything.
+</p>
+
+<p>
+  This cheat sheet covers the standard 5-field cron syntax, extended 6-field syntax (with seconds), every special character, and dozens of real-world examples you can copy-paste into your crontab, GitHub Actions, or Kubernetes CronJob.
+</p>
+
+<h2>Cron Syntax: The 5 Fields</h2>
+
+<p>
+  A standard cron expression has five fields separated by spaces:
+</p>
+
+<pre><code>┌───────────── minute (0–59)
+│ ┌───────────── hour (0–23)
+│ │ ┌───────────── day of month (1–31)
+│ │ │ ┌───────────── month (1–12 or JAN–DEC)
+│ │ │ │ ┌───────────── day of week (0–7 or SUN–SAT, 0 and 7 = Sunday)
+│ │ │ │ │
+* * * * *</code></pre>
+
+<p>
+  Each field can contain a single value, a range, a list, a step, or a wildcard. The expression fires when <em>all five fields</em> match the current time.
+</p>
+
+<h2>Special Characters Explained</h2>
+
+<table>
+  <thead>
+    <tr><th>Character</th><th>Meaning</th><th>Example</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>*</code></td><td>Any value</td><td><code>* * * * *</code> — every minute</td></tr>
+    <tr><td><code>,</code></td><td>List separator</td><td><code>0 8,12,18 * * *</code> — at 8am, noon, 6pm</td></tr>
+    <tr><td><code>-</code></td><td>Range</td><td><code>0 9-17 * * *</code> — every hour from 9am to 5pm</td></tr>
+    <tr><td><code>/</code></td><td>Step</td><td><code>*/15 * * * *</code> — every 15 minutes</td></tr>
+    <tr><td><code>L</code></td><td>Last (non-standard)</td><td><code>0 0 L * *</code> — last day of month</td></tr>
+    <tr><td><code>W</code></td><td>Nearest weekday (non-standard)</td><td><code>0 0 15W * *</code> — nearest weekday to 15th</td></tr>
+    <tr><td><code>#</code></td><td>Nth weekday (non-standard)</td><td><code>0 0 * * 5#3</code> — third Friday of month</td></tr>
+    <tr><td><code>?</code></td><td>No specific value (Quartz)</td><td><code>0 0 * * ?</code> — any day of week</td></tr>
+  </tbody>
+</table>
+
+<p>
+  <strong>Note:</strong> <code>L</code>, <code>W</code>, <code>#</code>, and <code>?</code> are extensions used in Quartz (Java), Spring, and some cloud platforms. Standard Unix crontab only supports <code>*</code>, <code>,</code>, <code>-</code>, and <code>/</code>.
+</p>
+
+<h2>Common Cron Patterns</h2>
+
+<p>
+  Here are the patterns you'll use most often, ready to copy-paste.
+</p>
+
+<h3>Every X Minutes</h3>
+
+<pre><code>* * * * *        # Every minute
+*/5 * * * *      # Every 5 minutes
+*/15 * * * *     # Every 15 minutes
+*/30 * * * *     # Every 30 minutes
+0 * * * *        # Every hour (at minute 0)</code></pre>
+
+<h3>Daily Schedules</h3>
+
+<pre><code>0 0 * * *        # Midnight daily
+0 6 * * *        # 6:00 AM daily
+30 8 * * *       # 8:30 AM daily
+0 12 * * *       # Noon daily
+0 23 * * *       # 11:00 PM daily
+0 0,12 * * *     # Midnight and noon</code></pre>
+
+<h3>Weekly Schedules</h3>
+
+<pre><code>0 0 * * 0        # Midnight every Sunday
+0 9 * * 1        # 9 AM every Monday
+0 9 * * 1-5      # 9 AM every weekday (Mon–Fri)
+0 18 * * 5       # 6 PM every Friday
+0 10 * * 6,0     # 10 AM every Saturday and Sunday</code></pre>
+
+<h3>Monthly and Yearly Schedules</h3>
+
+<pre><code>0 0 1 * *        # Midnight on the 1st of every month
+0 9 15 * *       # 9 AM on the 15th of every month
+0 0 1 1 *        # Midnight on January 1st (yearly)
+0 0 1 */3 *      # Midnight on the 1st, every 3 months (quarterly)
+0 0 1 1,4,7,10 * # Midnight on the 1st of each quarter</code></pre>
+
+<h3>Business Hours</h3>
+
+<pre><code>*/10 9-17 * * 1-5    # Every 10 min during business hours (Mon–Fri 9am–5pm)
+0 9-17 * * 1-5       # Every hour during business hours
+0 9,13 * * 1-5       # 9 AM and 1 PM on weekdays
+30 8 * * 1-5         # 8:30 AM on weekdays (daily standup time)</code></pre>
+
+<h2>Extended 6-Field Syntax (Seconds)</h2>
+
+<p>
+  Some systems (Quartz, Spring, AWS EventBridge) support a sixth field for seconds:
+</p>
+
+<pre><code>┌───────────── second (0–59)
+│ ┌───────────── minute (0–59)
+│ │ ┌───────────── hour (0–23)
+│ │ │ ┌───────────── day of month (1–31)
+│ │ │ │ ┌───────────── month (1–12)
+│ │ │ │ │ ┌───────────── day of week (0–7)
+│ │ │ │ │ │
+* * * * * *</code></pre>
+
+<pre><code>*/30 * * * * *    # Every 30 seconds
+0 */5 * * * *     # Every 5 minutes (at second 0)
+0 0 * * * *       # Every hour (at second 0, minute 0)</code></pre>
+
+<p>
+  <strong>Warning:</strong> Standard Unix crontab does NOT support seconds. If you need sub-minute scheduling on Linux, use a workaround like running a script every minute that internally sleeps.
+</p>
+
+<h2>Cron in Different Environments</h2>
+
+<h3>Linux / macOS Crontab</h3>
+
+<p>
+  Edit your crontab with <code>crontab -e</code>:
+</p>
+
+<pre><code># Backup database every night at 2 AM
+0 2 * * * /usr/local/bin/backup-db.sh >> /var/log/backup.log 2>&1
+
+# Clean temp files every Sunday at 3 AM
+0 3 * * 0 find /tmp -mtime +7 -delete
+
+# Health check every 5 minutes
+*/5 * * * * curl -fsS https://hc-ping.com/your-uuid > /dev/null</code></pre>
+
+<p>
+  Key crontab tips:
+</p>
+
+<ul>
+  <li>Always redirect output (<code>> /dev/null 2>&1</code>) or cron will email you on every run.</li>
+  <li>Use full paths for commands — cron's <code>PATH</code> is minimal.</li>
+  <li>Set <code>MAILTO=""</code> at the top to disable email notifications entirely.</li>
+  <li>Use <code>crontab -l</code> to list current jobs, <code>crontab -r</code> to remove all.</li>
+</ul>
+
+<h3>GitHub Actions</h3>
+
+<pre><code>on:
+  schedule:
+    - cron: '0 6 * * 1-5'   # 6 AM UTC, weekdays
+    - cron: '0 0 1 * *'     # Midnight UTC, 1st of month</code></pre>
+
+<p>
+  GitHub Actions uses UTC only. Runs may be delayed by up to 15 minutes during peak load. Minimum interval is 5 minutes, but GitHub may throttle more frequent schedules.
+</p>
+
+<h3>Kubernetes CronJob</h3>
+
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-report
+spec:
+  schedule: "0 8 * * *"        # 8 AM daily
+  concurrencyPolicy: Forbid     # Don't overlap runs
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: report
+            image: myapp/report:latest
+            command: ["python", "generate_report.py"]
+          restartPolicy: OnFailure</code></pre>
+
+<h3>AWS CloudWatch / EventBridge</h3>
+
+<p>
+  AWS uses a slightly different syntax with 6 fields (year is optional):
+</p>
+
+<pre><code>cron(0 18 ? * MON-FRI *)     # 6 PM UTC, weekdays
+cron(0 12 1 * ? *)           # Noon UTC on the 1st of each month
+rate(5 minutes)               # Alternative: every 5 minutes (simpler)</code></pre>
+
+<p>
+  Note that AWS uses <code>?</code> for "no specific value" in either day-of-month or day-of-week (you must use <code>?</code> in exactly one of them).
+</p>
+
+<h2>Debugging Cron Expressions</h2>
+
+<p>
+  The most common cron bugs:
+</p>
+
+<ol>
+  <li>
+    <strong>Timezone confusion.</strong> Crontab runs in the system's local timezone. GitHub Actions and AWS use UTC. Always document which timezone your cron uses.
+  </li>
+  <li>
+    <strong>Day-of-month AND day-of-week.</strong> In standard cron, if both are set (not <code>*</code>), the job runs when <em>either</em> matches — not both. This catches people off guard. <code>0 0 15 * 5</code> runs on the 15th AND every Friday.
+  </li>
+  <li>
+    <strong>February 30th.</strong> <code>0 0 30 2 *</code> will never fire. Cron silently skips impossible dates.
+  </li>
+  <li>
+    <strong>Step misunderstanding.</strong> <code>*/7 * * * *</code> does NOT run every 7 minutes starting from the last run. It runs at minutes 0, 7, 14, 21, 28, 35, 42, 49, 56. The step divides the range, not the interval from last execution.
+  </li>
+  <li>
+    <strong>Overlapping runs.</strong> If a job takes 10 minutes but runs every 5, you'll get overlapping executions. Use a lock file or <code>concurrencyPolicy: Forbid</code> in Kubernetes.
+  </li>
+</ol>
+
+<h2>Advanced Patterns</h2>
+
+<h3>First and Last Day of Month</h3>
+
+<p>
+  Standard cron doesn't have "last day of month" — but you can script around it:
+</p>
+
+<pre><code># Run on the last day of every month (Linux)
+0 0 28-31 * * [ "$(date -d tomorrow +\%d)" = "01" ] && /path/to/script.sh</code></pre>
+
+<p>
+  In Quartz/Spring, use the <code>L</code> modifier: <code>0 0 0 L * ?</code>
+</p>
+
+<h3>Every Other Week</h3>
+
+<p>
+  Cron can't express "every other week" natively. Workaround: run weekly and check the week number inside your script:
+</p>
+
+<pre><code># Every other Monday (even weeks)
+0 9 * * 1 [ $(($(date +\%V) \% 2)) -eq 0 ] && /path/to/script.sh</code></pre>
+
+<h3>Random Delay (Jitter)</h3>
+
+<p>
+  To avoid thundering-herd problems when many servers run the same cron:
+</p>
+
+<pre><code># Sleep 0-300 seconds before running
+*/5 * * * * sleep $((RANDOM \% 300)) && /path/to/health-check.sh</code></pre>
+
+<h2>Cron vs. Alternatives</h2>
+
+<table>
+  <thead>
+    <tr><th>Tool</th><th>Best for</th><th>Limitations</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>crontab</td><td>Simple server-side scheduling</td><td>No retry, no dependency chain, no seconds</td></tr>
+    <tr><td>systemd timers</td><td>Modern Linux, with logging and dependencies</td><td>Linux only, more verbose config</td></tr>
+    <tr><td>Celery Beat</td><td>Python app scheduling with workers</td><td>Requires message broker (Redis/RabbitMQ)</td></tr>
+    <tr><td>Kubernetes CronJob</td><td>Containerized workloads</td><td>1-minute minimum, cold start latency</td></tr>
+    <tr><td>AWS EventBridge</td><td>Serverless scheduling (Lambda, Step Functions)</td><td>AWS-specific syntax quirks</td></tr>
+    <tr><td>node-cron</td><td>In-process Node.js scheduling</td><td>Dies with the process, no persistence</td></tr>
+  </tbody>
+</table>
+
+<h2>Build and Test Your Cron Expressions</h2>
+
+<p>
+  The fastest way to get a cron expression right is to build it visually. <strong><a href="/tools/cron-generator">Try DevToolkit's Cron Expression Builder</a></strong> — select your schedule with dropdowns, see the next 5 execution times instantly, and copy the expression. No guessing, no syntax errors.
+</p>
+
+<p>
+  It supports both standard 5-field and extended 6-field syntax, with human-readable descriptions of what the expression does. Perfect for validating expressions before deploying to production.
+</p>
+
+<h2>Quick Reference Card</h2>
+
+<table>
+  <thead>
+    <tr><th>Schedule</th><th>Expression</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Every minute</td><td><code>* * * * *</code></td></tr>
+    <tr><td>Every 5 minutes</td><td><code>*/5 * * * *</code></td></tr>
+    <tr><td>Every hour</td><td><code>0 * * * *</code></td></tr>
+    <tr><td>Every day at midnight</td><td><code>0 0 * * *</code></td></tr>
+    <tr><td>Every weekday at 9 AM</td><td><code>0 9 * * 1-5</code></td></tr>
+    <tr><td>Every Monday at 9 AM</td><td><code>0 9 * * 1</code></td></tr>
+    <tr><td>1st of every month</td><td><code>0 0 1 * *</code></td></tr>
+    <tr><td>Every quarter</td><td><code>0 0 1 1,4,7,10 *</code></td></tr>
+    <tr><td>Yearly (Jan 1)</td><td><code>0 0 1 1 *</code></td></tr>
+    <tr><td>Weekdays, business hours</td><td><code>0 9-17 * * 1-5</code></td></tr>
+  </tbody>
+</table>
+
+<h2>Conclusion</h2>
+
+<p>
+  Cron expressions are deceptively simple — five fields, a handful of special characters, infinite scheduling power. The key is understanding how fields combine and knowing the quirks of your specific platform (Unix crontab vs. Quartz vs. AWS).
+</p>
+
+<p>
+  Bookmark this cheat sheet for quick reference. And when you need to build or validate a cron expression, <strong><a href="/tools/cron-generator">use DevToolkit's visual Cron Expression Builder</a></strong> to get it right the first time.
+</p>
+
+</BlogLayout>

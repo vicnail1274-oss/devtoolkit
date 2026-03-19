@@ -1,0 +1,85 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import SqlFormatter from '../../components/tools/SqlFormatter';
+
+const faq = [
+  {
+    question: "What SQL dialects does this formatter support?",
+    answer: "The formatter handles standard SQL syntax that works across MySQL, PostgreSQL, SQLite, SQL Server, and Oracle. It formats keywords, indentation, and clause structure universally."
+  },
+  {
+    question: "Can I choose uppercase or lowercase keywords?",
+    answer: "Yes! Toggle the 'Uppercase keywords' option to format SQL keywords in UPPERCASE (standard convention) or leave them as lowercase."
+  },
+  {
+    question: "Does formatting change my query's behavior?",
+    answer: "No. The formatter only changes whitespace and keyword casing. Your query logic, table names, and data remain unchanged."
+  },
+  {
+    question: "Is my SQL sent to a server?",
+    answer: "No. Everything runs 100% in your browser using JavaScript. Your queries never leave your device."
+  },
+];
+---
+
+<ToolLayout
+  title="SQL Formatter"
+  description="Format and beautify SQL queries online for free with customizable indentation and keyword casing."
+  slug="sql-formatter"
+  toolName="SQL Formatter"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      SQL Formatter
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Paste your SQL query and get beautifully formatted output. Customize indentation and keyword casing. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <SqlFormatter client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Universal SQL</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Works with MySQL, PostgreSQL, SQLite, SQL Server, and Oracle syntax.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Customizable</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Choose indentation size and keyword casing to match your team's SQL style guide.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your queries never leave your browser. No tracking, no cookies, no server-side processing.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

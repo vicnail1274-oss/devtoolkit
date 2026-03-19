@@ -1,0 +1,26 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import ColorConverter from "../../components/tools/ColorConverter";
+
+const faq = [
+  { question: "How do I convert HEX to RGB?", answer: "Paste your HEX color code (e.g., #3B82F6) into the input field and the tool instantly shows the RGB equivalent. Each pair of hex digits maps to red, green, and blue values from 0-255." },
+  { question: "What is the difference between HEX, RGB, and HSL?", answer: "HEX uses a 6-digit hexadecimal code (#RRGGBB). RGB specifies red, green, blue values from 0-255. HSL uses hue (0-360 degrees), saturation, and lightness percentages. All three represent the same colors in different formats." },
+  { question: "What is a contrast ratio and why does it matter?", answer: "Contrast ratio measures the luminance difference between two colors. WCAG accessibility guidelines require at least 4.5:1 for normal text and 3:1 for large text. This tool checks your color combinations against these standards." },
+  { question: "Is this tool free to use?", answer: "Yes, completely free with no signup required. All color conversion runs in your browser — no data is sent to any server." },
+];
+---
+
+<ToolLayout title="Color Converter" description="Convert colors between HEX, RGB, and HSL formats." slug="color-converter" toolName="Color Converter" faq={faq}>
+  <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
+    <a href="/" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Tools</a>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+    <span class="text-gray-900 dark:text-gray-100 font-medium">Color Converter</span>
+  </nav>
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">Color Converter</h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">Convert colors between HEX, RGB, and HSL with live preview and contrast checker.</p>
+  </div>
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <ColorConverter client:load />
+  </div>
+</ToolLayout>

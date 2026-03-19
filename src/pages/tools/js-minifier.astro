@@ -1,0 +1,85 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import JsMinifier from '../../components/tools/JsMinifier';
+
+const faq = [
+  {
+    question: "What does a JavaScript minifier do?",
+    answer: "A JavaScript minifier removes comments, whitespace, and unnecessary characters from your code to reduce file size. This speeds up page loads and saves bandwidth."
+  },
+  {
+    question: "Will minified JavaScript still work?",
+    answer: "Yes. Minification only removes formatting that is irrelevant to execution. The logic and behavior of your code remain unchanged."
+  },
+  {
+    question: "How much file size can I save?",
+    answer: "Typically 20-50% depending on how much whitespace and comments your original code contains. The tool shows exact before/after sizes and savings percentage."
+  },
+  {
+    question: "Is this a production-grade minifier?",
+    answer: "This is a lightweight browser-based minifier great for quick tasks. For production builds, consider using tools like Terser or esbuild in your build pipeline."
+  },
+];
+---
+
+<ToolLayout
+  title="JavaScript Minifier"
+  description="Minify JavaScript code online for free. Remove comments and whitespace to reduce file size."
+  slug="js-minifier"
+  toolName="JavaScript Minifier"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      JavaScript Minifier
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Paste your JavaScript and get minified output with size savings. Remove comments and whitespace in one click. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <JsMinifier client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Instant Minification</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Strip comments, whitespace, and redundant characters from JavaScript in milliseconds.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Size Report</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        See original vs minified size and percentage saved at a glance.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your code never leaves your browser. No tracking, no cookies, no server-side processing.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

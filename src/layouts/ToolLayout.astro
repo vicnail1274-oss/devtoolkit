@@ -1,0 +1,510 @@
+---
+import NewsletterBanner from '../components/NewsletterBanner.astro';
+import RelatedTools from '../components/RelatedTools.astro';
+import EmailPopup from '../components/EmailPopup';
+import { getToolBySlug } from '../data/tools';
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+export interface Props {
+  title: string;
+  description: string;
+  slug?: string;
+  toolName?: string;
+  faq?: FaqItem[];
+}
+
+const { title, description, slug, toolName, faq } = Astro.props;
+const canonicalURL = slug ? `https://devtoolkit.cc/tools/${slug}` : 'https://devtoolkit.cc';
+const isToolPage = !!toolName;
+const currentTool = slug ? getToolBySlug(slug) : undefined;
+const toolCategory = currentTool?.category;
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- SEO -->
+    <title>{title} | DevToolkit</title>
+    <meta name="description" content={`${description} - Free, no signup required.`} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={`${title} | DevToolkit`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="DevToolkit" />
+    <meta property="og:image" content="https://devtoolkit.cc/og-default.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${title} - DevToolkit`} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={`${title} | DevToolkit`} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content="https://devtoolkit.cc/og-default.png" />
+
+    <!-- RSS Feed -->
+    <link rel="alternate" type="application/rss+xml" title="DevToolkit Blog" href="https://devtoolkit.cc/rss.xml" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DVD84363WT"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DVD84363WT');
+    </script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3928088726708786" crossorigin="anonymous"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+
+    <!-- JSON-LD Structured Data -->
+    {!isToolPage && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "DevToolkit",
+        "url": "https://devtoolkit.cc",
+        "description": "Free online developer tools for AI/LLM engineers. No signup required.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://devtoolkit.cc/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      })} />
+    )}
+    {isToolPage && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": toolName,
+        "description": description,
+        "url": canonicalURL,
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Web",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Organization", "name": "DevToolkit", "url": "https://devtoolkit.cc" }
+      })} />
+    )}
+    {isToolPage && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://devtoolkit.cc" },
+          { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://devtoolkit.cc/tools" },
+          ...(toolCategory ? [{ "@type": "ListItem", "position": 3, "name": toolCategory, "item": `https://devtoolkit.cc/tools?category=${toolCategory}` }] : []),
+          { "@type": "ListItem", "position": toolCategory ? 4 : 3, "name": toolName, "item": canonicalURL }
+        ]
+      })} />
+    )}
+    {faq && faq.length > 0 && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": faq.map(item => ({
+          "@type": "Question",
+          "name": item.question,
+          "acceptedAnswer": { "@type": "Answer", "text": item.answer }
+        }))
+      })} />
+    )}
+  </head>
+  <body class="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800">
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2 group">
+          <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <span class="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+            DevToolkit
+          </span>
+        </a>
+
+        <div class="flex items-center gap-4">
+          <a href="/tools" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
+            All Tools
+          </a>
+          <a href="/blog" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
+            Blog
+          </a>
+          <a href="/pricing" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
+            Pricing
+          </a>
+          <a href="/newsletter" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
+            Newsletter
+          </a>
+          <a href="/sponsors" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors duration-200">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            Sponsor
+          </a>
+          <a href="/pricing" class="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors duration-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Try Pro Free
+          </a>
+          <button
+            id="theme-toggle"
+            class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200"
+            aria-label="Toggle dark mode"
+          >
+            <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Breadcrumb — auto-generated for tool pages */}
+      {isToolPage && (
+        <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
+          <a href="/" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Home</a>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+          <a href="/tools" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Tools</a>
+          {toolCategory && (
+            <>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+              <a href={`/tools?category=${toolCategory}`} class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{toolCategory}</a>
+            </>
+          )}
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+          <span class="text-gray-900 dark:text-gray-100 font-medium">{toolName}</span>
+        </nav>
+      )}
+
+      <slot />
+
+      {/* Share & Copy — shown only on tool pages */}
+      {isToolPage && (
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mr-1">Share:</span>
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${toolName} - Free online tool`)}&url=${encodeURIComponent(canonicalURL)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            title="Share on X / Twitter"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            X
+          </a>
+          <a
+            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(canonicalURL)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-[#0A66C2] hover:text-white dark:hover:bg-[#0A66C2] transition-colors"
+            title="Share on LinkedIn"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+          </a>
+          <a
+            href={`https://reddit.com/submit?url=${encodeURIComponent(canonicalURL)}&title=${encodeURIComponent(`${toolName} - Free Developer Tool`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-[#FF4500] hover:text-white dark:hover:bg-[#FF4500] transition-colors"
+            title="Share on Reddit"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.884-7.003 4.884-3.874 0-7.004-2.19-7.004-4.884 0-.18.015-.36.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>
+            Reddit
+          </a>
+          <button
+            id="copy-link-btn"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-100 hover:text-primary-700 dark:hover:bg-primary-900 dark:hover:text-primary-300 transition-colors"
+            title="Copy link"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            <span id="copy-link-text">Copy Link</span>
+          </button>
+        </div>
+      )}
+
+      {/* Gumroad Products CTA — shown only on tool pages */}
+      {isToolPage && (
+        <div class="mt-10 p-5 sm:p-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-gray-900 rounded-xl border border-amber-200 dark:border-amber-800/50">
+          <h3 class="text-base font-bold text-gray-900 dark:text-gray-100 mb-3">
+            Premium Developer Resources
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <a href="https://vicnail.gumroad.com/l/dev-productivity-bundle" target="_blank" rel="noopener" class="group flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-amber-400 dark:hover:border-amber-500 transition-all">
+              <span class="text-xl shrink-0">&#x1F6E0;</span>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-amber-600 transition-colors truncate">Dev Productivity Bundle</p>
+                <p class="text-xs text-amber-600 font-bold">$29</p>
+              </div>
+            </a>
+            <a href="https://vicnail.gumroad.com/l/ai-prompt-toolkit" target="_blank" rel="noopener" class="group flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-amber-400 dark:hover:border-amber-500 transition-all">
+              <span class="text-xl shrink-0">&#x1F9E0;</span>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-amber-600 transition-colors truncate">AI Prompt Toolkit</p>
+                <p class="text-xs text-amber-600 font-bold">$19</p>
+              </div>
+            </a>
+            <a href="https://vicnail.gumroad.com/l/fullstack-boilerplate" target="_blank" rel="noopener" class="group flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-amber-400 dark:hover:border-amber-500 transition-all">
+              <span class="text-xl shrink-0">&#x1F680;</span>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-amber-600 transition-colors truncate">Full-Stack Boilerplate</p>
+                <p class="text-xs text-amber-600 font-bold">$49</p>
+              </div>
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* CTA: Upgrade to Pro — shown only on tool pages */}
+      {isToolPage && (
+        <div class="mt-12 p-6 sm:p-8 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-950 dark:to-gray-900 rounded-2xl border border-primary-200 dark:border-primary-800">
+          <div class="flex flex-col sm:flex-row items-center gap-6">
+            <div class="flex-1">
+              <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                Like this tool? Get 20+ premium tools
+              </h3>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">
+                Unlock AI Code Review, AI Doc Generator, AI SQL Builder, batch processing, and API access. Start your 7-day free trial today.
+              </p>
+            </div>
+            <a
+              href="/pricing"
+              class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 whitespace-nowrap shrink-0"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Try Pro Free
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Free vs Pro comparison — shown only on tool pages */}
+      {isToolPage && (
+        <div class="mt-8 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+          <div class="p-6 border-b border-gray-200 dark:border-gray-800">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Free vs Pro</h3>
+          </div>
+          <div class="divide-y divide-gray-100 dark:divide-gray-800">
+            <div class="grid grid-cols-3 text-sm">
+              <div class="p-4 font-medium text-gray-500 dark:text-gray-400">Feature</div>
+              <div class="p-4 text-center font-semibold text-gray-700 dark:text-gray-300">Free</div>
+              <div class="p-4 text-center font-semibold text-primary-600 dark:text-primary-400">Pro</div>
+            </div>
+            <div class="grid grid-cols-3 text-sm">
+              <div class="p-4 text-gray-700 dark:text-gray-300">Developer Tools</div>
+              <div class="p-4 text-center text-gray-500">29 tools</div>
+              <div class="p-4 text-center text-primary-600 dark:text-primary-400 font-medium">32+ tools</div>
+            </div>
+            <div class="grid grid-cols-3 text-sm">
+              <div class="p-4 text-gray-700 dark:text-gray-300">AI-Powered Tools</div>
+              <div class="p-4 text-center text-gray-400">&mdash;</div>
+              <div class="p-4 text-center text-primary-600 dark:text-primary-400 font-medium">3 AI tools</div>
+            </div>
+            <div class="grid grid-cols-3 text-sm">
+              <div class="p-4 text-gray-700 dark:text-gray-300">Batch Processing</div>
+              <div class="p-4 text-center text-gray-400">&mdash;</div>
+              <div class="p-4 text-center text-green-600 dark:text-green-400">&#10003;</div>
+            </div>
+            <div class="grid grid-cols-3 text-sm">
+              <div class="p-4 text-gray-700 dark:text-gray-300">API Access</div>
+              <div class="p-4 text-center text-gray-400">&mdash;</div>
+              <div class="p-4 text-center text-green-600 dark:text-green-400">&#10003;</div>
+            </div>
+            <div class="grid grid-cols-3 text-sm">
+              <div class="p-4 text-gray-700 dark:text-gray-300">Ad-Free</div>
+              <div class="p-4 text-center text-gray-400">&mdash;</div>
+              <div class="p-4 text-center text-green-600 dark:text-green-400">&#10003;</div>
+            </div>
+          </div>
+          <div class="p-4 bg-gray-50 dark:bg-gray-950 text-center">
+            <a href="/pricing" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">
+              Start free trial &mdash; $9.99/mo &rarr;
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Open Source Link */}
+      {isToolPage && (
+        <div class="mt-8 text-center">
+          <a
+            href="https://github.com/vicnail1274-oss/devtoolkit-utils"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            View source on GitHub
+          </a>
+        </div>
+      )}
+
+      {/* Related Tools — shown only on tool pages */}
+      {isToolPage && slug && (
+        <RelatedTools slug={slug} />
+      )}
+    </main>
+
+    <!-- Newsletter Banner -->
+    <NewsletterBanner />
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 dark:border-gray-800 mt-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-8">
+          <div>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Tool Categories</h4>
+            <ul class="space-y-2">
+              <li><a href="/tools?category=Code" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Code Tools</a></li>
+              <li><a href="/tools?category=Data" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Data Tools</a></li>
+              <li><a href="/tools?category=Security" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Security Tools</a></li>
+              <li><a href="/tools?category=DevOps" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">DevOps Tools</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">More Categories</h4>
+            <ul class="space-y-2">
+              <li><a href="/tools?category=Encoding" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Encoding Tools</a></li>
+              <li><a href="/tools?category=Content" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Content Tools</a></li>
+              <li><a href="/tools?category=Design" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Design Tools</a></li>
+              <li><a href="/tools?category=AI" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">AI Tools</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Popular Tools</h4>
+            <ul class="space-y-2">
+              <li><a href="/tools/json-formatter" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">JSON Formatter</a></li>
+              <li><a href="/tools/regex-tester" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Regex Tester</a></li>
+              <li><a href="/tools/base64" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Base64 Encoder</a></li>
+              <li><a href="/tools/cron-generator" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Cron Generator</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Resources</h4>
+            <ul class="space-y-2">
+              <li><a href="/blog" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Blog</a></li>
+              <li><a href="/pricing" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Pricing</a></li>
+              <li><a href="/newsletter" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Newsletter</a></li>
+              <li><a href="/changelog" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Changelog</a></li>
+              <li><a href="/embed" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Embed</a></li>
+              <li><a href="/sponsors" class="text-sm text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Sponsor</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="pt-6 border-t border-gray-200 dark:border-gray-800 text-center">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            &copy; {new Date().getFullYear()} DevToolkit. Free developer tools, no signup required.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Exit-Intent / Scroll Email Capture Popup -->
+    <EmailPopup client:idle />
+
+    <!-- Cloudflare Web Analytics (privacy-friendly, no cookies) -->
+    {import.meta.env.CLOUDFLARE_ANALYTICS_TOKEN && (
+      <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={`{"token": "${import.meta.env.CLOUDFLARE_ANALYTICS_TOKEN}"}`}></script>
+    )}
+
+    <!-- Custom Event Tracking -->
+    <script is:inline>
+      (function() {
+        var endpoint = '/api/analytics/track';
+        function track(event, slug, label) {
+          try {
+            navigator.sendBeacon(endpoint, JSON.stringify({ event: event, slug: slug || location.pathname, label: label }));
+          } catch(e) {}
+        }
+
+        // Track page view
+        track('page_view', location.pathname);
+
+        // Track tool usage — listen for any form submit or button click inside .tool-container
+        document.addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-track-cta]');
+          if (btn) {
+            track('cta_click', location.pathname, btn.getAttribute('data-track-cta'));
+            return;
+          }
+          // Track tool action buttons (Run, Format, Convert, Generate, etc.)
+          var toolBtn = e.target.closest('.tool-container button, .tool-container [role="button"]');
+          if (toolBtn && !toolBtn.closest('nav') && !toolBtn.closest('header')) {
+            var toolSlug = location.pathname.replace('/tools/', '');
+            track('tool_use', toolSlug);
+          }
+        });
+      })();
+    </script>
+
+    <!-- Copy Link Script -->
+    <script is:inline>
+      const copyBtn = document.getElementById('copy-link-btn');
+      const copyText = document.getElementById('copy-link-text');
+      copyBtn?.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          if (copyText) copyText.textContent = 'Copied!';
+          setTimeout(() => { if (copyText) copyText.textContent = 'Copy Link'; }, 2000);
+        } catch {
+          const ta = document.createElement('textarea');
+          ta.value = window.location.href;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (copyText) copyText.textContent = 'Copied!';
+          setTimeout(() => { if (copyText) copyText.textContent = 'Copy Link'; }, 2000);
+        }
+      });
+    </script>
+
+    <!-- Dark Mode Toggle Script -->
+    <script is:inline>
+      const toggle = document.getElementById('theme-toggle');
+      const html = document.documentElement;
+
+      // Check saved preference or system preference
+      if (localStorage.getItem('theme') === 'light' ||
+          (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+        html.classList.remove('dark');
+      }
+
+      toggle?.addEventListener('click', () => {
+        html.classList.toggle('dark');
+        localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+      });
+    </script>
+  </body>
+</html>

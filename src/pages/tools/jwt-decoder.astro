@@ -1,0 +1,74 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import JwtDecoder from '../../components/tools/JwtDecoder';
+
+const faq = [
+  { question: "What is a JWT token?", answer: "A JSON Web Token (JWT) is a compact, URL-safe token format used for securely transmitting information between parties. It consists of three Base64-encoded parts: header, payload, and signature, separated by dots." },
+  { question: "Is it safe to paste my JWT here?", answer: "Yes. This tool runs entirely in your browser — your token is never sent to any server. The decoding happens locally using JavaScript, so your sensitive tokens remain private." },
+  { question: "Can this tool verify JWT signatures?", answer: "This tool decodes and displays JWT contents but does not verify signatures, as that requires the signing secret or public key. Use it for inspecting token structure, claims, and expiration." },
+  { question: "How do I check if my JWT is expired?", answer: "Paste your token and look at the 'exp' (expiration) claim in the payload section. The tool automatically calculates and displays whether the token is expired and shows the human-readable expiration time." },
+  { question: "What JWT claims are displayed?", answer: "The tool displays all standard claims (iss, sub, aud, exp, nbf, iat, jti) and any custom claims in your token's payload. The header section shows the signing algorithm and token type." },
+];
+---
+
+<ToolLayout
+  title="JWT Decoder"
+  description="Decode and inspect JWT tokens online for free. View header, payload, claims, and expiration."
+  slug="jwt-decoder"
+  toolName="JWT Decoder"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      JWT Decoder
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Decode and inspect JSON Web Tokens instantly. View header, payload, claims, and check expiration &mdash; all in your browser.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <JwtDecoder client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Secure Decoding</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your tokens never leave your browser. No server-side processing, no logging.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Expiration Check</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Instantly see if your token is expired with human-readable time differences.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Claims Table</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        All standard and custom claims displayed in an easy-to-read table format.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

@@ -1,0 +1,122 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="Structured Income Research Template for AI and Product Ideas"
+  description="Stop vague AI research outputs. Use a five-field income research template — scheme name, target market, revenue math, technical feasibility score, and validation steps — for founders and AI assistants."
+  slug="structured-income-research-template-ai-products"
+  publishDate="2026-03-19"
+  readTime="9 min read"
+>
+
+<p>
+  When you ask an AI or a researcher whether an idea can make money, the worst answers are fluffy: “it depends,” “there is potential,” or “further research is recommended” with no numbers. Those responses waste time. The fix is not better prompting alone — it is a <strong>fixed structure</strong> that forces concrete outputs.
+</p>
+
+<p>
+  This guide introduces a <strong>structured income research template</strong> with five mandatory fields and explicit bans on vague language. It works for indie hackers, product managers, and teams that use AI (or humans) to evaluate revenue ideas before building.
+</p>
+
+<h2>Why Open-Ended Research Fails</h2>
+
+<p>
+  Open-ended questions invite open-ended answers. “Can we monetize X?” often produces a narrative without testable claims. You cannot compare two ideas, prioritize a roadmap, or defend a decision to stakeholders without:
+</p>
+
+<ul>
+  <li><strong>Named markets</strong> — not “everyone who uses apps.”</li>
+  <li><strong>Revenue math</strong> — price × volume, ARPU, or RPM with stated assumptions.</li>
+  <li><strong>Feasibility</strong> — a scored judgment with reasons, not vibes.</li>
+  <li><strong>Next validation</strong> — what you will do this week, not someday.</li>
+</ul>
+
+<p>
+  A template turns research into a <strong>checklist artifact</strong> you can file, diff over time, and feed into planning tools or AI agents consistently.
+</p>
+
+<h2>The Five Mandatory Fields</h2>
+
+<p>
+  Every income research note should fill all of the following. Skip any field and the document is incomplete.
+</p>
+
+<table class="w-full text-sm border-collapse my-6">
+  <thead>
+    <tr class="border-b border-gray-200 dark:border-gray-700">
+      <th class="text-left py-2 pr-4 font-semibold">Field</th>
+      <th class="text-left py-2 font-semibold">What to include</th>
+    </tr>
+  </thead>
+  <tbody class="text-gray-600 dark:text-gray-300">
+    <tr class="border-b border-gray-100 dark:border-gray-800">
+      <td class="py-2 pr-4 font-medium text-gray-900 dark:text-gray-100">Scheme name</td>
+      <td class="py-2">One line: product, service, or monetization mechanism.</td>
+    </tr>
+    <tr class="border-b border-gray-100 dark:border-gray-800">
+      <td class="py-2 pr-4 font-medium text-gray-900 dark:text-gray-100">Target market</td>
+      <td class="py-2">Industry, role, geography, company size — specific enough to find people.</td>
+    </tr>
+    <tr class="border-b border-gray-100 dark:border-gray-800">
+      <td class="py-2 pr-4 font-medium text-gray-900 dark:text-gray-100">Estimated revenue</td>
+      <td class="py-2">Numbers + currency + <strong>calculation logic</strong> (formula and assumptions).</td>
+    </tr>
+    <tr class="border-b border-gray-100 dark:border-gray-800">
+      <td class="py-2 pr-4 font-medium text-gray-900 dark:text-gray-100">Technical feasibility</td>
+      <td class="py-2">Score 1–5 plus <strong>reasons</strong> (stack, risks, team/time).</td>
+    </tr>
+    <tr>
+      <td class="py-2 pr-4 font-medium text-gray-900 dark:text-gray-100">Validation plan</td>
+      <td class="py-2">Concrete next steps: interviews, landing page, MVP scope, paid test, etc.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>What to Ban in the Output</h2>
+
+<ul>
+  <li><strong>Hedge words without data</strong> — “maybe,” “roughly,” “it could work” without attaching numbers or experiments.</li>
+  <li><strong>Revenue conclusions without math</strong> — any dollar amount must show how it was derived.</li>
+  <li><strong>“Recommend more research”</strong> as the only outcome — replace with the validation field’s specific actions.</li>
+</ul>
+
+<h2>How to Use This With AI Assistants</h2>
+
+<p>
+  Paste the template into your system prompt or project docs and ask: “Fill this template for [idea]. If data is missing, state assumptions explicitly and still show the formula.” That keeps the model inside guardrails instead of drifting into essays.
+</p>
+
+<p>
+  For teams using internal automation (for example research pipelines or “lobster” style batch jobs), storing the template as a single Markdown file in your repo makes every run comparable — same sections, same rigor.
+</p>
+
+<h2>Example Snippet (Abbreviated)</h2>
+
+<pre><code>### Scheme name
+B2B uptime alerts for Shopify-scale merchants (webhook + SMS).
+
+### Target market
+Merchants doing $1M–$20M GMV/year, 2–8 person ops teams, US/CA first.
+
+### Estimated revenue
+Year 1 target $90k USD = 30 paying × $250/mo × 12 (assumes 3% trial-to-paid from 1k trials).
+
+### Technical feasibility
+4/5 — Webhooks + queue + Twilio are standard; hardest part is noisy alert tuning (2 eng-months).
+
+### Validation plan
+10 customer discovery calls + single-page waitlist; ship read-only dashboard in 4 weeks.</code></pre>
+
+<h2>Takeaways</h2>
+
+<ul>
+  <li>Structure beats length: five fields beat ten pages of prose for go/no-go decisions.</li>
+  <li>Revenue without a formula is an opinion, not research.</li>
+  <li>Pair the template with your favorite <a href="/" class="text-primary-600 dark:text-primary-400 underline">developer tools</a> for specs, JSON, and docs — keep artifacts machine-friendly.</li>
+</ul>
+
+<p>
+  Adopt this pattern once, and every “can this make money?” request produces comparable, auditable answers you can stack-rank and ship against.
+</p>
+
+</BlogLayout>

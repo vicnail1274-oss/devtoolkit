@@ -1,0 +1,89 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import Base64Tool from '../../components/tools/Base64Tool';
+
+const faq = [
+  { question: "What is Base64 encoding?", answer: "Base64 is a binary-to-text encoding scheme that represents binary data as an ASCII string. It is commonly used to embed images in HTML/CSS, transmit data in URLs, and encode email attachments." },
+  { question: "Is Base64 encoding the same as encryption?", answer: "No. Base64 is an encoding, not encryption. Anyone can decode Base64 data without a key. It is used for data transport, not security." },
+  { question: "What is URL-safe Base64?", answer: "URL-safe Base64 replaces the + and / characters with - and _, and removes padding (=). This makes the encoded string safe to use in URLs and filenames without additional escaping." },
+  { question: "Can I encode files to Base64?", answer: "Yes. This tool supports encoding both text and files to Base64. You can use it to convert images, documents, or any binary file into a Base64 string for embedding in code." },
+];
+---
+
+<ToolLayout
+  title="Base64 Encode/Decode"
+  description="Encode and decode text to/from Base64 format. Free online tool, runs in your browser."
+  slug="base64"
+  toolName="Base64 Encode/Decode"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Base64 Encode/Decode
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Encode and decode text to/from Base64 format instantly. Supports URL-safe Base64 and full UTF-8. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <Base64Tool client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Instant Processing</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Encode or decode Base64 in milliseconds. No server roundtrips needed.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your data never leaves your browser. No tracking, no cookies, no server-side processing.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">URL-Safe Mode</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Toggle URL-safe Base64 encoding that replaces +/= with URL-friendly characters.
+      </p>
+    </div>
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="mt-12">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Frequently Asked Questions</h2>
+    <div class="space-y-4">
+      {faq.map(item => (
+        <details class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 group">
+          <summary class="font-semibold text-gray-900 dark:text-gray-100 cursor-pointer list-none flex items-center justify-between">
+            {item.question}
+            <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</ToolLayout>

@@ -1,0 +1,75 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import QrCodeGenerator from '../../components/tools/QrCodeGenerator';
+
+const faq = [
+  { question: "What types of QR codes can I generate?", answer: "This tool supports plain text, URLs, WiFi network credentials, vCard contact information, and email QR codes. Each type formats the data in the correct standard so phones and QR scanners can interpret them automatically." },
+  { question: "Is this QR code generator free?", answer: "Yes, completely free with no signup required. You can generate unlimited QR codes. Everything runs locally in your browser — no data is sent to any server." },
+  { question: "Can I customize the QR code colors?", answer: "Yes, you can change both the foreground (dark modules) and background colors using the color pickers. Make sure there is enough contrast between the two colors for the QR code to remain scannable." },
+  { question: "What is error correction level?", answer: "Error correction allows a QR code to be scanned even if it is partially damaged or obscured. Level L recovers 7% of data, M recovers 15%, Q recovers 25%, and H recovers 30%. Higher levels make the QR code denser but more resilient." },
+  { question: "What image formats can I download?", answer: "You can download your QR code as PNG (raster image, best for web and documents) or SVG (vector image, best for printing at any size without quality loss)." },
+  { question: "How do WiFi QR codes work?", answer: "WiFi QR codes encode your network name (SSID), password, and encryption type in a standard format. When scanned with a phone camera, the device automatically offers to connect to the network without manually entering the password." },
+];
+---
+
+<ToolLayout
+  title="QR Code Generator"
+  description="Generate QR codes for text, URLs, WiFi, vCard, and email. Customize colors and size, download as PNG or SVG"
+  slug="qr-code-generator"
+  toolName="QR Code Generator"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      QR Code Generator
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Generate QR codes for text, URLs, WiFi credentials, contacts, and email. Customize colors and error correction level. Download as PNG or SVG. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <QrCodeGenerator client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">5 QR Types</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Generate QR codes for plain text, URLs, WiFi networks, vCard contacts, and email — all with standard encoding.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Fully Customizable</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Choose custom foreground and background colors, adjust size from 128px to 1024px, and set error correction level.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">PNG & SVG Export</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Download as PNG for web use or SVG for print. SVG exports scale to any size without quality loss.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

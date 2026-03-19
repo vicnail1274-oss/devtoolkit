@@ -1,0 +1,162 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import { tools, categories } from '../../data/tools';
+
+const displayCategories = categories.filter(c => c !== 'All');
+const freeCount = tools.filter(t => !t.isPro).length;
+const proCount = tools.filter(t => t.isPro).length;
+---
+
+<ToolLayout title="All Developer Tools" description="Browse all free and pro developer tools. Search by name or filter by category.">
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
+    <a href="/" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Home</a>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    <span class="text-gray-900 dark:text-gray-100 font-medium">All Tools</span>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      All Developer Tools
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      {freeCount} free tools + {proCount} Pro AI tools. Everything you need for development, encoding, security, and more.
+    </p>
+  </div>
+
+  <!-- Search -->
+  <div class="max-w-xl mb-6">
+    <div class="relative">
+      <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input
+        type="text"
+        id="tool-search"
+        placeholder="Search all tools..."
+        class="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200"
+      />
+    </div>
+  </div>
+
+  <!-- Category Filter -->
+  <div class="flex flex-wrap gap-2 mb-10" id="category-filter">
+    <button
+      data-category="All"
+      class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-primary-600 text-white"
+    >
+      All ({tools.length})
+    </button>
+    {displayCategories.map((cat) => {
+      const count = tools.filter(t => t.category === cat).length;
+      return count > 0 ? (
+        <button
+          data-category={cat}
+          class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          {cat} ({count})
+        </button>
+      ) : null;
+    })}
+  </div>
+
+  <!-- Tool Grid -->
+  <div id="tool-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {tools.map((tool) => (
+      <div class="tool-item" data-title={tool.title.toLowerCase()} data-description={tool.description.toLowerCase()} data-category={tool.category} data-pro={tool.isPro ? 'true' : 'false'}>
+        {tool.isPro ? (
+          <a
+            href={tool.href}
+            class="group relative block bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-lg border border-primary-200 dark:border-primary-800 p-6 transition-all duration-200 hover:-translate-y-1"
+          >
+            <div class="absolute top-3 right-3">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 text-white text-xs font-bold">
+                PRO
+              </span>
+            </div>
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-12 h-12 bg-primary-50 dark:bg-primary-950 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-200">
+                {tool.icon}
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 truncate">
+                  {tool.title}
+                </h3>
+                <span class="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400 mb-2">
+                  {tool.category}
+                </span>
+                <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                  {tool.description}
+                </p>
+              </div>
+            </div>
+          </a>
+        ) : (
+          <ToolCard {...tool} />
+        )}
+      </div>
+    ))}
+  </div>
+
+  <!-- Empty State -->
+  <div id="empty-state" class="hidden text-center py-16">
+    <p class="text-gray-400 dark:text-gray-500 text-lg">No tools found matching your search.</p>
+  </div>
+
+  <!-- Tool Count -->
+  <div class="text-center mt-8">
+    <p class="text-sm text-gray-400 dark:text-gray-500">
+      Showing <span id="tool-count">{tools.length}</span> of {tools.length} tools
+    </p>
+  </div>
+
+  <!-- Search + Category Filter Script -->
+  <script is:inline>
+    const searchInput = document.getElementById('tool-search');
+    const emptyState = document.getElementById('empty-state');
+    const toolCount = document.getElementById('tool-count');
+    const toolItems = document.querySelectorAll('.tool-item');
+    const categoryBtns = document.querySelectorAll('.category-btn');
+
+    let activeCategory = 'All';
+
+    function filterTools() {
+      const query = (searchInput?.value || '').toLowerCase().trim();
+      let visible = 0;
+
+      toolItems.forEach((item) => {
+        const title = item.dataset.title || '';
+        const desc = item.dataset.description || '';
+        const cat = item.dataset.category || '';
+        const matchesSearch = !query || title.includes(query) || desc.includes(query);
+        const matchesCategory = activeCategory === 'All' || cat === activeCategory;
+        const show = matchesSearch && matchesCategory;
+        item.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+
+      if (emptyState) emptyState.classList.toggle('hidden', visible > 0);
+      if (toolCount) toolCount.textContent = visible.toString();
+    }
+
+    searchInput?.addEventListener('input', filterTools);
+
+    categoryBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeCategory = btn.dataset.category || 'All';
+        categoryBtns.forEach((b) => {
+          if (b.dataset.category === activeCategory) {
+            b.className = 'category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-primary-600 text-white';
+          } else {
+            b.className = 'category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700';
+          }
+        });
+        filterTools();
+      });
+    });
+  </script>
+</ToolLayout>

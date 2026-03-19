@@ -1,0 +1,486 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="REST API Testing Guide for Beginners"
+  description="Learn how to test REST APIs from scratch — HTTP methods, status codes, headers, authentication, and hands-on examples with curl, Postman, and free online tools."
+  slug="rest-api-testing-guide"
+  publishDate="2026-03-19"
+  readTime="15 min read"
+>
+
+<p>
+  Whether you're a frontend developer integrating a backend, a QA engineer writing test suites, or a backend developer debugging your own endpoints, knowing how to test REST APIs is a fundamental skill. This guide takes you from zero to confidently testing any API.
+</p>
+
+<p>
+  We'll cover HTTP fundamentals, the most common testing patterns, authentication, error handling, and hands-on examples using curl, Postman, and browser-based tools. By the end, you'll be able to test any REST API you encounter.
+</p>
+
+<h2>What Is a REST API?</h2>
+
+<p>
+  REST (Representational State Transfer) is an architectural style for building web APIs. A REST API exposes <strong>resources</strong> (data entities like users, orders, products) at URLs and uses standard HTTP methods to manipulate them.
+</p>
+
+<p>
+  The key principles:
+</p>
+
+<ul>
+  <li><strong>Stateless:</strong> Each request contains all information needed to process it. The server doesn't remember previous requests.</li>
+  <li><strong>Resource-based:</strong> Everything is a resource identified by a URL (<code>/api/users/123</code>).</li>
+  <li><strong>HTTP methods as verbs:</strong> GET reads, POST creates, PUT/PATCH updates, DELETE removes.</li>
+  <li><strong>Standard status codes:</strong> 200 OK, 201 Created, 404 Not Found, 500 Server Error.</li>
+</ul>
+
+<h2>HTTP Methods: The Big Five</h2>
+
+<p>
+  Every REST API test starts with choosing the right HTTP method.
+</p>
+
+<h3>GET — Read Data</h3>
+
+<p>
+  Retrieves a resource without modifying it. GET requests should be <strong>idempotent</strong> — calling them multiple times produces the same result.
+</p>
+
+<pre><code>GET /api/users          → List all users
+GET /api/users/123      → Get user with ID 123
+GET /api/users?role=admin&limit=10  → Filtered list</code></pre>
+
+<p>
+  When testing GET requests, check:
+</p>
+
+<ul>
+  <li>Response status is 200 OK</li>
+  <li>Response body contains expected data structure</li>
+  <li>Pagination headers or metadata are present for list endpoints</li>
+  <li>Query parameters filter correctly</li>
+  <li>Non-existent resource returns 404</li>
+</ul>
+
+<h3>POST — Create Data</h3>
+
+<p>
+  Creates a new resource. The request body contains the data for the new resource.
+</p>
+
+<pre><code>POST /api/users
+Content-Type: application/json
+
+{'{'}
+  "name": "Alice",
+  "email": "alice@example.com",
+  "role": "user"
+{'}'}</code></pre>
+
+<p>
+  When testing POST requests, check:
+</p>
+
+<ul>
+  <li>Response status is 201 Created (not 200)</li>
+  <li>Response body contains the created resource with a generated ID</li>
+  <li><code>Location</code> header points to the new resource URL</li>
+  <li>Duplicate creation is handled (409 Conflict or idempotency key)</li>
+  <li>Missing required fields return 400 Bad Request with clear error messages</li>
+</ul>
+
+<h3>PUT — Replace Data</h3>
+
+<p>
+  Replaces an entire resource. If the resource doesn't exist, some APIs create it (upsert behavior).
+</p>
+
+<pre><code>PUT /api/users/123
+Content-Type: application/json
+
+{'{'}
+  "name": "Alice Updated",
+  "email": "alice@example.com",
+  "role": "admin"
+{'}'}</code></pre>
+
+<p>
+  PUT should be <strong>idempotent</strong> — sending the same PUT request twice should have the same effect as sending it once.
+</p>
+
+<h3>PATCH — Partial Update</h3>
+
+<p>
+  Updates specific fields without replacing the entire resource.
+</p>
+
+<pre><code>PATCH /api/users/123
+Content-Type: application/json
+
+{'{'}
+  "role": "admin"
+{'}'}</code></pre>
+
+<p>
+  Only the <code>role</code> field changes; <code>name</code> and <code>email</code> stay the same. PATCH is more bandwidth-efficient than PUT for small updates.
+</p>
+
+<h3>DELETE — Remove Data</h3>
+
+<pre><code>DELETE /api/users/123</code></pre>
+
+<p>
+  When testing DELETE, verify:
+</p>
+
+<ul>
+  <li>Response is 204 No Content (or 200 with confirmation body)</li>
+  <li>Subsequent GET returns 404</li>
+  <li>Deleting a non-existent resource returns 404 (or 204 if idempotent)</li>
+  <li>Cascade behavior: are related resources also deleted?</li>
+</ul>
+
+<h2>HTTP Status Codes You Must Know</h2>
+
+<table>
+  <thead>
+    <tr><th>Code</th><th>Meaning</th><th>When You'll See It</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>200</code></td><td>OK</td><td>Successful GET, PUT, PATCH, DELETE</td></tr>
+    <tr><td><code>201</code></td><td>Created</td><td>Successful POST that creates a resource</td></tr>
+    <tr><td><code>204</code></td><td>No Content</td><td>Successful DELETE with no response body</td></tr>
+    <tr><td><code>301/302</code></td><td>Redirect</td><td>Resource moved; follow the Location header</td></tr>
+    <tr><td><code>400</code></td><td>Bad Request</td><td>Malformed JSON, missing required fields, invalid values</td></tr>
+    <tr><td><code>401</code></td><td>Unauthorized</td><td>Missing or invalid authentication</td></tr>
+    <tr><td><code>403</code></td><td>Forbidden</td><td>Authenticated but not authorized for this action</td></tr>
+    <tr><td><code>404</code></td><td>Not Found</td><td>Resource doesn't exist</td></tr>
+    <tr><td><code>409</code></td><td>Conflict</td><td>Duplicate creation, version conflict</td></tr>
+    <tr><td><code>422</code></td><td>Unprocessable Entity</td><td>Valid JSON but business rule violation</td></tr>
+    <tr><td><code>429</code></td><td>Too Many Requests</td><td>Rate limited; check Retry-After header</td></tr>
+    <tr><td><code>500</code></td><td>Internal Server Error</td><td>Server bug — not your fault (usually)</td></tr>
+    <tr><td><code>502/503</code></td><td>Bad Gateway / Unavailable</td><td>Server is down or overloaded</td></tr>
+  </tbody>
+</table>
+
+<h2>Essential Headers</h2>
+
+<p>
+  HTTP headers carry metadata about the request and response. Here are the ones you'll use in every API test:
+</p>
+
+<h3>Request Headers</h3>
+
+<pre><code>Content-Type: application/json          # "I'm sending JSON"
+Accept: application/json                 # "I want JSON back"
+Authorization: Bearer eyJhbGciOiJI...   # Auth token
+X-Request-ID: 550e8400-e29b-41d4       # Trace ID for debugging
+If-None-Match: "etag-value"             # Conditional GET (caching)</code></pre>
+
+<h3>Response Headers</h3>
+
+<pre><code>Content-Type: application/json          # Response format
+Location: /api/users/456                # URL of created resource
+X-RateLimit-Limit: 100                  # Max requests per window
+X-RateLimit-Remaining: 42              # Requests left
+Retry-After: 30                         # Seconds to wait (429)
+ETag: "33a64df5"                        # Resource version for caching</code></pre>
+
+<h2>Testing with curl</h2>
+
+<p>
+  <code>curl</code> is the universal API testing tool — available on every OS, scriptable, and precise. Here are the patterns you'll use daily.
+</p>
+
+<h3>GET Request</h3>
+
+<pre><code># Simple GET
+curl https://api.example.com/users
+
+# With headers and pretty-print
+curl -s https://api.example.com/users \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" | jq .</code></pre>
+
+<h3>POST Request</h3>
+
+<pre><code># Create a user
+curl -X POST https://api.example.com/users \
+  -H "Content-Type: application/json" \
+  -d '{"{"}"name": "Alice", "email": "alice@example.com"{"}"}'
+
+# From a file
+curl -X POST https://api.example.com/users \
+  -H "Content-Type: application/json" \
+  -d @user.json</code></pre>
+
+<h3>PUT / PATCH / DELETE</h3>
+
+<pre><code># Full update
+curl -X PUT https://api.example.com/users/123 \
+  -H "Content-Type: application/json" \
+  -d '{"{"}"name": "Alice Updated", "email": "alice@example.com", "role": "admin"{"}"}'
+
+# Partial update
+curl -X PATCH https://api.example.com/users/123 \
+  -H "Content-Type: application/json" \
+  -d '{"{"}"role": "admin"{"}"}'
+
+# Delete
+curl -X DELETE https://api.example.com/users/123 \
+  -H "Authorization: Bearer YOUR_TOKEN"</code></pre>
+
+<h3>Useful curl Flags</h3>
+
+<pre><code>-v            # Verbose: show request/response headers
+-s            # Silent: no progress bar
+-o /dev/null  # Discard body (useful with -w)
+-w "%{'{'}http_code{'}'}\n"  # Print just the status code
+-L            # Follow redirects
+-k            # Skip TLS verification (dev only!)
+--max-time 10 # Timeout after 10 seconds</code></pre>
+
+<h2>API Authentication Patterns</h2>
+
+<p>
+  Most APIs require authentication. Here are the four most common patterns and how to test each.
+</p>
+
+<h3>1. API Key (Header or Query)</h3>
+
+<pre><code># In header (preferred)
+curl -H "X-API-Key: your-api-key" https://api.example.com/data
+
+# In query string (less secure)
+curl "https://api.example.com/data?api_key=your-api-key"</code></pre>
+
+<h3>2. Bearer Token (OAuth2 / JWT)</h3>
+
+<pre><code># Get token
+curl -X POST https://auth.example.com/token \
+  -d "grant_type=client_credentials" \
+  -d "client_id=YOUR_ID" \
+  -d "client_secret=YOUR_SECRET"
+
+# Use token
+curl -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIs..." \
+  https://api.example.com/protected</code></pre>
+
+<h3>3. Basic Auth</h3>
+
+<pre><code># curl handles encoding automatically
+curl -u "username:password" https://api.example.com/data
+
+# Equivalent header
+curl -H "Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=" \
+  https://api.example.com/data</code></pre>
+
+<h3>4. Cookie-Based (Session)</h3>
+
+<pre><code># Login and save cookies
+curl -c cookies.txt -X POST https://app.example.com/login \
+  -d '{"{"}"email": "user@example.com", "password": "secret"{"}"}'
+
+# Use saved cookies
+curl -b cookies.txt https://app.example.com/dashboard</code></pre>
+
+<h2>Testing Error Cases</h2>
+
+<p>
+  Good API testing isn't just about the happy path. Here's a checklist of error cases every API should handle:
+</p>
+
+<h3>Validation Errors (400)</h3>
+
+<pre><code># Missing required field
+curl -X POST https://api.example.com/users \
+  -H "Content-Type: application/json" \
+  -d '{"{"}"name": "Alice"{"}"}'
+# Expected: 400 with message about missing email
+
+# Wrong data type
+curl -X POST https://api.example.com/users \
+  -H "Content-Type: application/json" \
+  -d '{"{"}"name": "Alice", "email": "alice@example.com", "age": "not-a-number"{"}"}'
+# Expected: 400 with type validation error
+
+# Empty body
+curl -X POST https://api.example.com/users \
+  -H "Content-Type: application/json" \
+  -d '{"{"}{"}"}'
+# Expected: 400 with list of missing fields</code></pre>
+
+<h3>Authentication Errors (401/403)</h3>
+
+<pre><code># No auth header
+curl https://api.example.com/protected
+# Expected: 401
+
+# Expired token
+curl -H "Authorization: Bearer expired-token" \
+  https://api.example.com/protected
+# Expected: 401
+
+# Valid token, wrong permissions
+curl -H "Authorization: Bearer user-token" \
+  -X DELETE https://api.example.com/admin/users/123
+# Expected: 403</code></pre>
+
+<h3>Not Found (404)</h3>
+
+<pre><code># Non-existent resource
+curl https://api.example.com/users/99999
+# Expected: 404 with meaningful message
+
+# Wrong URL
+curl https://api.example.com/userz
+# Expected: 404</code></pre>
+
+<h3>Rate Limiting (429)</h3>
+
+<pre><code># Rapid-fire requests
+for i in $(seq 1 100); do
+  curl -s -o /dev/null -w "%{'{'}http_code{'}'}\n" \
+    https://api.example.com/data
+done
+# Expected: 429 after exceeding limit, with Retry-After header</code></pre>
+
+<h2>Writing Automated API Tests</h2>
+
+<p>
+  Once you're comfortable testing manually, automate your tests. Here's a simple example in JavaScript using <code>fetch</code> and a test runner:
+</p>
+
+<pre><code>// api.test.js (using Node.js built-in test runner)
+import {'{'} describe, it {'}'} from 'node:test';
+import assert from 'node:assert';
+
+const BASE_URL = 'https://api.example.com';
+
+describe('Users API', () => {'{'}
+  it('GET /users returns 200 and array', async () => {'{'}
+    const res = await fetch(`${'{'}BASE_URL{'}'}/users`);
+    assert.strictEqual(res.status, 200);
+
+    const data = await res.json();
+    assert.ok(Array.isArray(data));
+    assert.ok(data.length > 0);
+  {'}'});
+
+  it('POST /users creates a user', async () => {'{'}
+    const res = await fetch(`${'{'}BASE_URL{'}'}/users`, {'{'}
+      method: 'POST',
+      headers: {'{'} 'Content-Type': 'application/json' {'}'},
+      body: JSON.stringify({'{'}
+        name: 'Test User',
+        email: `test-${'{'}Date.now(){'}'}@example.com`
+      {'}'})
+    {'}'});
+
+    assert.strictEqual(res.status, 201);
+    const user = await res.json();
+    assert.ok(user.id);
+    assert.strictEqual(user.name, 'Test User');
+  {'}'});
+
+  it('GET /users/999999 returns 404', async () => {'{'}
+    const res = await fetch(`${'{'}BASE_URL{'}'}/users/999999`);
+    assert.strictEqual(res.status, 404);
+  {'}'});
+
+  it('POST /users without email returns 400', async () => {'{'}
+    const res = await fetch(`${'{'}BASE_URL{'}'}/users`, {'{'}
+      method: 'POST',
+      headers: {'{'} 'Content-Type': 'application/json' {'}'},
+      body: JSON.stringify({'{'} name: 'No Email' {'}'})
+    {'}'});
+    assert.strictEqual(res.status, 400);
+  {'}'});
+{'}'});</code></pre>
+
+<h3>Python with pytest</h3>
+
+<pre><code>import requests
+import pytest
+
+BASE_URL = "https://api.example.com"
+
+def test_get_users():
+    res = requests.get(f"{'{'}BASE_URL{'}'}/users")
+    assert res.status_code == 200
+    data = res.json()
+    assert isinstance(data, list)
+    assert len(data) > 0
+
+def test_create_user():
+    payload = {'{'}"name": "Test", "email": f"test-{'{'}id(object()){'}'}@example.com"{'}'}
+    res = requests.post(f"{'{'}BASE_URL{'}'}/users", json=payload)
+    assert res.status_code == 201
+    assert "id" in res.json()
+
+def test_not_found():
+    res = requests.get(f"{'{'}BASE_URL{'}'}/users/999999")
+    assert res.status_code == 404
+
+def test_validation_error():
+    res = requests.post(f"{'{'}BASE_URL{'}'}/users", json={'{'}"name": "No Email"{'}'})
+    assert res.status_code == 400</code></pre>
+
+<h2>API Testing Best Practices</h2>
+
+<ol>
+  <li>
+    <strong>Test the contract, not the implementation.</strong> Your tests should verify the API's documented behavior — status codes, response shape, error messages. Don't test internal database state.
+  </li>
+  <li>
+    <strong>Use unique test data.</strong> Generate unique emails, names, and IDs for each test run to avoid collisions. Timestamps or UUIDs work well.
+  </li>
+  <li>
+    <strong>Clean up after yourself.</strong> If your test creates a user, delete it afterward. Use setup/teardown hooks or a dedicated test database.
+  </li>
+  <li>
+    <strong>Test edge cases.</strong> Empty strings, very long strings, special characters, Unicode, null values, zero, negative numbers, boundary values (max int, empty arrays).
+  </li>
+  <li>
+    <strong>Check response times.</strong> A test that passes in 30 seconds is a broken API. Set timeouts and assert on response time.
+  </li>
+  <li>
+    <strong>Version your test collections.</strong> Keep API tests in version control alongside the code. They're documentation and regression safety nets.
+  </li>
+  <li>
+    <strong>Test auth thoroughly.</strong> Missing tokens, expired tokens, wrong scopes, cross-tenant access — auth bugs are security bugs.
+  </li>
+</ol>
+
+<h2>Test APIs Online — No Setup Required</h2>
+
+<p>
+  Sometimes you need to quickly test an endpoint without setting up Postman or writing a script. <strong><a href="/tools/api-tester">DevToolkit's free API Tester</a></strong> lets you send any HTTP request right in your browser — GET, POST, PUT, PATCH, DELETE with custom headers, body, and authentication.
+</p>
+
+<p>
+  It shows the full response including status code, headers, timing, and a formatted JSON body. Perfect for quick debugging, exploring a new API, or sharing reproducible requests with your team. No signup, no install.
+</p>
+
+<h2>Common Mistakes When Testing APIs</h2>
+
+<ul>
+  <li><strong>Forgetting Content-Type header.</strong> Many APIs return 400 or 415 if you send JSON without <code>Content-Type: application/json</code>.</li>
+  <li><strong>Testing only the happy path.</strong> If your tests only check successful responses, your app will break on the first 400 or 500.</li>
+  <li><strong>Hardcoding URLs and tokens.</strong> Use environment variables or config files. Test against staging, not production.</li>
+  <li><strong>Ignoring response headers.</strong> Rate limit headers, pagination links, cache headers — they're part of the API contract.</li>
+  <li><strong>Not checking response shape.</strong> A 200 with unexpected data is worse than a 500 — it fails silently downstream.</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>
+  API testing is a core skill that pays dividends in every project. Start with manual testing using curl or a browser-based tool to understand the API, then automate your tests for regression safety. Always test both the happy path and error cases.
+</p>
+
+<p>
+  Ready to test an API right now? <strong><a href="/tools/api-tester">Open DevToolkit's API Tester</a></strong> — send requests, inspect responses, and debug endpoints in seconds. Free, in your browser, no setup needed.
+</p>
+
+</BlogLayout>

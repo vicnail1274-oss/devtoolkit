@@ -1,0 +1,85 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import YamlToJson from '../../components/tools/YamlToJson';
+
+const faq = [
+  {
+    question: "What is YAML?",
+    answer: "YAML (YAML Ain't Markup Language) is a human-readable data serialization format commonly used for configuration files (Docker Compose, Kubernetes, CI/CD pipelines, etc.)."
+  },
+  {
+    question: "Can I convert JSON back to YAML?",
+    answer: "Yes! This tool supports bidirectional conversion. Switch to 'JSON → YAML' mode to convert JSON data into clean YAML format."
+  },
+  {
+    question: "Does this handle nested YAML structures?",
+    answer: "Yes. The converter supports nested objects, arrays, inline arrays/objects, comments, block scalars, and common YAML data types (strings, numbers, booleans, null)."
+  },
+  {
+    question: "Is my data sent to a server?",
+    answer: "No. Everything runs 100% in your browser using JavaScript. Your configuration data never leaves your device."
+  },
+];
+---
+
+<ToolLayout
+  title="YAML to JSON Converter"
+  description="Convert YAML to JSON and JSON to YAML online for free. Bidirectional conversion with instant preview."
+  slug="yaml-to-json"
+  toolName="YAML to JSON Converter"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      YAML to JSON Converter
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Convert between YAML and JSON formats instantly. Supports Docker Compose, Kubernetes configs, and any valid YAML/JSON. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <YamlToJson client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Bidirectional</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Convert YAML to JSON or JSON to YAML with a single toggle switch.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Config-Friendly</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Perfect for Docker Compose, Kubernetes manifests, GitHub Actions, and CI/CD configs.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your data never leaves your browser. No tracking, no cookies, no server-side processing.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

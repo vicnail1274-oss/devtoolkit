@@ -1,0 +1,497 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="HTTP Status Codes Quick Reference Guide"
+  description="A comprehensive reference for every HTTP status code you'll encounter — 1xx through 5xx — with practical examples, debugging tips, and guidance on choosing the right code for your API."
+  slug="http-status-codes-reference"
+  publishDate="2026-03-19"
+  readTime="15 min read"
+>
+
+<p>
+  Every HTTP response carries a three-digit status code that tells the client exactly what happened on the server. Whether you're building a REST API, debugging a 503 on production, or just trying to understand why your fetch call failed, knowing your status codes is non-negotiable.
+</p>
+
+<p>
+  This guide covers all five status code families — 1xx through 5xx — with plain-English explanations, real-world HTTP response examples, and practical debugging tips for every major code. You'll also find a section at the end on how to choose the right status code when designing your own API.
+</p>
+
+<p>
+  If you want to look up a code quickly without reading the whole article, jump straight to <a href="/tools/http-status-codes">DevToolkit's HTTP Status Codes tool</a> for an instant searchable reference.
+</p>
+
+<h2>How HTTP Status Codes Are Structured</h2>
+
+<p>
+  HTTP status codes are three-digit integers grouped into five classes based on their first digit:
+</p>
+
+<ul>
+  <li><strong>1xx — Informational:</strong> The request was received and processing is continuing.</li>
+  <li><strong>2xx — Success:</strong> The request was successfully received, understood, and accepted.</li>
+  <li><strong>3xx — Redirection:</strong> Further action is needed to complete the request.</li>
+  <li><strong>4xx — Client Error:</strong> The request contains bad syntax or cannot be fulfilled by the server.</li>
+  <li><strong>5xx — Server Error:</strong> The server failed to fulfill an apparently valid request.</li>
+</ul>
+
+<p>
+  Every status code is accompanied by a short reason phrase (e.g., <code>200 OK</code>, <code>404 Not Found</code>), though HTTP/2 dropped the reason phrase from the wire format. What matters is always the numeric code.
+</p>
+
+<h2>1xx — Informational Responses</h2>
+
+<p>
+  1xx codes are provisional responses. They tell the client that the request is being processed and more is coming. You'll rarely handle these manually; they're mostly handled transparently by HTTP clients and servers.
+</p>
+
+<h3>100 Continue</h3>
+
+<p>
+  The server has received the request headers and the client should proceed to send the request body. Clients sending large payloads (like file uploads) can send an <code>Expect: 100-continue</code> header first to confirm the server will accept the body before actually transmitting it. This prevents wasting bandwidth uploading a large file only to receive a 413 rejection.
+</p>
+
+<pre><code>POST /api/upload HTTP/1.1
+Host: example.com
+Content-Length: 5242880
+Expect: 100-continue
+
+HTTP/1.1 100 Continue
+
+[client now sends the file body]</code></pre>
+
+<h3>101 Switching Protocols</h3>
+
+<p>
+  The server agrees to switch protocols as requested by the client via an <code>Upgrade</code> header. This is the handshake you see at the start of every WebSocket connection — the client upgrades from HTTP/1.1 to the WebSocket protocol.
+</p>
+
+<pre><code>GET /chat HTTP/1.1
+Host: example.com
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+
+HTTP/1.1 101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=</code></pre>
+
+<p>
+  <strong>Debugging tip:</strong> If your WebSocket connection fails to establish, verify the server returns 101 and not 400 or 426. A 400 usually means a missing or malformed header; a 426 means the server requires an upgrade but the client didn't request one.
+</p>
+
+<h2>2xx — Success</h2>
+
+<p>
+  2xx codes confirm that the client's request was received, understood, and processed successfully. Picking the right 2xx code in your own API communicates intent clearly to API consumers.
+</p>
+
+<h3>200 OK</h3>
+
+<p>
+  The all-purpose success response. The request succeeded and the response body contains the requested data (for GET), the result of an action (for POST), or confirmation of an update (for PUT/PATCH). When in doubt, 200 is the safe choice — but more specific codes are almost always better.
+</p>
+
+<pre><code>GET /api/users/42 HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{'{'}
+  "id": 42,
+  "name": "Jane Doe",
+  "email": "jane@example.com"
+{'}'}</code></pre>
+
+<h3>201 Created</h3>
+
+<p>
+  The request succeeded and a new resource was created as a result. Always use 201 instead of 200 for successful POST requests that create resources. Best practice is to include a <code>Location</code> header pointing to the newly created resource, and optionally return the created object in the body.
+</p>
+
+<pre><code>POST /api/users HTTP/1.1
+Content-Type: application/json
+
+{'{'} "name": "John Smith", "email": "john@example.com" {'}'}
+
+HTTP/1.1 201 Created
+Location: /api/users/43
+Content-Type: application/json
+
+{'{'}
+  "id": 43,
+  "name": "John Smith",
+  "email": "john@example.com"
+{'}'}</code></pre>
+
+<h3>204 No Content</h3>
+
+<p>
+  The request succeeded but there is no content to return. Commonly used for DELETE operations and PUT/PATCH requests where you don't need to return the updated resource. The response must not include a body. If your client is expecting data after a 204 and hanging, that's your culprit.
+</p>
+
+<pre><code>DELETE /api/users/42 HTTP/1.1
+
+HTTP/1.1 204 No Content</code></pre>
+
+<p>
+  <strong>Debugging tip for 2xx:</strong> A 200 when you expected 201 often means the server is reusing an existing resource rather than creating a new one (idempotent creation). A 200 on a DELETE means the server returned a body — check whether your client is discarding it unexpectedly.
+</p>
+
+<h2>3xx — Redirection</h2>
+
+<p>
+  3xx codes tell the client to take an additional action to complete the request — usually following a redirect to a different URL. The <code>Location</code> header specifies where to go next.
+</p>
+
+<h3>301 Moved Permanently</h3>
+
+<p>
+  The resource has been permanently moved to a new URL. Browsers and HTTP clients will cache this redirect and automatically use the new URL for all future requests. Search engines transfer link equity to the new URL. Use this when you're permanently restructuring your URLs or migrating a domain.
+</p>
+
+<pre><code>GET /old-page HTTP/1.1
+
+HTTP/1.1 301 Moved Permanently
+Location: https://example.com/new-page</code></pre>
+
+<h3>302 Found</h3>
+
+<p>
+  A temporary redirect. The resource is available at a different URL for this request only. Clients should continue to use the original URL for future requests. In practice, most browsers convert the follow-up request to GET even if the original was POST — which is why 307 and 308 were introduced.
+</p>
+
+<h3>304 Not Modified</h3>
+
+<p>
+  Used for conditional GET requests with caching. If the client already has a cached version and sends an <code>If-None-Match</code> or <code>If-Modified-Since</code> header, and the resource hasn't changed, the server responds with 304 and no body — saving bandwidth. The client uses its cached copy.
+</p>
+
+<pre><code>GET /api/data HTTP/1.1
+If-None-Match: "abc123"
+
+HTTP/1.1 304 Not Modified
+ETag: "abc123"</code></pre>
+
+<h3>307 Temporary Redirect</h3>
+
+<p>
+  Like 302, but guarantees the HTTP method is preserved. If you POST to a URL that redirects with 307, the client must POST to the new URL as well (not convert to GET). Use this for temporary redirects where method preservation matters — for example, redirecting form submissions.
+</p>
+
+<h3>308 Permanent Redirect</h3>
+
+<p>
+  Like 301, but preserves the HTTP method. The permanent equivalent of 307. Use 308 instead of 301 when you need to permanently redirect non-GET requests (such as API endpoints that accept POST or PUT).
+</p>
+
+<p>
+  <strong>Debugging tip for 3xx:</strong> Redirect loops (the browser keeps following redirects endlessly) are a common trap. They usually happen when a 301 is misconfigured to point back to itself, or when HTTP and HTTPS rewrites conflict. Check your <code>Location</code> headers carefully. Also watch for redirect chains longer than 3–4 hops — each hop adds latency.
+</p>
+
+<h2>4xx — Client Errors</h2>
+
+<p>
+  4xx codes mean the client did something wrong — bad input, missing authentication, insufficient permissions, or a resource that doesn't exist. These are the most common errors you'll encounter when building or consuming APIs.
+</p>
+
+<h3>400 Bad Request</h3>
+
+<p>
+  The server could not understand the request due to invalid syntax, missing required fields, or malformed data. This is the generic catch-all for client-side input problems.
+</p>
+
+<pre><code>POST /api/users HTTP/1.1
+Content-Type: application/json
+
+{'{'} "email": "not-an-email", "name": "" {'}'}
+
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{'{'}
+  "error": "Validation failed",
+  "details": [
+    {'{'} "field": "email", "message": "Must be a valid email address" {'}'},
+    {'{'} "field": "name", "message": "Name cannot be empty" {'}'}
+  ]
+{'}'}</code></pre>
+
+<h3>401 Unauthorized</h3>
+
+<p>
+  Despite the name, 401 means <em>unauthenticated</em> — the client has not proved their identity. The server should include a <code>WWW-Authenticate</code> header indicating how to authenticate. Common causes: missing Authorization header, expired JWT token, or invalid API key.
+</p>
+
+<pre><code>GET /api/profile HTTP/1.1
+
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer realm="api"
+Content-Type: application/json
+
+{'{'} "error": "Authentication required" {'}'}</code></pre>
+
+<h3>403 Forbidden</h3>
+
+<p>
+  The client is authenticated but does not have permission to access the resource. Unlike 401, re-authenticating will not help — the identity is known but the action is not allowed. Use 403 when a logged-in user tries to access another user's data, or a regular user tries to access an admin endpoint.
+</p>
+
+<pre><code>GET /api/admin/users HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+
+HTTP/1.1 403 Forbidden
+Content-Type: application/json
+
+{'{'} "error": "Insufficient permissions" {'}'}</code></pre>
+
+<h3>404 Not Found</h3>
+
+<p>
+  The most famous status code. The server cannot find the requested resource. This could mean the URL is wrong, the resource was deleted, or the resource never existed. Note: servers sometimes deliberately return 404 instead of 403 to avoid leaking information about the existence of a resource.
+</p>
+
+<h3>405 Method Not Allowed</h3>
+
+<p>
+  The HTTP method used is not supported for the requested resource. The server must include an <code>Allow</code> header listing the permitted methods. This often happens when you try to POST to a read-only endpoint, or DELETE a resource that doesn't support deletion.
+</p>
+
+<pre><code>DELETE /api/config HTTP/1.1
+
+HTTP/1.1 405 Method Not Allowed
+Allow: GET, PUT</code></pre>
+
+<h3>409 Conflict</h3>
+
+<p>
+  The request conflicts with the current state of the server. Common scenarios: trying to create a resource that already exists (duplicate email, duplicate username), or a version conflict in optimistic locking (you tried to update version 5 of a record but it's now version 6).
+</p>
+
+<pre><code>POST /api/users HTTP/1.1
+Content-Type: application/json
+
+{'{'} "email": "existing@example.com", "name": "Jane" {'}'}
+
+HTTP/1.1 409 Conflict
+Content-Type: application/json
+
+{'{'} "error": "A user with this email already exists" {'}'}</code></pre>
+
+<h3>422 Unprocessable Entity</h3>
+
+<p>
+  The server understands the content type and the syntax is correct, but it was unable to process the contained instructions due to semantic errors. While 400 covers syntax errors, 422 is for semantic validation failures — the JSON is valid, but the data doesn't make business sense. Heavily used in Rails APIs and increasingly in REST APIs generally.
+</p>
+
+<pre><code>POST /api/orders HTTP/1.1
+Content-Type: application/json
+
+{'{'} "quantity": -5, "product_id": 99 {'}'}
+
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/json
+
+{'{'}
+  "error": "Unprocessable entity",
+  "details": [
+    {'{'} "field": "quantity", "message": "Must be greater than 0" {'}'}
+  ]
+{'}'}</code></pre>
+
+<h3>429 Too Many Requests</h3>
+
+<p>
+  The client has sent too many requests in a given time period (rate limiting). The server should include a <code>Retry-After</code> header indicating when the client can try again. If you're hitting 429s in production, you need to implement backoff and retry logic, or request a higher rate limit from the API provider.
+</p>
+
+<pre><code>GET /api/search?q=shoes HTTP/1.1
+
+HTTP/1.1 429 Too Many Requests
+Retry-After: 30
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1711000000
+
+{'{'} "error": "Rate limit exceeded. Try again in 30 seconds." {'}'}</code></pre>
+
+<p>
+  <strong>Debugging tip for 4xx:</strong> Always read the response body — well-designed APIs include a machine-readable error code and a human-readable message explaining what went wrong. A 400 without a body is frustrating to debug. For auth issues, double-check whether the issue is 401 (who are you?) versus 403 (I know who you are, but no). Use <a href="/tools/api-tester">DevToolkit's API Tester</a> to inspect headers and bodies in detail.
+</p>
+
+<h2>5xx — Server Errors</h2>
+
+<p>
+  5xx codes mean the server encountered an error while processing a valid request. The client didn't do anything wrong — the problem is on the server side. These are the errors you need to monitor, alert on, and fix.
+</p>
+
+<h3>500 Internal Server Error</h3>
+
+<p>
+  The generic server error — something went wrong and the server doesn't have a more specific code to describe it. This could be an unhandled exception, a null pointer, a database query that threw an error, or any unexpected condition. Check your server logs immediately when you see 500s.
+</p>
+
+<pre><code>GET /api/report?month=13 HTTP/1.1
+
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+
+{'{'}
+  "error": "Internal server error",
+  "request_id": "req_abc123"
+{'}'}</code></pre>
+
+<p>
+  Good APIs return a <code>request_id</code> or <code>trace_id</code> in 500 responses so you can correlate the client-facing error with a specific log line on the server. Always log the full stack trace server-side, but never expose it to clients.
+</p>
+
+<h3>502 Bad Gateway</h3>
+
+<p>
+  A server acting as a gateway or proxy received an invalid response from an upstream server. In modern architectures with load balancers, reverse proxies (nginx, Caddy), and microservices, 502 usually means one of your backend services crashed or returned garbage. The proxy is fine; the app server behind it is not.
+</p>
+
+<pre><code>GET /api/products HTTP/1.1
+
+HTTP/1.1 502 Bad Gateway
+Content-Type: text/html
+
+&lt;html&gt;&lt;body&gt;502 Bad Gateway&lt;/body&gt;&lt;/html&gt;</code></pre>
+
+<h3>503 Service Unavailable</h3>
+
+<p>
+  The server is temporarily unable to handle the request — usually because it's overloaded or down for maintenance. A <code>Retry-After</code> header should indicate when the service will be available again. Unlike 500 (something broke unexpectedly), 503 is often intentional — returned during rolling deployments or maintenance windows.
+</p>
+
+<pre><code>POST /api/checkout HTTP/1.1
+
+HTTP/1.1 503 Service Unavailable
+Retry-After: 120
+Content-Type: application/json
+
+{'{'} "error": "Service temporarily unavailable. Maintenance in progress." {'}'}</code></pre>
+
+<h3>504 Gateway Timeout</h3>
+
+<p>
+  The gateway or proxy did not receive a timely response from the upstream server. Similar to 502, but specifically about a timeout rather than an invalid response. Common causes: a slow database query holding up a request, a microservice taking too long to respond, or network issues between services. Your upstream service is alive but too slow.
+</p>
+
+<pre><code>GET /api/analytics/report?range=1year HTTP/1.1
+
+HTTP/1.1 504 Gateway Timeout
+Content-Type: application/json
+
+{'{'} "error": "Upstream service timed out" {'}'}</code></pre>
+
+<p>
+  <strong>Debugging tip for 5xx:</strong> 500 means check your app logs. 502 means check if the app server is running. 503 means check load and capacity. 504 means profile your slowest operations and check inter-service timeouts. In all cases, set up alerting so you know about 5xx spikes before users report them. The <code>request_id</code> pattern (return an ID in the 5xx response, log the full context server-side) is the fastest way to trace the root cause.
+</p>
+
+<h2>Choosing the Right Status Code for Your API</h2>
+
+<p>
+  When building your own API, using semantically correct status codes dramatically improves the developer experience for anyone integrating with your service. Here are the key decisions:
+</p>
+
+<h3>Creating Resources</h3>
+
+<ul>
+  <li>Use <strong>201 Created</strong> (not 200) for successful POST requests that create a new resource.</li>
+  <li>Include a <code>Location</code> header pointing to the new resource.</li>
+  <li>Use <strong>409 Conflict</strong> if a duplicate resource already exists.</li>
+</ul>
+
+<h3>Reading Resources</h3>
+
+<ul>
+  <li>Use <strong>200 OK</strong> for successful GET requests.</li>
+  <li>Use <strong>304 Not Modified</strong> to support client-side caching with ETags.</li>
+  <li>Use <strong>404 Not Found</strong> if the resource doesn't exist. Use <strong>403</strong> if it exists but the user can't access it (though 404 is acceptable if you don't want to leak existence).</li>
+</ul>
+
+<h3>Updating Resources</h3>
+
+<ul>
+  <li>Use <strong>200 OK</strong> if you return the updated resource in the response.</li>
+  <li>Use <strong>204 No Content</strong> if you don't return a body.</li>
+  <li>Use <strong>409 Conflict</strong> for optimistic locking failures.</li>
+  <li>Use <strong>422 Unprocessable Entity</strong> for semantic validation failures.</li>
+</ul>
+
+<h3>Deleting Resources</h3>
+
+<ul>
+  <li>Use <strong>204 No Content</strong> for successful deletions.</li>
+  <li>Use <strong>404 Not Found</strong> if the resource doesn't exist (or 204 if you prefer idempotent behavior — deleting something that's already gone is still "success").</li>
+</ul>
+
+<h3>Authentication and Authorization</h3>
+
+<ul>
+  <li>Use <strong>401 Unauthorized</strong> when credentials are missing or invalid — the client needs to authenticate.</li>
+  <li>Use <strong>403 Forbidden</strong> when credentials are valid but permissions are insufficient — the client is authenticated but not authorized.</li>
+</ul>
+
+<h3>Validation Errors</h3>
+
+<ul>
+  <li>Use <strong>400 Bad Request</strong> for malformed syntax, missing required fields, or invalid data types.</li>
+  <li>Use <strong>422 Unprocessable Entity</strong> for syntactically valid but semantically invalid data.</li>
+  <li>Always include a machine-readable error structure in the body — field name, error code, and human-readable message.</li>
+</ul>
+
+<h3>Rate Limiting</h3>
+
+<ul>
+  <li>Use <strong>429 Too Many Requests</strong> with a <code>Retry-After</code> header and rate limit headers (<code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code>, <code>X-RateLimit-Reset</code>).</li>
+</ul>
+
+<h2>A Note on Error Response Bodies</h2>
+
+<p>
+  Status codes tell you the category of the problem. Error response bodies tell you the specifics. For any 4xx or 5xx response, always return a JSON body (for JSON APIs) with at minimum:
+</p>
+
+<ul>
+  <li>A human-readable <code>message</code> or <code>error</code> string.</li>
+  <li>A machine-readable <code>code</code> (e.g., <code>"VALIDATION_ERROR"</code>, <code>"RESOURCE_NOT_FOUND"</code>) so clients can handle specific errors programmatically without parsing strings.</li>
+  <li>For validation errors: a <code>details</code> array listing each field and its problem.</li>
+  <li>For 500s: a <code>request_id</code> for server-side log correlation.</li>
+</ul>
+
+<pre><code>{'{'}
+  "error": "Validation failed",
+  "code": "VALIDATION_ERROR",
+  "request_id": "req_7f3a9c2b",
+  "details": [
+    {'{'}
+      "field": "email",
+      "code": "INVALID_FORMAT",
+      "message": "Must be a valid email address"
+    {'}'}
+  ]
+{'}'}</code></pre>
+
+<h2>Related Guides and Tools</h2>
+
+<p>
+  HTTP status codes are just one part of working with APIs effectively. To go deeper:
+</p>
+
+<ul>
+  <li>Read the <a href="/blog/rest-api-testing-guide">REST API Testing Guide</a> to learn how to test status codes and response bodies systematically.</li>
+  <li>Check out the <a href="/blog/regex-cheat-sheet">Regex Cheat Sheet</a> if you're parsing or validating response data in your tests.</li>
+  <li>Use <a href="/tools/api-tester">DevToolkit's API Tester</a> to send live requests and inspect status codes, headers, and bodies in your browser — no Postman installation needed.</li>
+</ul>
+
+<h2>Try DevToolkit's HTTP Status Codes Reference</h2>
+
+<p>
+  Need to look up a specific code without digging through RFCs? <a href="/tools/http-status-codes">DevToolkit's HTTP Status Codes tool</a> gives you an instant, searchable reference for every standard status code — with descriptions, typical use cases, and which RFC defines it. Bookmark it, and the next time a 422 shows up in your logs you'll have the answer in seconds.
+</p>
+
+</BlogLayout>

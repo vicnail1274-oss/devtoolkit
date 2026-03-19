@@ -1,0 +1,308 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const jsonExample = `{
+  "name": "my-app",
+  "version": "2.1.0",
+  "dependencies": {
+    "express": "^4.18.0",
+    "lodash": "^4.17.21"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest --coverage"
+  },
+  "production": true,
+  "port": 3000
+}`;
+
+const yamlExample = `# Application configuration
+name: my-app
+version: "2.1.0"
+
+dependencies:
+  express: "^4.18.0"
+  lodash: "^4.17.21"
+
+scripts:
+  start: node server.js
+  test: jest --coverage
+
+production: true
+port: 3000`;
+
+const tomlExample = `# Application configuration
+name = "my-app"
+version = "2.1.0"
+production = true
+port = 3000
+
+[dependencies]
+express = "^4.18.0"
+lodash = "^4.17.21"
+
+[scripts]
+start = "node server.js"
+test = "jest --coverage"`;
+---
+
+<BlogLayout
+  title="JSON vs YAML vs TOML: Complete Comparison Guide"
+  description="An in-depth comparison of JSON, YAML, and TOML configuration formats — syntax, use cases, strengths, and when to use each."
+  slug="json-vs-yaml-vs-toml"
+  publishDate="2026-03-18"
+  readTime="12 min read"
+>
+
+<p>
+  If you've worked on any modern software project, you've dealt with configuration files. And at some point, you've had to choose between JSON, YAML, and TOML — or been confused by a project that uses all three. Each format has distinct strengths, weaknesses, and ideal use cases.
+</p>
+
+<p>
+  This guide gives you a comprehensive comparison so you can make the right choice for your project. We'll cover syntax, readability, ecosystem support, common pitfalls, and real-world recommendations.
+</p>
+
+<h2>Quick Overview</h2>
+
+<p>
+  Before diving deep, here's the 30-second summary:
+</p>
+
+<ul>
+  <li><strong>JSON</strong> — The universal data interchange format. Strict syntax, no comments, excellent tooling. Best for APIs and machine-generated config.</li>
+  <li><strong>YAML</strong> — Human-friendly, uses indentation for structure. Supports comments. Best for complex configs like Kubernetes manifests and CI/CD pipelines.</li>
+  <li><strong>TOML</strong> — Minimal and obvious. INI-like syntax with strong typing. Best for application config files (think <code>pyproject.toml</code>, <code>Cargo.toml</code>).</li>
+</ul>
+
+<h2>JSON: The Universal Standard</h2>
+
+<h3>Syntax</h3>
+
+<p>
+  JSON (JavaScript Object Notation) was formalized by Douglas Crockford in the early 2000s. Its syntax is a subset of JavaScript object literals:
+</p>
+
+<pre><code set:html={jsonExample} /></pre>
+
+<p>
+  Key syntax rules: double-quoted strings only (no single quotes), no trailing commas, no comments, no multiline strings. Objects use curly braces, arrays use square brackets. Values can be strings, numbers, booleans, null, objects, or arrays.
+</p>
+
+<h3>Strengths</h3>
+
+<ul>
+  <li><strong>Universal parsing</strong> — Every programming language has a JSON parser. It's the one format you can always rely on.</li>
+  <li><strong>Strict and unambiguous</strong> — There's exactly one way to represent data in JSON. No implicit type coercion, no surprising edge cases.</li>
+  <li><strong>Excellent tooling</strong> — JSON Schema for validation, JSONPath for querying, JSON Patch for diffs. The ecosystem is massive.</li>
+  <li><strong>API standard</strong> — REST APIs overwhelmingly use JSON. It's the default for fetch, axios, and every HTTP client.</li>
+</ul>
+
+<h3>Weaknesses</h3>
+
+<ul>
+  <li><strong>No comments</strong> — This is JSON's biggest pain point for configuration files. You can't document why a setting exists.</li>
+  <li><strong>Verbose</strong> — All those quotes and braces add up. Deeply nested JSON becomes hard to scan.</li>
+  <li><strong>No multiline strings</strong> — Long strings must be on a single line or split into arrays.</li>
+  <li><strong>No trailing commas</strong> — Adding a new item to the end of a list always requires editing the previous line too, making diffs noisier.</li>
+</ul>
+
+<h3>Best for</h3>
+
+<p>
+  API responses, <code>package.json</code>, <code>tsconfig.json</code>, machine-generated configuration, data interchange between services, any context where strictness and universal parsing matter more than human readability.
+</p>
+
+<p>
+  Need to format or validate JSON? Our <a href="/tools/json-formatter">JSON Formatter & Validator</a> handles both with syntax highlighting and error detection.
+</p>
+
+<h2>YAML: Human-Friendly Configuration</h2>
+
+<h3>Syntax</h3>
+
+<p>
+  YAML (YAML Ain't Markup Language) uses indentation instead of braces to denote structure. Here's the same config in YAML:
+</p>
+
+<pre><code set:html={yamlExample} /></pre>
+
+<p>
+  YAML supports comments (with <code>#</code>), multiline strings (using <code>|</code> for literal blocks or <code>&gt;</code> for folded blocks), anchors and aliases for reuse, and multiple documents in one file (separated by <code>---</code>).
+</p>
+
+<h3>Strengths</h3>
+
+<ul>
+  <li><strong>Human-readable</strong> — YAML is genuinely easier to read than JSON for complex configurations. The lack of braces and quotes reduces visual noise.</li>
+  <li><strong>Comments</strong> — You can document every setting inline. This alone makes YAML superior for configuration files that humans maintain.</li>
+  <li><strong>Multiline strings</strong> — Perfect for embedding scripts, SQL queries, or documentation within config files.</li>
+  <li><strong>Anchors and aliases</strong> — DRY (Don't Repeat Yourself) for config. Define a value once, reference it everywhere.</li>
+  <li><strong>Ecosystem dominance in DevOps</strong> — Kubernetes, Docker Compose, GitHub Actions, Ansible, Helm, CloudFormation — the DevOps world runs on YAML.</li>
+</ul>
+
+<h3>Weaknesses</h3>
+
+<ul>
+  <li><strong>Indentation sensitivity</strong> — A single misplaced space can change the meaning of your config or cause a parse error. Tabs are not allowed (spaces only).</li>
+  <li><strong>Implicit type coercion</strong> — This is YAML's most dangerous feature. The string <code>no</code> becomes boolean <code>false</code>. The string <code>1.0</code> becomes a float. Country codes like <code>NO</code> (Norway) become <code>false</code>. Always quote strings to be safe.</li>
+  <li><strong>Complex spec</strong> — The YAML specification is 80+ pages. Most developers use a small subset, but the full spec includes features like custom tags and complex mappings that create surprising behavior.</li>
+  <li><strong>Security concerns</strong> — YAML deserializers in some languages (Python's <code>yaml.load()</code>, Ruby's <code>YAML.load()</code>) can execute arbitrary code. Always use safe loading functions.</li>
+  <li><strong>Multiple valid representations</strong> — The same data can be written many different ways in YAML, leading to inconsistent codebases.</li>
+</ul>
+
+<h3>Best for</h3>
+
+<p>
+  Kubernetes manifests, CI/CD pipelines (GitHub Actions, GitLab CI), Docker Compose, Ansible playbooks, any DevOps configuration, and complex nested configurations that benefit from comments and readability.
+</p>
+
+<p>
+  Working with YAML and JSON? Our <a href="/tools/yaml-to-json">YAML to JSON Converter</a> handles bidirectional conversion instantly.
+</p>
+
+<h2>TOML: Obvious Configuration</h2>
+
+<h3>Syntax</h3>
+
+<p>
+  TOML (Tom's Obvious, Minimal Language) was created by Tom Preston-Werner, co-founder of GitHub. It's designed to be a minimal config file format that's easy to read due to obvious semantics:
+</p>
+
+<pre><code set:html={tomlExample} /></pre>
+
+<p>
+  TOML looks like an enhanced INI file. It uses <code>[sections]</code> for tables (objects), <code>key = value</code> for assignments, supports comments with <code>#</code>, and has strong native types: strings, integers, floats, booleans, dates, times, and arrays.
+</p>
+
+<h3>Strengths</h3>
+
+<ul>
+  <li><strong>Obvious semantics</strong> — TOML is designed so that every piece of data maps to a hash table unambiguously. There's no implicit type coercion (unlike YAML).</li>
+  <li><strong>Strong typing</strong> — Integers, floats, booleans, datetime, and strings are all distinct types. <code>port = 3000</code> is always an integer, <code>name = "app"</code> is always a string.</li>
+  <li><strong>Comments</strong> — Full-line and inline comments with <code>#</code>.</li>
+  <li><strong>Familiar syntax</strong> — Anyone who's edited an INI file or <code>.gitconfig</code> will immediately understand TOML.</li>
+  <li><strong>Native datetime support</strong> — TOML natively supports RFC 3339 dates: <code>created = 2026-03-18T10:30:00Z</code>. No quoting needed.</li>
+  <li><strong>Growing adoption</strong> — Python (<code>pyproject.toml</code>), Rust (<code>Cargo.toml</code>), Hugo, and many modern tools use TOML as their config format.</li>
+</ul>
+
+<h3>Weaknesses</h3>
+
+<ul>
+  <li><strong>Deeply nested structures are awkward</strong> — TOML excels at flat or moderately nested data, but 4+ levels of nesting becomes verbose with repeated section headers like <code>[servers.alpha.network.firewall]</code>.</li>
+  <li><strong>Smaller ecosystem</strong> — Fewer parsers, fewer validators, and less tooling compared to JSON and YAML.</li>
+  <li><strong>Less adoption in DevOps</strong> — Kubernetes, Docker, and most CI/CD tools use YAML. TOML is not a drop-in replacement in these ecosystems.</li>
+  <li><strong>Array of tables syntax</strong> — The <code>[[array.of.tables]]</code> syntax is powerful but not immediately intuitive for newcomers.</li>
+</ul>
+
+<h3>Best for</h3>
+
+<p>
+  Application configuration files, project metadata (<code>pyproject.toml</code>, <code>Cargo.toml</code>), settings that are mostly flat or one level deep, and any context where you want explicit typing and no nasty surprises.
+</p>
+
+<h2>Head-to-Head Comparison</h2>
+
+<h3>Readability</h3>
+
+<p>
+  For flat configuration: <strong>TOML &gt; YAML &gt; JSON</strong>. TOML's key-value pairs are the cleanest. For deeply nested data: <strong>YAML &gt; JSON &gt; TOML</strong>. YAML's indentation handles nesting naturally, while TOML gets verbose.
+</p>
+
+<h3>Safety</h3>
+
+<p>
+  <strong>TOML &gt; JSON &gt; YAML</strong>. TOML and JSON are both unambiguous. YAML's implicit type coercion is a well-documented source of bugs. The infamous "Norway problem" (where <code>NO</code> is parsed as boolean <code>false</code>) has bitten countless projects.
+</p>
+
+<h3>Tooling and Ecosystem</h3>
+
+<p>
+  <strong>JSON &gt; YAML &gt; TOML</strong>. JSON has the most mature ecosystem by far — schema validation, query languages, diff tools, and universal parser support. YAML has strong DevOps tooling. TOML's ecosystem is growing but smaller.
+</p>
+
+<h3>Comments</h3>
+
+<p>
+  <strong>YAML = TOML &gt; JSON</strong>. Both YAML and TOML support comments. JSON does not. This single feature often disqualifies JSON for human-maintained configuration files.
+</p>
+
+<h3>Type Safety</h3>
+
+<p>
+  <strong>TOML &gt; JSON &gt; YAML</strong>. TOML has the strongest type system with native dates and distinct integer/float types. JSON is strict but limited (no date type, no integer/float distinction). YAML's implicit coercion makes it the least type-safe.
+</p>
+
+<h2>When to Use Which Format</h2>
+
+<h3>Use JSON when:</h3>
+<ul>
+  <li>Building or consuming REST APIs</li>
+  <li>The config is generated by a tool, not written by hand</li>
+  <li>You need maximum interoperability across languages and tools</li>
+  <li>Schema validation is important (JSON Schema is excellent)</li>
+  <li>The file is <code>package.json</code>, <code>tsconfig.json</code>, or similar ecosystem standards</li>
+</ul>
+
+<h3>Use YAML when:</h3>
+<ul>
+  <li>Working with Kubernetes, Docker Compose, or CI/CD pipelines</li>
+  <li>The configuration is deeply nested (3+ levels)</li>
+  <li>You need comments to document settings</li>
+  <li>Multiline strings are common (embedded scripts, templates)</li>
+  <li>The ecosystem requires it (DevOps tooling)</li>
+</ul>
+
+<h3>Use TOML when:</h3>
+<ul>
+  <li>Writing application configuration files</li>
+  <li>The structure is mostly flat (1-2 levels of nesting)</li>
+  <li>Type safety matters (dates, integers vs floats)</li>
+  <li>You want an INI-like format with modern features</li>
+  <li>The ecosystem supports it (Python, Rust, Hugo)</li>
+</ul>
+
+<h2>Common Pitfalls and How to Avoid Them</h2>
+
+<h3>JSON Pitfall: Trailing Commas</h3>
+
+<p>
+  Every developer has been burned by a trailing comma in JSON. Your editor might not flag it, but the parser will reject it. Use a JSON validator (like our <a href="/tools/json-formatter">JSON Formatter</a>) to catch these instantly.
+</p>
+
+<h3>YAML Pitfall: Implicit Type Coercion</h3>
+
+<p>
+  Always quote strings in YAML when the value could be interpreted as another type. <code>version: 1.0</code> becomes a float; <code>version: "1.0"</code> stays a string. <code>country: NO</code> becomes <code>false</code>; <code>country: "NO"</code> stays a string.
+</p>
+
+<h3>TOML Pitfall: Array of Tables</h3>
+
+<p>
+  The double-bracket syntax <code>[[products]]</code> creates an array of objects. It's powerful but can confuse newcomers. Remember: single brackets <code>[table]</code> create an object, double brackets <code>[[array]]</code> create an array entry.
+</p>
+
+<h2>The Future: What's Changing?</h2>
+
+<p>
+  JSON continues to dominate data interchange. JSON5 and JSONC (JSON with Comments) are gaining traction as alternatives that add comments and trailing commas while maintaining JSON's strictness. YAML 1.2 addressed some type coercion issues but adoption is slow. TOML is steadily growing, especially in the Python and Rust ecosystems.
+</p>
+
+<p>
+  The trend is clear: projects are becoming more deliberate about format choice instead of defaulting to JSON for everything. Choose the right format for each use case, and your team will thank you.
+</p>
+
+<h2>Conclusion</h2>
+
+<p>
+  There's no single "best" format — each excels in different contexts. JSON is the universal standard for data interchange. YAML is the DevOps default for complex, commented configuration. TOML is the cleanest choice for application settings.
+</p>
+
+<p>
+  The best approach is to use what your ecosystem expects: <code>package.json</code> for Node.js, <code>pyproject.toml</code> for Python, YAML for Kubernetes. When you have a genuine choice, optimize for the people who will maintain the file — not the machines that parse it.
+</p>
+
+<p>
+  Need to convert between formats? Try our <a href="/tools/yaml-to-json">YAML to JSON Converter</a> or validate your JSON with our <a href="/tools/json-formatter">JSON Formatter & Validator</a>.
+</p>
+
+</BlogLayout>

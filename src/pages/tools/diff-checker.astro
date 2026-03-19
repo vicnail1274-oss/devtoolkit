@@ -1,0 +1,73 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import DiffChecker from '../../components/tools/DiffChecker';
+
+const faq = [
+  { question: "How does the diff checker work?", answer: "Paste two versions of text into the left and right panels. The tool compares them line by line and highlights additions (green), deletions (red), and modifications so you can quickly see what changed." },
+  { question: "Can I compare code files?", answer: "Yes. The diff checker works with any text including source code, configuration files, JSON, CSV, and plain text. It preserves formatting and handles large files efficiently." },
+  { question: "Is my data private?", answer: "Yes. All comparison runs entirely in your browser. No data is sent to any server, making it safe for comparing sensitive code or configuration files." },
+  { question: "What diff algorithm is used?", answer: "The tool uses a line-by-line comparison algorithm similar to Unix diff. It identifies the minimum set of changes needed to transform one text into the other." },
+];
+---
+
+<ToolLayout
+  title="Diff Checker"
+  description="Compare two texts and highlight differences line by line online for free"
+  slug="diff-checker"
+  toolName="Diff Checker"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Diff Checker
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Compare two texts and instantly see the differences highlighted. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <DiffChecker client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Line-by-Line Diff</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        See additions, removals, and unchanged lines with clear color coding and line numbers.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your data never leaves your browser. No tracking, no cookies, no server-side processing.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Swap & Compare</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Easily swap original and modified text to view differences from either direction.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

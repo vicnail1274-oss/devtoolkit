@@ -1,0 +1,96 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import GitHubReadmeGenerator from '../../components/tools/GitHubReadmeGenerator';
+
+const faq = [
+  { question: "What is a GitHub profile README?", answer: "A GitHub profile README is a special repository (named after your username) that displays on your GitHub profile page. It lets you showcase your skills, projects, stats, and social links to visitors." },
+  { question: "How do I set up my profile README?", answer: "Create a new repository with the same name as your GitHub username. Add a README.md file — its content will appear on your profile. Use this generator to create the content, then paste it into your README.md." },
+  { question: "What badges and stats can I include?", answer: "The generator supports technology skill badges, GitHub stats cards (commits, PRs, streak), social media links, and custom sections for your bio, current work, and projects." },
+  { question: "Can I customize the generated README?", answer: "Yes. The generator creates markdown that you can freely edit. Add, remove, or rearrange any section. The output is standard markdown compatible with GitHub." },
+];
+---
+
+<ToolLayout
+  title="GitHub Profile README Generator"
+  description="Create a stunning GitHub profile README with badges, stats, and skills. Free online generator."
+  slug="github-readme-generator"
+  toolName="GitHub Profile README Generator"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      GitHub Profile README Generator
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Create a professional GitHub profile README in seconds. Choose a template, add your skills, connect your stats, and copy the markdown. Everything runs in your browser.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <GitHubReadmeGenerator client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">3 Templates</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Choose from Minimal, Banner, or Centered layouts. Each template generates clean, well-structured markdown.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">50+ Skill Badges</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Pick from 50+ technology badges powered by shields.io. Languages, frameworks, databases, and DevOps tools.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">GitHub Stats Widgets</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Add GitHub stats, streak counters, top languages, trophies, and visitor badges automatically.
+      </p>
+    </div>
+  </div>
+
+  <!-- How to Use -->
+  <div class="mt-12 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 sm:p-8">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">How to Use</h2>
+    <ol class="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+      <li class="flex items-start gap-3">
+        <span class="flex-shrink-0 w-6 h-6 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+        <span>Fill in your profile details — name, bio, what you're working on, and social links.</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="flex-shrink-0 w-6 h-6 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+        <span>Select your tech stack badges from 50+ options across languages, frameworks, and tools.</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="flex-shrink-0 w-6 h-6 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+        <span>Choose which GitHub stat widgets to include (stats card, streak, top languages, trophies).</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="flex-shrink-0 w-6 h-6 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full flex items-center justify-center text-xs font-bold">4</span>
+        <span>Click "Copy Markdown" and paste it into your <code class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">username/username</code> repository's README.md file.</span>
+      </li>
+    </ol>
+  </div>
+</ToolLayout>

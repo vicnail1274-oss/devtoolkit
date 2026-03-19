@@ -1,0 +1,91 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+
+const entries = [
+  {
+    date: 'March 19, 2026',
+    title: 'Content & Engagement Expansion',
+    changes: [
+      'Added comparison articles (DevToolkit vs Postman, DevToolkit vs CodePen, and more)',
+      'Published listicle-style blog posts for SEO and discovery',
+      'Launched embeddable widget system — embed any tool via iframe',
+      'Created social sharing templates for Twitter, LinkedIn, and Reddit',
+    ],
+  },
+  {
+    date: 'March 18, 2026',
+    title: 'Pro Launch & Blog',
+    changes: [
+      'Launched Stripe-powered Pro subscription at $9.99/mo with 7-day free trial',
+      'Added 3 AI-powered tools: Code Review, Doc Generator, SQL Builder',
+      'Launched Blog section with 8 in-depth developer articles',
+      'Integrated email capture popup and newsletter signup flow',
+    ],
+  },
+  {
+    date: 'March 17, 2026',
+    title: 'Initial Launch',
+    changes: [
+      'Released 20+ free developer tools covering JSON, Base64, Regex, UUID, hashing, and more',
+      'Integrated Google Analytics (GA4) for usage tracking',
+      'Full SEO optimization: meta tags, Open Graph, JSON-LD structured data, sitemap',
+      'Dark mode support with system preference detection',
+    ],
+  },
+];
+---
+
+<ToolLayout title="Changelog" description="What's new in DevToolkit. Latest updates, new tools, and improvements.">
+  <!-- Hero -->
+  <div class="text-center mb-12">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+      Changelog
+    </h1>
+    <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+      What's new in DevToolkit. Latest updates, new tools, and improvements.
+    </p>
+  </div>
+
+  <!-- Timeline -->
+  <div class="max-w-3xl mx-auto space-y-8">
+    {entries.map((entry) => (
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{entry.title}</h2>
+          <span class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 whitespace-nowrap">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {entry.date}
+          </span>
+        </div>
+        <div class="p-6">
+          <ul class="space-y-3">
+            {entry.changes.map((change) => (
+              <li class="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">
+                <svg class="w-5 h-5 text-green-500 dark:text-green-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {change}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Bottom CTA -->
+  <div class="mt-12 text-center">
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Want to stay updated on new tools and features?</p>
+    <a
+      href="/newsletter"
+      class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      Subscribe to Newsletter
+    </a>
+  </div>
+</ToolLayout>

@@ -1,0 +1,200 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="A Developer Guide to JSON Formatting and Validation"
+  description="Everything you need to know about JSON formatting, validation, common errors, and best practices for working with JSON data."
+  slug="guide-to-json-formatting-and-validation"
+  publishDate="2026-03-18"
+  readTime="9 min read"
+>
+
+<p>
+  JSON (JavaScript Object Notation) is the most widely used data format on the web. Every REST API, every configuration file, every data pipeline touches JSON at some point. Yet developers routinely lose time to formatting issues, validation errors, and syntax mistakes that are easy to avoid.
+</p>
+
+<p>
+  This guide covers everything you need to know about working with JSON effectively — from common errors to validation best practices.
+</p>
+
+<h2>JSON Syntax Rules (The Complete List)</h2>
+
+<p>
+  JSON's syntax is intentionally minimal. Here are all the rules:
+</p>
+
+<ul>
+  <li><strong>Strings</strong> must use double quotes (<code>"</code>), never single quotes</li>
+  <li><strong>Keys</strong> must be strings (double-quoted)</li>
+  <li><strong>Values</strong> can be: string, number, boolean (<code>true</code>/<code>false</code>), <code>null</code>, object, or array</li>
+  <li><strong>No trailing commas</strong> — the last item in an object or array must not have a comma after it</li>
+  <li><strong>No comments</strong> — <code>//</code> and <code>/* */</code> are not valid JSON</li>
+  <li><strong>No undefined</strong> — use <code>null</code> instead</li>
+  <li><strong>Numbers</strong> cannot have leading zeros (except <code>0</code> itself) or trailing decimal points</li>
+  <li><strong>No hex numbers</strong> — <code>0xFF</code> is not valid JSON</li>
+  <li><strong>No single-line strings with newlines</strong> — use <code>\n</code> for newlines inside strings</li>
+</ul>
+
+<h2>The 5 Most Common JSON Errors</h2>
+
+<h3>1. Trailing Commas</h3>
+
+<pre><code>// INVALID — trailing comma after "age"
+{'{'}
+  "name": "Alice",
+  "age": 30,
+{'}'}</code></pre>
+
+<p>
+  This is valid JavaScript but invalid JSON. Remove the comma after the last property. Every JSON parser will reject this.
+</p>
+
+<h3>2. Single Quotes</h3>
+
+<pre><code>// INVALID — single quotes
+{'{'} 'name': 'Alice' {'}'}</code></pre>
+
+<p>
+  JSON requires double quotes for all strings and keys. No exceptions.
+</p>
+
+<h3>3. Unquoted Keys</h3>
+
+<pre><code>// INVALID — unquoted key
+{'{'} name: "Alice" {'}'}</code></pre>
+
+<p>
+  Every key must be a double-quoted string, even if it's a simple identifier.
+</p>
+
+<h3>4. Comments</h3>
+
+<pre><code>// INVALID — comments not allowed
+{'{'}
+  "name": "Alice", // user's name
+  "age": 30
+{'}'}</code></pre>
+
+<p>
+  JSON does not support comments. If you need comments in config files, consider JSONC (JSON with Comments) or switch to YAML/TOML. Read our <a href="/blog/json-vs-yaml-vs-toml">JSON vs YAML vs TOML comparison</a> for guidance.
+</p>
+
+<h3>5. Missing Quotes Around String Values</h3>
+
+<pre><code>// INVALID — unquoted string value
+{'{'} "status": active {'}'}</code></pre>
+
+<p>
+  String values must be quoted: <code>"status": "active"</code>. Without quotes, the parser interprets <code>active</code> as an undefined identifier.
+</p>
+
+<h2>JSON Formatting Best Practices</h2>
+
+<h3>Use 2-Space Indentation</h3>
+
+<p>
+  The JavaScript ecosystem has standardized on 2-space indentation for JSON. It's compact enough to keep deeply nested structures readable:
+</p>
+
+<pre><code>JSON.stringify(data, null, 2)</code></pre>
+
+<h3>Keep Keys Consistent</h3>
+
+<p>
+  Pick one naming convention for keys and stick with it. <code>camelCase</code> is standard in JavaScript APIs. <code>snake_case</code> is common in Python and Ruby APIs. Mixing conventions makes code harder to work with.
+</p>
+
+<h3>Sort Keys for Diffs</h3>
+
+<p>
+  When JSON files are committed to version control, sorted keys produce cleaner diffs:
+</p>
+
+<pre><code>JSON.stringify(data, null, 2) // unsorted — key order depends on insertion
+JSON.stringify(data, Object.keys(data).sort(), 2) // sorted — stable diffs</code></pre>
+
+<h3>Minify for Production</h3>
+
+<p>
+  Remove whitespace from JSON in API responses to reduce payload size. A typical JSON response is 30-50% smaller when minified:
+</p>
+
+<pre><code>JSON.stringify(data) // minified — no whitespace</code></pre>
+
+<p>
+  Use our <a href="/tools/json-formatter">JSON Formatter</a> to switch between formatted and minified views instantly.
+</p>
+
+<h2>JSON Validation Methods</h2>
+
+<h3>Online Validators</h3>
+
+<p>
+  For quick checks, paste your JSON into an online validator. Our <a href="/tools/json-formatter">JSON Formatter & Validator</a> highlights syntax errors with line numbers and runs entirely in your browser — your data stays private.
+</p>
+
+<h3>JSON Schema</h3>
+
+<p>
+  For API contracts and configuration validation, JSON Schema is the standard. It defines the expected structure, types, and constraints:
+</p>
+
+<pre><code>{'{'}
+  "type": "object",
+  "required": ["name", "email"],
+  "properties": {'{'}
+    "name": {'{'} "type": "string", "minLength": 1 {'}'},
+    "email": {'{'} "type": "string", "format": "email" {'}'},
+    "age": {'{'} "type": "integer", "minimum": 0 {'}'}
+  {'}'}
+{'}'}</code></pre>
+
+<p>
+  Libraries like Ajv (JavaScript), jsonschema (Python), and many others validate data against JSON Schema at runtime.
+</p>
+
+<h3>TypeScript Type Guards</h3>
+
+<p>
+  In TypeScript projects, use type guards or libraries like Zod to validate JSON at runtime while maintaining type safety:
+</p>
+
+<pre><code>import {'{'} z {'}'} from 'zod';
+
+const UserSchema = z.object({'{'}
+  name: z.string(),
+  email: z.string().email(),
+  age: z.number().int().positive().optional(),
+{'}'});
+
+const user = UserSchema.parse(jsonData); // throws if invalid</code></pre>
+
+<h2>Working with Large JSON</h2>
+
+<ul>
+  <li><strong>Streaming parsers</strong> — for files too large to fit in memory, use streaming JSON parsers like <code>JSONStream</code> (Node.js) or <code>ijson</code> (Python)</li>
+  <li><strong>JSON Lines (JSONL)</strong> — for datasets, use one JSON object per line instead of a giant array. This enables line-by-line processing.</li>
+  <li><strong>jq for CLI</strong> — the <code>jq</code> command-line tool is indispensable for filtering, transforming, and extracting data from JSON files</li>
+</ul>
+
+<h2>JSON Alternatives</h2>
+
+<p>
+  JSON isn't always the best choice:
+</p>
+
+<ul>
+  <li><strong>MessagePack / CBOR</strong> — binary JSON formats, 20-50% smaller, faster to parse</li>
+  <li><strong>Protocol Buffers</strong> — Google's binary format with schema enforcement. Used by gRPC.</li>
+  <li><strong>YAML / TOML</strong> — for human-edited configuration files where comments matter</li>
+  <li><strong>CSV</strong> — for tabular data, CSV is simpler and more compact. Use our <a href="/tools/json-to-csv">JSON to CSV Converter</a> to switch between formats.</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>
+  JSON's simplicity is its greatest strength. Master the syntax rules, validate early, and choose the right tool for each job. For quick formatting and validation, our <a href="/tools/json-formatter">JSON Formatter & Validator</a> is always one click away.
+</p>
+
+</BlogLayout>

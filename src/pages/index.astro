@@ -1,0 +1,305 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import ToolCard from '../components/ToolCard.astro';
+import { freeTools, proTools, categories } from '../data/tools';
+
+const displayCategories = categories.filter(c => c !== 'All');
+
+// Featured tools (most popular / high-value)
+const featuredSlugs = ['json-formatter', 'regex-tester', 'jwt-decoder', 'base64', 'cron-generator', 'password-generator'];
+const featuredTools = featuredSlugs.map(s => freeTools.find(t => t.slug === s)).filter(Boolean);
+
+// New tools (recently added)
+const newSlugs = ['code-screenshot', 'og-image-preview', 'meta-tag-generator', 'favicon-generator', 'github-readme-generator', 'color-palette-generator'];
+const newTools = newSlugs.map(s => freeTools.find(t => t.slug === s)).filter(Boolean);
+
+// Recommended (editor picks for typical workflow)
+const recommendedSlugs = ['api-tester', 'diff-checker', 'markdown-preview-editor', 'json-schema-generator', 'sql-formatter', 'qr-code-generator'];
+const recommendedTools = recommendedSlugs.map(s => freeTools.find(t => t.slug === s)).filter(Boolean);
+---
+
+<ToolLayout title="Free Developer Tools" description="Free online developer tools for AI/LLM engineers. No signup required.">
+  <!-- Hero Section -->
+  <div class="text-center mb-14">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-sm font-medium mb-6">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+      </span>
+      {freeTools.length}+ Free Tools &middot; No Signup Required
+    </div>
+    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-5 leading-tight">
+      <span class="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+        Developer Tools
+      </span>
+      <br />
+      <span class="text-gray-900 dark:text-gray-100">That Just Work</span>
+    </h1>
+    <p class="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-8">
+      Free, fast, and privacy-friendly tools for developers and AI engineers.
+      No signup, no tracking &mdash; everything runs in your browser.
+    </p>
+    <div class="flex flex-wrap justify-center gap-6 text-sm text-gray-500 dark:text-gray-400 mb-8">
+      <span class="flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        100% Free
+      </span>
+      <span class="flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        No Account Needed
+      </span>
+      <span class="flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        Runs In Your Browser
+      </span>
+      <span class="flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        Open Source
+      </span>
+    </div>
+    <!-- CTA -->
+    <a href="#all-tools" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-xl transition-colors duration-200 shadow-lg shadow-primary-600/25">
+      Browse All Tools
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+    </a>
+  </div>
+
+  <!-- Featured Tools -->
+  <div class="mb-14">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        <span class="text-sm font-semibold">Featured</span>
+      </div>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Most Popular</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {featuredTools.map((tool) => (
+        <ToolCard {...tool} />
+      ))}
+    </div>
+  </div>
+
+  <!-- New Tools -->
+  <div class="mb-14">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        <span class="text-sm font-semibold">New</span>
+      </div>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Recently Added</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {newTools.map((tool) => (
+        <ToolCard {...tool} />
+      ))}
+    </div>
+  </div>
+
+  <!-- Recommended Tools -->
+  <div class="mb-14">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-sm font-semibold">Recommended</span>
+      </div>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Editor's Picks</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {recommendedTools.map((tool) => (
+        <ToolCard {...tool} />
+      ))}
+    </div>
+  </div>
+
+  <!-- All Tools Section -->
+  <div id="all-tools" class="pt-8 border-t border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">All Tools</h2>
+      <span class="text-sm text-gray-400 dark:text-gray-500" id="tool-count-label">
+        <span id="tool-count">{freeTools.length}</span> tools
+      </span>
+    </div>
+
+    <!-- Search -->
+    <div class="max-w-xl mx-auto mb-6">
+      <div class="relative">
+        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          type="text"
+          id="tool-search"
+          placeholder="Search tools... (e.g. JSON, regex, hash)"
+          class="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200"
+        />
+      </div>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="flex flex-wrap justify-center gap-2 mb-10" id="category-filter">
+      <button
+        data-category="All"
+        class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-primary-600 text-white"
+      >
+        All
+      </button>
+      {displayCategories.map((cat) => (
+        <button
+          data-category={cat}
+          class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          {cat}
+        </button>
+      ))}
+    </div>
+
+    <!-- Tool Grid -->
+    <div id="tool-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {freeTools.map((tool) => (
+        <div class="tool-item" data-title={tool.title.toLowerCase()} data-description={tool.description.toLowerCase()} data-category={tool.category}>
+          <ToolCard {...tool} />
+        </div>
+      ))}
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden text-center py-16">
+      <p class="text-gray-400 dark:text-gray-500 text-lg">No tools found matching your search.</p>
+    </div>
+  </div>
+
+  <!-- Pro AI Tools Section -->
+  <div class="mt-16 pt-12 border-t border-gray-200 dark:border-gray-700">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 text-sm font-medium mb-4">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        PRO
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-bold mb-3">
+        <span class="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+          AI-Powered Tools
+        </span>
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+        Supercharge your workflow with AI. Code review, documentation, and SQL — all powered by advanced language models.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+      {proTools.map((tool) => (
+        <a
+          href={tool.href}
+          class="group relative block bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-lg border border-primary-200 dark:border-primary-800 p-6 transition-all duration-200 hover:-translate-y-1"
+        >
+          <div class="absolute top-3 right-3">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 text-white text-xs font-bold">
+              PRO
+            </span>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-12 h-12 bg-primary-50 dark:bg-primary-950 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-200">
+              {tool.icon}
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 truncate">
+                {tool.title}
+              </h3>
+              <span class="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400 mb-2">
+                {tool.category}
+              </span>
+              <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                {tool.description}
+              </p>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+    <div class="text-center mt-6">
+      <a href="/pricing" data-track-cta="hero-start-free-trial" class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-xl transition-colors duration-200">
+        Start Free Trial — $9.99/mo
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Premium Products Section -->
+  <div class="mt-16 pt-12 border-t border-gray-200 dark:border-gray-700">
+    <div class="text-center mb-8">
+      <h2 class="text-2xl sm:text-3xl font-bold mb-3">
+        <span class="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+          Premium Products
+        </span>
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+        Level up your workflow with our curated developer resources.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+      <a href="https://vicnail.gumroad.com/l/dev-productivity-bundle" target="_blank" rel="noopener" class="group block p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-amber-400 dark:hover:border-amber-500 transition-all duration-200 hover:shadow-lg">
+        <div class="text-2xl mb-3">&#x1F6E0;</div>
+        <h3 class="font-semibold text-lg mb-1 group-hover:text-amber-500 transition-colors">Developer Productivity Bundle</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Battle-tested scripts, CLI tools, and workflow templates to ship faster.</p>
+        <span class="inline-block text-sm font-bold text-amber-500">$29</span>
+      </a>
+      <a href="https://vicnail.gumroad.com/l/ai-prompt-toolkit" target="_blank" rel="noopener" class="group block p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-amber-400 dark:hover:border-amber-500 transition-all duration-200 hover:shadow-lg">
+        <div class="text-2xl mb-3">&#x1F9E0;</div>
+        <h3 class="font-semibold text-lg mb-1 group-hover:text-amber-500 transition-colors">AI Prompt Engineering Toolkit</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Master LLM interactions with 16 curated prompt templates and API code.</p>
+        <span class="inline-block text-sm font-bold text-amber-500">$19</span>
+      </a>
+      <a href="https://vicnail.gumroad.com/l/fullstack-boilerplate" target="_blank" rel="noopener" class="group block p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-amber-400 dark:hover:border-amber-500 transition-all duration-200 hover:shadow-lg">
+        <div class="text-2xl mb-3">&#x1F680;</div>
+        <h3 class="font-semibold text-lg mb-1 group-hover:text-amber-500 transition-colors">Full-Stack Boilerplate Collection</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">3 production-ready boilerplates: Next.js SaaS, React Dashboard, Express API.</p>
+        <span class="inline-block text-sm font-bold text-amber-500">$49</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Search + Category Filter Script -->
+  <script is:inline>
+    const searchInput = document.getElementById('tool-search');
+    const emptyState = document.getElementById('empty-state');
+    const toolCount = document.getElementById('tool-count');
+    const toolItems = document.querySelectorAll('.tool-item');
+    const categoryBtns = document.querySelectorAll('.category-btn');
+
+    let activeCategory = 'All';
+
+    function filterTools() {
+      const query = (searchInput?.value || '').toLowerCase().trim();
+      let visible = 0;
+
+      toolItems.forEach((item) => {
+        const title = item.dataset.title || '';
+        const desc = item.dataset.description || '';
+        const cat = item.dataset.category || '';
+        const matchesSearch = !query || title.includes(query) || desc.includes(query);
+        const matchesCategory = activeCategory === 'All' || cat === activeCategory;
+        const show = matchesSearch && matchesCategory;
+        item.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+
+      if (emptyState) emptyState.classList.toggle('hidden', visible > 0);
+      if (toolCount) toolCount.textContent = visible.toString();
+    }
+
+    searchInput?.addEventListener('input', filterTools);
+
+    categoryBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeCategory = btn.dataset.category || 'All';
+        categoryBtns.forEach((b) => {
+          if (b.dataset.category === activeCategory) {
+            b.className = 'category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-primary-600 text-white';
+          } else {
+            b.className = 'category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700';
+          }
+        });
+        filterTools();
+      });
+    });
+  </script>
+</ToolLayout>

@@ -1,0 +1,73 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import UuidGenerator from '../../components/tools/UuidGenerator';
+
+const faq = [
+  { question: "What is a UUID?", answer: "A UUID (Universally Unique Identifier) is a 128-bit identifier formatted as 32 hexadecimal digits in five groups separated by hyphens (e.g., 550e8400-e29b-41d4-a716-446655440000). UUIDs are designed to be unique without a central authority." },
+  { question: "What is the difference between UUID versions?", answer: "UUID v1 is based on timestamp and MAC address. UUID v4 is randomly generated and most commonly used. UUID v5 is generated from a namespace and name using SHA-1. This tool generates v4 UUIDs using cryptographic randomness." },
+  { question: "Can two UUIDs ever be the same?", answer: "Theoretically yes, but practically no. UUID v4 has 122 random bits, giving 5.3 x 10^36 possible values. The probability of a collision is astronomically low — you would need to generate 1 billion UUIDs per second for about 86 years to have a 50% chance of one collision." },
+  { question: "Are the generated UUIDs cryptographically random?", answer: "Yes. This tool uses the browser's crypto.getRandomValues() API, which provides cryptographically secure random numbers suitable for security-sensitive applications." },
+];
+---
+
+<ToolLayout
+  title="UUID Generator"
+  description="Generate random UUID v4 values online for free"
+  slug="uuid-generator"
+  toolName="UUID Generator"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      UUID Generator
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Generate random UUID v4 values instantly. Bulk generate up to 25 at a time with format options. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <UuidGenerator client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Cryptographically Secure</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Uses crypto.randomUUID when available for truly random, RFC 4122 compliant UUIDs.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        All UUIDs are generated locally in your browser. No data is sent to any server.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Flexible Output</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Choose lowercase, uppercase, or no-dash format. Bulk generate 1, 5, 10, or 25 UUIDs at once.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

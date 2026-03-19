@@ -1,0 +1,89 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import AiCodeReview from '../../components/tools/AiCodeReview';
+
+const faq = [
+  { question: "What does AI Code Review check for?", answer: "AI Code Review analyzes your code for bugs, security vulnerabilities, performance issues, code smells, and best practice violations. It provides actionable suggestions with explanations." },
+  { question: "Which programming languages are supported?", answer: "AI Code Review supports JavaScript, TypeScript, Python, Go, Rust, Java, C#, PHP, and more. The AI model understands modern language features and frameworks." },
+  { question: "Is my code kept private?", answer: "Your code is sent to our API for analysis but is never stored. It is processed in real-time and discarded immediately after generating the review. We do not use your code for training." },
+  { question: "How is this different from a linter?", answer: "Linters check syntax and style rules. AI Code Review understands logic, detects subtle bugs like race conditions, suggests architectural improvements, and provides human-readable explanations." },
+];
+---
+
+<ToolLayout
+  title="AI Code Review"
+  description="Get instant AI-powered code reviews with bug detection, security analysis, and best practice suggestions"
+  slug="ai-code-review"
+  toolName="AI Code Review"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <div class="flex items-center gap-3 mb-3">
+      <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">
+        AI Code Review
+      </h1>
+      <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 text-white text-xs font-bold">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        PRO
+      </span>
+    </div>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Get instant AI-powered code reviews. Detect bugs, security vulnerabilities, and performance issues with actionable suggestions.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <AiCodeReview client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-red-50 dark:bg-red-950 rounded-lg flex items-center justify-center text-red-600 dark:text-red-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
+      </div>
+      <h3 class="font-semibold mb-2">Bug Detection</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Catches race conditions, null references, off-by-one errors, and logic flaws that slip past linters.</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-amber-50 dark:bg-amber-950 rounded-lg flex items-center justify-center text-amber-600 dark:text-amber-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="font-semibold mb-2">Security Analysis</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Identifies injection risks, XSS vulnerabilities, insecure data handling, and OWASP Top 10 issues.</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-green-50 dark:bg-green-950 rounded-lg flex items-center justify-center text-green-600 dark:text-green-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
+      </div>
+      <h3 class="font-semibold mb-2">Performance Tips</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Suggests optimizations for memory, CPU, and I/O — from algorithm choices to framework-specific best practices.</p>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  {faq && faq.length > 0 && (
+    <div class="mt-12">
+      <h2 class="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+      <div class="space-y-4">
+        {faq.map((item) => (
+          <details class="group bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl">
+            <summary class="flex items-center justify-between cursor-pointer p-5 font-medium">
+              {item.question}
+              <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <div class="px-5 pb-5 text-gray-500 dark:text-gray-400">{item.answer}</div>
+          </details>
+        ))}
+      </div>
+    </div>
+  )}
+</ToolLayout>

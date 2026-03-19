@@ -1,0 +1,40 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import MarkdownToHtml from '../../components/tools/MarkdownToHtml';
+
+const faq = [
+  { question: "What Markdown syntax is supported?", answer: "The converter supports standard Markdown including headings, bold, italic, links, images, code blocks, lists, blockquotes, tables, and horizontal rules. It follows the CommonMark specification." },
+  { question: "Can I preview the HTML output?", answer: "Yes. The tool provides a live preview that renders your Markdown as formatted HTML in real-time as you type. You can also view the raw HTML source code." },
+  { question: "Is my content sent to a server?", answer: "No. All Markdown parsing and HTML conversion happens entirely in your browser. Your content is private and never uploaded." },
+  { question: "Can I use this for blog posts or documentation?", answer: "Yes. Convert your Markdown to clean HTML, then copy the output directly into your CMS, blog platform, or documentation site. The generated HTML is standards-compliant and production-ready." },
+];
+---
+
+<ToolLayout
+  title="Markdown to HTML"
+  description="Convert Markdown to HTML with live preview. Free online tool."
+  slug="markdown-to-html"
+  toolName="Markdown to HTML"
+  faq={faq}
+>
+  <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
+    <a href="/" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Tools</a>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    <span class="text-gray-900 dark:text-gray-100 font-medium">Markdown to HTML</span>
+  </nav>
+
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Markdown to HTML
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Convert Markdown to clean HTML with live preview. Everything runs in your browser.
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <MarkdownToHtml client:load />
+  </div>
+</ToolLayout>

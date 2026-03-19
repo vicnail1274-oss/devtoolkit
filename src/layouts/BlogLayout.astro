@@ -1,0 +1,286 @@
+---
+import BlogRelatedTools from '../components/BlogRelatedTools.astro';
+
+export interface Props {
+  title: string;
+  description: string;
+  slug: string;
+  publishDate: string;
+  author?: string;
+  readTime?: string;
+}
+
+const { title, description, slug, publishDate, author = 'DevToolkit Team', readTime = '8 min read' } = Astro.props;
+const canonicalURL = `https://devtoolkit.cc/blog/${slug}`;
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- SEO -->
+    <title>{title} | DevToolkit Blog</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={`${title} | DevToolkit Blog`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="DevToolkit" />
+    <meta property="og:image" content="https://devtoolkit.cc/og-default.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${title} - DevToolkit Blog`} />
+    <meta property="article:published_time" content={publishDate} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={`${title} | DevToolkit Blog`} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content="https://devtoolkit.cc/og-default.png" />
+
+    <!-- RSS Feed -->
+    <link rel="alternate" type="application/rss+xml" title="DevToolkit Blog" href="https://devtoolkit.cc/rss.xml" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DVD84363WT"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DVD84363WT');
+    </script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3928088726708786" crossorigin="anonymous"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+
+    <!-- JSON-LD Article -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": title,
+      "description": description,
+      "url": canonicalURL,
+      "datePublished": publishDate,
+      "author": { "@type": "Organization", "name": "DevToolkit", "url": "https://devtoolkit.cc" },
+      "publisher": { "@type": "Organization", "name": "DevToolkit", "url": "https://devtoolkit.cc" }
+    })} />
+
+    <!-- Breadcrumbs -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "DevToolkit", "item": "https://devtoolkit.cc" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://devtoolkit.cc/blog" },
+        { "@type": "ListItem", "position": 3, "name": title, "item": canonicalURL }
+      ]
+    })} />
+  </head>
+  <body class="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800">
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2 group">
+          <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <span class="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+            DevToolkit
+          </span>
+        </a>
+
+        <div class="flex items-center gap-4">
+          <a href="/" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
+            All Tools
+          </a>
+          <a href="/blog" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
+            Blog
+          </a>
+          <a href="/pricing" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
+            Pricing
+          </a>
+          <button
+            id="theme-toggle"
+            class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200"
+            aria-label="Toggle dark mode"
+          >
+            <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Article Content -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <!-- Breadcrumb -->
+      <nav class="mb-8 text-sm text-gray-500 dark:text-gray-400">
+        <a href="/" class="hover:text-primary-600 dark:hover:text-primary-400">Home</a>
+        <span class="mx-2">/</span>
+        <a href="/blog" class="hover:text-primary-600 dark:hover:text-primary-400">Blog</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-700 dark:text-gray-300">{title}</span>
+      </nav>
+
+      <!-- Article Header -->
+      <header class="mb-10">
+        <h1 class="text-3xl sm:text-4xl font-bold mb-4 leading-tight">{title}</h1>
+        <div class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+          <span>{author}</span>
+          <span>&middot;</span>
+          <time datetime={publishDate}>{new Date(publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+          <span>&middot;</span>
+          <span>{readTime}</span>
+        </div>
+      </header>
+
+      <!-- Article Body -->
+      <article class="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-[''] prose-code:after:content-['']">
+        <slot />
+      </article>
+
+      <!-- Inline Email CTA -->
+      <div class="mt-10 p-6 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-950/40 dark:to-gray-900 rounded-2xl border border-primary-200 dark:border-primary-800/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div class="flex-1">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+              Enjoyed this article?
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              Get the free Developer Cheatsheet Pack + weekly tips on tools, workflows, and productivity.
+            </p>
+          </div>
+          <a
+            href="/newsletter"
+            data-track-cta="blog-inline-newsletter"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 whitespace-nowrap shrink-0"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Subscribe Free
+          </a>
+        </div>
+      </div>
+
+      <!-- Related Tools -->
+      <BlogRelatedTools blogSlug={slug} />
+
+      <!-- Back to Blog -->
+      <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+        <a href="/blog" class="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:underline font-medium">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
+          Back to Blog
+        </a>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 dark:border-gray-800 mt-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-8">
+          <div>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Tool Categories</h4>
+            <ul class="space-y-2">
+              <li><a href="/tools?category=Code" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Code Tools</a></li>
+              <li><a href="/tools?category=Data" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Data Tools</a></li>
+              <li><a href="/tools?category=Security" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Security Tools</a></li>
+              <li><a href="/tools?category=DevOps" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">DevOps Tools</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">More Categories</h4>
+            <ul class="space-y-2">
+              <li><a href="/tools?category=Encoding" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Encoding Tools</a></li>
+              <li><a href="/tools?category=Content" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Content Tools</a></li>
+              <li><a href="/tools?category=Design" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Design Tools</a></li>
+              <li><a href="/tools?category=AI" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">AI Tools</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Popular Tools</h4>
+            <ul class="space-y-2">
+              <li><a href="/tools/json-formatter" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">JSON Formatter</a></li>
+              <li><a href="/tools/regex-tester" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Regex Tester</a></li>
+              <li><a href="/tools/base64" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Base64 Encoder</a></li>
+              <li><a href="/tools/cron-generator" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Cron Generator</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Resources</h4>
+            <ul class="space-y-2">
+              <li><a href="/blog" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Blog</a></li>
+              <li><a href="/pricing" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Pricing</a></li>
+              <li><a href="/newsletter" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Newsletter</a></li>
+              <li><a href="/changelog" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Changelog</a></li>
+              <li><a href="/sponsors" class="text-sm text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Sponsor</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="pt-6 border-t border-gray-200 dark:border-gray-800 text-center">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            &copy; {new Date().getFullYear()} DevToolkit. Free developer tools, no signup required.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Cloudflare Web Analytics (privacy-friendly, no cookies) -->
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "CLOUDFLARE_ANALYTICS_TOKEN"}'></script>
+
+    <!-- Custom Event Tracking -->
+    <script is:inline>
+      (function() {
+        var endpoint = '/api/analytics/track';
+        function track(event, slug, label) {
+          try {
+            navigator.sendBeacon(endpoint, JSON.stringify({ event: event, slug: slug || location.pathname, label: label }));
+          } catch(e) {}
+        }
+        track('page_view', location.pathname);
+        document.addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-track-cta]');
+          if (btn) {
+            track('cta_click', location.pathname, btn.getAttribute('data-track-cta'));
+          }
+        });
+      })();
+    </script>
+
+    <!-- Dark Mode Toggle Script -->
+    <script is:inline>
+      const toggle = document.getElementById('theme-toggle');
+      const html = document.documentElement;
+
+      if (localStorage.getItem('theme') === 'light' ||
+          (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+        html.classList.remove('dark');
+      }
+
+      toggle?.addEventListener('click', () => {
+        html.classList.toggle('dark');
+        localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+      });
+    </script>
+  </body>
+</html>

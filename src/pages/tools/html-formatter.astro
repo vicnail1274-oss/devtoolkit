@@ -1,0 +1,85 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import HtmlFormatter from '../../components/tools/HtmlFormatter';
+
+const faq = [
+  {
+    question: "What does an HTML formatter do?",
+    answer: "An HTML formatter (also called HTML beautifier or pretty printer) takes messy, minified, or poorly indented HTML code and reformats it with proper indentation and line breaks, making it easier to read and maintain."
+  },
+  {
+    question: "Does this tool modify my HTML structure?",
+    answer: "No. The formatter only changes whitespace and indentation. It does not alter your HTML tags, attributes, or content in any way."
+  },
+  {
+    question: "Can I also minify HTML with this tool?",
+    answer: "Yes! Switch to the Minify mode to remove comments, extra whitespace, and line breaks from your HTML to reduce file size for production."
+  },
+  {
+    question: "Is my HTML sent to a server?",
+    answer: "No. Everything runs 100% in your browser using JavaScript. Your code never leaves your device."
+  },
+];
+---
+
+<ToolLayout
+  title="HTML Formatter & Beautifier"
+  description="Format, beautify, and minify HTML code online for free. Supports custom indentation."
+  slug="html-formatter"
+  toolName="HTML Formatter & Beautifier"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      HTML Formatter & Beautifier
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Format or minify your HTML code instantly. Choose your indentation style and get clean, readable markup. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <HtmlFormatter client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Format & Minify</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Beautify messy HTML with proper indentation or minify it for production in one click.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Custom Indentation</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Choose between 2 spaces, 4 spaces, or tab-based indentation to match your coding style.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your code never leaves your browser. No tracking, no cookies, no server-side processing.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

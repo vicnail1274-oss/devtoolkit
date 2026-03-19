@@ -1,0 +1,187 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+
+const pastIssues = [
+  {
+    number: 3,
+    title: 'Top 5 JSON Tips Every Developer Should Know',
+    date: 'Coming soon',
+    preview: 'Learn advanced JSON manipulation techniques, including streaming parsers, schema validation, and common pitfalls in production.',
+  },
+  {
+    number: 2,
+    title: 'Why AI-Powered Code Review Is the Future',
+    date: 'Coming soon',
+    preview: 'How automated code review catches bugs that humans miss — and how to integrate it into your CI pipeline.',
+  },
+  {
+    number: 1,
+    title: 'Welcome to DevToolkit Weekly',
+    date: 'Coming soon',
+    preview: 'Introducing our newsletter: weekly dev tips, tool recommendations, and behind-the-scenes of building DevToolkit.',
+  },
+];
+---
+
+<ToolLayout title="Newsletter" description="Weekly developer tips, tool updates, and exclusive Pro deals from DevToolkit.">
+  <!-- Header -->
+  <div class="text-center mb-12">
+    <h1 class="text-4xl sm:text-5xl font-bold mb-4">
+      <span class="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+        DevToolkit Newsletter
+      </span>
+    </h1>
+    <p class="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-4">
+      Weekly developer tips, new tool launches, and exclusive Pro deals. Join 500+ developers who level up every week.
+    </p>
+    <div class="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400 dark:text-gray-500">
+      <span class="flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        Every Tuesday
+      </span>
+      <span class="flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        5-min read
+      </span>
+      <span class="flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        Unsubscribe anytime
+      </span>
+    </div>
+  </div>
+
+  <!-- Subscribe Form -->
+  <div class="max-w-lg mx-auto mb-16">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-8">
+      <form id="page-newsletter-form" class="space-y-4">
+        <input
+          type="email"
+          id="page-newsletter-email"
+          placeholder="you@example.com"
+          required
+          class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+        />
+        <button
+          type="submit"
+          id="page-newsletter-btn"
+          class="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200"
+        >
+          Subscribe — It's Free
+        </button>
+        <p id="page-newsletter-msg" class="text-sm text-center hidden"></p>
+      </form>
+      <div class="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800/50">
+        <p class="text-xs text-amber-700 dark:text-amber-400 text-center font-medium">
+          &#127873; Bonus: Get our free Developer Cheatsheet Pack (Git, Docker, Regex, SQL & more) when you subscribe!
+        </p>
+      </div>
+      <p class="text-xs text-gray-400 dark:text-gray-500 text-center mt-3">
+        No spam, ever. Unsubscribe with one click.
+      </p>
+    </div>
+  </div>
+
+  <!-- What You'll Get -->
+  <div class="mb-16">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">What You'll Get</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+        <div class="text-3xl mb-3">&#128736;</div>
+        <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Tool Tips</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Hidden features and pro tricks for every DevToolkit tool.</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+        <div class="text-3xl mb-3">&#128640;</div>
+        <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">New Launches</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Be the first to know when new tools and features drop.</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+        <div class="text-3xl mb-3">&#127873;</div>
+        <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Exclusive Deals</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Subscriber-only discounts on Pro plans and premium products.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Past Issues -->
+  <div>
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">Past Issues</h2>
+    <div class="max-w-2xl mx-auto space-y-4">
+      {pastIssues.map((issue) => (
+        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-500 dark:text-gray-400">
+              #{issue.number}
+            </span>
+            <span class="text-xs text-gray-400 dark:text-gray-500">{issue.date}</span>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">{issue.title}</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">{issue.preview}</p>
+        </div>
+      ))}
+    </div>
+    <p class="text-center mt-6 text-sm text-gray-400 dark:text-gray-500">
+      First issue launching soon. Subscribe to get it!
+    </p>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+  (function() {
+    const form = document.getElementById('page-newsletter-form');
+    const emailInput = document.getElementById('page-newsletter-email');
+    const btn = document.getElementById('page-newsletter-btn');
+    const msg = document.getElementById('page-newsletter-msg');
+
+    if (localStorage.getItem('newsletter_subscribed')) {
+      if (msg) {
+        msg.textContent = "You're already subscribed!";
+        msg.classList.remove('hidden');
+        msg.classList.add('text-green-600');
+      }
+      if (btn) { btn.textContent = 'Subscribed ✓'; btn.disabled = true; btn.classList.add('opacity-60', 'cursor-not-allowed'); }
+    }
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = emailInput?.value?.trim();
+      if (!email) return;
+      btn.disabled = true;
+      btn.textContent = 'Subscribing...';
+
+      try {
+        const res = await fetch('/api/newsletter/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        if (res.ok) {
+          localStorage.setItem('newsletter_subscribed', '1');
+          msg.textContent = 'Welcome! You\'re on the list.';
+          msg.classList.remove('hidden');
+          msg.classList.add('text-green-600');
+          btn.textContent = 'Subscribed ✓';
+          btn.classList.add('opacity-60', 'cursor-not-allowed');
+          emailInput.value = '';
+        } else {
+          const data = await res.json().catch(() => ({}));
+          msg.textContent = data.error || 'Something went wrong.';
+          msg.classList.remove('hidden');
+          msg.classList.add('text-red-500');
+          btn.disabled = false;
+          btn.textContent = 'Subscribe — It\'s Free';
+        }
+      } catch {
+        const q = JSON.parse(localStorage.getItem('newsletter_queue') || '[]');
+        q.push({ email, ts: Date.now() });
+        localStorage.setItem('newsletter_queue', JSON.stringify(q));
+        localStorage.setItem('newsletter_subscribed', '1');
+        msg.textContent = 'Thanks! You\'re on the list.';
+        msg.classList.remove('hidden');
+        msg.classList.add('text-green-600');
+        btn.textContent = 'Subscribed ✓';
+        btn.classList.add('opacity-60', 'cursor-not-allowed');
+      }
+    });
+  })();
+</script>

@@ -1,0 +1,161 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="How to Minify JavaScript Without Build Tools"
+  description="Learn how to minify JavaScript without webpack, Vite, or any build system. Techniques for quick minification when you don't need a full toolchain."
+  slug="how-to-minify-javascript-without-build-tools"
+  publishDate="2026-03-18"
+  readTime="8 min read"
+>
+
+<p>
+  Not every project needs webpack, Vite, or Rollup. Sometimes you have a single JavaScript file on a static site, a quick prototype, or a legacy project where adding a build system would be overkill. But you still want smaller files and faster load times.
+</p>
+
+<p>
+  This guide covers practical ways to minify JavaScript without setting up any build toolchain — from online tools to one-line CLI commands.
+</p>
+
+<h2>Why Minify JavaScript?</h2>
+
+<p>
+  Minification removes whitespace, comments, and shortens variable names without changing how the code runs. The results are significant:
+</p>
+
+<ul>
+  <li><strong>30-70% smaller file size</strong> — fewer bytes transferred means faster page loads</li>
+  <li><strong>Better Core Web Vitals</strong> — smaller scripts improve LCP and FID scores</li>
+  <li><strong>Lower bandwidth costs</strong> — especially impactful at scale</li>
+  <li><strong>Faster parsing</strong> — browsers parse smaller files more quickly</li>
+</ul>
+
+<p>
+  Even with gzip/brotli compression on your server, minification still helps because compression works better on already-minified code.
+</p>
+
+<h2>Method 1: Online Minification Tools</h2>
+
+<p>
+  The fastest approach for one-off minification is an online tool. Paste your code, click a button, copy the result. No installation needed.
+</p>
+
+<p>
+  Our <a href="/tools/js-minifier">JavaScript Minifier</a> runs entirely in your browser — your code never leaves your machine. It shows you the exact byte savings and compression ratio instantly.
+</p>
+
+<p>
+  This is ideal when you need to minify a file quickly during development or when updating a static site. The trade-off is that it's manual — you have to paste and copy each time you make changes.
+</p>
+
+<h2>Method 2: npx One-Liners (No Installation)</h2>
+
+<p>
+  If you have Node.js installed, you can minify files with a single command using <code>npx</code>, which runs packages without installing them globally:
+</p>
+
+<pre><code>npx terser input.js -o output.min.js --compress --mangle</code></pre>
+
+<p>
+  <a href="https://terser.org/" target="_blank" rel="noopener">Terser</a> is the industry standard JavaScript minifier. The <code>--compress</code> flag enables dead code elimination and constant folding. The <code>--mangle</code> flag shortens variable names.
+</p>
+
+<p>
+  For multiple files, combine them first:
+</p>
+
+<pre><code>cat lib.js app.js | npx terser -o bundle.min.js --compress --mangle</code></pre>
+
+<p>
+  This is a great middle ground — no project setup, no <code>package.json</code>, just a command.
+</p>
+
+<h2>Method 3: UglifyJS via npx</h2>
+
+<p>
+  UglifyJS is another popular option, especially for ES5 code:
+</p>
+
+<pre><code>npx uglify-js input.js -o output.min.js -c -m</code></pre>
+
+<p>
+  Note that UglifyJS does not support ES6+ syntax (arrow functions, <code>const</code>/<code>let</code>, template literals). For modern JavaScript, use Terser instead — it's actually a fork of UglifyJS with ES6+ support.
+</p>
+
+<h2>Method 4: esbuild (Blazing Fast)</h2>
+
+<p>
+  <a href="https://esbuild.github.io/" target="_blank" rel="noopener">esbuild</a> is written in Go and is 10-100x faster than JavaScript-based minifiers:
+</p>
+
+<pre><code>npx esbuild input.js --minify --outfile=output.min.js</code></pre>
+
+<p>
+  esbuild can also bundle multiple files, handle TypeScript, and process CSS — all without configuration. If you find yourself needing more than just minification, esbuild is the natural next step before a full build system.
+</p>
+
+<h2>Method 5: Browser DevTools</h2>
+
+<p>
+  Chrome DevTools can show you a "pretty-printed" version of minified code, but it can't minify for you. However, you can use the Console to run a quick minification:
+</p>
+
+<pre><code>// In browser console — basic whitespace removal
+const code = `your code here`;
+console.log(code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').replace(/\s+/g, ' '));</code></pre>
+
+<p>
+  This is extremely basic (no variable mangling, no dead code elimination) and only suitable for quick experiments. For real minification, use one of the methods above.
+</p>
+
+<h2>What Minification Actually Does</h2>
+
+<p>
+  A good minifier performs several transformations:
+</p>
+
+<ul>
+  <li><strong>Whitespace removal</strong> — removes spaces, tabs, and newlines that aren't inside strings</li>
+  <li><strong>Comment stripping</strong> — removes all <code>//</code> and <code>/* */</code> comments</li>
+  <li><strong>Variable mangling</strong> — renames local variables from <code>totalPrice</code> to <code>a</code></li>
+  <li><strong>Dead code elimination</strong> — removes code that can never execute (like <code>if (false) {'{'} ... {'}'}</code>)</li>
+  <li><strong>Constant folding</strong> — replaces <code>1 + 2</code> with <code>3</code> at build time</li>
+  <li><strong>Boolean simplification</strong> — replaces <code>true</code> with <code>!0</code> and <code>false</code> with <code>!1</code></li>
+</ul>
+
+<h2>When to Use a Build System Instead</h2>
+
+<p>
+  These no-build approaches work great for simple projects, but consider adding a proper build system when:
+</p>
+
+<ul>
+  <li>You have more than 5-10 JavaScript files</li>
+  <li>You need module bundling (import/export)</li>
+  <li>You're using TypeScript, JSX, or other syntaxes that need transformation</li>
+  <li>You need tree-shaking to remove unused exports</li>
+  <li>You want source maps for debugging production code</li>
+  <li>Multiple developers need consistent builds</li>
+</ul>
+
+<h2>Quick Comparison</h2>
+
+<p>
+  Here's how the methods compare for a typical 50KB JavaScript file:
+</p>
+
+<ul>
+  <li><strong>Online tools</strong> — 0 setup, manual copy-paste, ~60% reduction</li>
+  <li><strong>npx terser</strong> — 1 command, ~65% reduction, full mangling</li>
+  <li><strong>npx esbuild</strong> — 1 command, ~60% reduction, 100x faster</li>
+  <li><strong>Regex in console</strong> — instant, ~30% reduction, unsafe for production</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>
+  You don't need a complex build pipeline to ship optimized JavaScript. For quick wins, use our <a href="/tools/js-minifier">JavaScript Minifier</a> in your browser. For CLI workflows, <code>npx terser</code> or <code>npx esbuild</code> get the job done in one command. Save the full build system for when your project actually needs it.
+</p>
+
+</BlogLayout>

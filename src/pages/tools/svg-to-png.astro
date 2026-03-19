@@ -1,0 +1,79 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import SvgToPng from '../../components/tools/SvgToPng';
+
+const faq = [
+  { question: "Why convert SVG to PNG?", answer: "While SVG is great for scalability, many platforms (social media, email clients, some CMS) don't support SVG. Converting to PNG ensures your images display correctly everywhere." },
+  { question: "Will I lose quality converting SVG to PNG?", answer: "No, if you set the output dimensions appropriately. Use the 2x or 3x scale option for retina displays. Since SVG is vector-based, you can export at any size without quality loss." },
+  { question: "What's the maximum size I can export?", answer: "This tool supports up to 4096x4096 pixels with up to 3x scaling. For most use cases (social media, web), 1200x630 at 2x is optimal." },
+  { question: "Can I set a transparent background?", answer: "Yes! Toggle the 'Transparent' checkbox to export PNG with a transparent background, perfect for logos and icons." },
+];
+---
+
+<ToolLayout
+  title="SVG to PNG Converter"
+  description="Convert SVG to PNG with custom dimensions, background color, and retina scaling. Free online tool."
+  slug="svg-to-png"
+  toolName="SVG to PNG Converter"
+  faq={faq}
+>
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      SVG to PNG Converter
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Convert SVG to high-quality PNG with custom dimensions, background colors, and retina scaling. Paste code or upload a file &mdash; everything runs in your browser.
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <SvgToPng client:load />
+  </div>
+
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Custom Dimensions</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Set exact width, height, and scale. Quick presets for OG images, favicons, and social media.</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Background Control</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Choose any background color or export with full transparency for logos and icons.</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Retina Ready</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Export at 2x or 3x scale for crystal-clear images on high-DPI displays.</p>
+    </div>
+  </div>
+
+  <div class="mt-12">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Frequently Asked Questions</h2>
+    <div class="space-y-4">
+      {faq.map(item => (
+        <details class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 group">
+          <summary class="font-semibold text-gray-900 dark:text-gray-100 cursor-pointer list-none flex items-center justify-between">
+            {item.question}
+            <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</ToolLayout>

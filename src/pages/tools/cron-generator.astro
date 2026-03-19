@@ -1,0 +1,96 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import CronGenerator from '../../components/tools/CronGenerator';
+
+const faq = [
+  { question: "What is a cron expression?", answer: "A cron expression is a string of five fields (minute, hour, day of month, month, day of week) that defines a schedule for recurring tasks. It's used in Unix/Linux cron jobs, CI/CD pipelines, cloud schedulers, and task automation tools." },
+  { question: "What does each field mean?", answer: "The five fields are: Minute (0-59), Hour (0-23), Day of Month (1-31), Month (1-12), Day of Week (0-6, where 0 is Sunday). Use * for 'every', */N for 'every N', and comma-separated values or ranges (e.g., 1-5)." },
+  { question: "How do I schedule a job every 5 minutes?", answer: "Use the expression '*/5 * * * *'. The */5 in the minute field means 'every 5 minutes', while the asterisks in other fields mean 'every hour, every day, every month, every day of the week'." },
+  { question: "Is this tool free to use?", answer: "Yes, completely free with no signup required. Everything runs in your browser — no data is sent to any server." },
+  { question: "Can I use this for AWS CloudWatch or GitHub Actions?", answer: "Yes. Standard 5-field cron expressions work with most schedulers including crontab, AWS CloudWatch Events, GitHub Actions, Kubernetes CronJobs, and Google Cloud Scheduler." },
+];
+---
+
+<ToolLayout
+  title="Cron Expression Generator"
+  description="Visual cron expression builder with next execution time preview. Free online tool."
+  slug="cron-generator"
+  toolName="Cron Expression Generator"
+  faq={faq}
+>
+  <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
+    <a href="/" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Tools</a>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    <span class="text-gray-900 dark:text-gray-100 font-medium">Cron Generator</span>
+  </nav>
+
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Cron Expression Generator
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Build cron expressions visually with instant preview of next execution times.
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <CronGenerator client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Visual Builder</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Edit each cron field individually or use quick presets for common schedules like daily, weekly, or hourly.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Next 5 Executions</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        See exactly when your cron job will run next. Instantly verify your schedule is correct before deploying.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Copy & Go</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        One-click copy to use in crontab, AWS CloudWatch, GitHub Actions, Kubernetes, or any scheduler.
+      </p>
+    </div>
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="mt-12">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Frequently Asked Questions</h2>
+    <div class="space-y-4">
+      {faq.map(item => (
+        <details class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 group">
+          <summary class="font-semibold text-gray-900 dark:text-gray-100 cursor-pointer list-none flex items-center justify-between">
+            {item.question}
+            <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</ToolLayout>

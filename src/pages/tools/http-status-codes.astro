@@ -1,0 +1,73 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import HttpStatusCodes from '../../components/tools/HttpStatusCodes';
+
+const faq = [
+  { question: "What are the HTTP status code categories?", answer: "HTTP status codes are grouped into five categories: 1xx (Informational), 2xx (Success), 3xx (Redirection), 4xx (Client Error), and 5xx (Server Error). The first digit tells you the general class of the response." },
+  { question: "What is the difference between 401 and 403?", answer: "401 Unauthorized means the request lacks valid authentication credentials — the user needs to log in. 403 Forbidden means the server understood the request but refuses to authorize it — the user is authenticated but lacks permission." },
+  { question: "When should I use 404 vs 410?", answer: "Use 404 Not Found when a resource doesn't exist or might exist later. Use 410 Gone when a resource has been permanently removed and will not return. 410 tells search engines to de-index the URL." },
+  { question: "What does 429 Too Many Requests mean?", answer: "429 means the client has sent too many requests in a given time period (rate limiting). The response usually includes a Retry-After header indicating how long to wait before making another request." },
+];
+---
+
+<ToolLayout
+  title="HTTP Status Code Reference"
+  description="Complete HTTP status code reference with descriptions. Search, filter, and copy status codes instantly."
+  slug="http-status-codes"
+  toolName="HTTP Status Code Reference"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      HTTP Status Code Reference
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Complete reference of HTTP status codes with descriptions. Search by code number or name, filter by category.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <HttpStatusCodes client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Instant Search</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Search by code number, name, or description. Find the status code you need instantly.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Category Filters</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Filter by 1xx, 2xx, 3xx, 4xx, or 5xx categories. Color-coded for quick scanning.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Detailed Descriptions</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Each status code includes a clear, practical description explaining when and why it's used.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

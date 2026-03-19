@@ -1,0 +1,80 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import OgImagePreview from '../../components/tools/OgImagePreview';
+
+const faq = [
+  { question: "What are Open Graph tags?", answer: "Open Graph (OG) tags are HTML meta tags that control how your webpage appears when shared on social media platforms like Facebook, Twitter, LinkedIn, and Slack. They define the title, description, and image shown in link previews." },
+  { question: "What size should an OG image be?", answer: "The recommended OG image size is 1200x630 pixels with an aspect ratio of 1.91:1. This size works well across Facebook, Twitter, LinkedIn, and most social platforms." },
+  { question: "Why does my link preview look wrong?", answer: "Common issues include missing og:image tag, image URL not being an absolute URL, image too small (minimum 200x200px), or the platform caching an old version. Use our tool to debug and preview exactly how your page will appear." },
+  { question: "How do I force social platforms to update my preview?", answer: "Each platform has a cache-clearing tool: Facebook has the Sharing Debugger, Twitter has the Card Validator, and LinkedIn has the Post Inspector. After updating your OG tags, use these tools to force a refresh." },
+];
+---
+
+<ToolLayout
+  title="Open Graph Image Preview"
+  description="Preview how your URL appears when shared on social media. Check OG tags for Google, Twitter, Facebook, LinkedIn, and Slack."
+  slug="og-image-preview"
+  toolName="Open Graph Image Preview"
+  faq={faq}
+>
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Open Graph Image Preview
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Preview how your website looks when shared on Google, Twitter/X, Facebook, LinkedIn, and Slack. Debug OG meta tags instantly &mdash; everything runs in your browser.
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <OgImagePreview client:load />
+  </div>
+
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">5 Platform Previews</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">See how your link appears on Google, Twitter/X, Facebook, LinkedIn, and Slack.</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Copy Meta Tags</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">One-click copy of all detected OG and Twitter Card meta tags for your site.</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Client-Side</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Your URLs are never stored. Manual mode lets you preview without fetching any URL.</p>
+    </div>
+  </div>
+
+  <div class="mt-12">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Frequently Asked Questions</h2>
+    <div class="space-y-4">
+      {faq.map(item => (
+        <details class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 group">
+          <summary class="font-semibold text-gray-900 dark:text-gray-100 cursor-pointer list-none flex items-center justify-between">
+            {item.question}
+            <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</ToolLayout>

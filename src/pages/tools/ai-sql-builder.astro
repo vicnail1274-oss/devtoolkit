@@ -1,0 +1,89 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import AiSqlBuilder from '../../components/tools/AiSqlBuilder';
+
+const faq = [
+  { question: "How does AI SQL Builder work?", answer: "Describe what you want in plain English, optionally paste your database schema, and the AI generates an optimized SQL query. It understands joins, aggregations, subqueries, CTEs, and window functions." },
+  { question: "Which SQL dialects are supported?", answer: "PostgreSQL, MySQL, SQLite, SQL Server (T-SQL), and Oracle. Each dialect uses the correct syntax, functions, and data types for that database." },
+  { question: "Do I need to provide my schema?", answer: "Schema is optional but recommended. When provided, the AI uses your exact table and column names, understands relationships (foreign keys), and generates more accurate queries." },
+  { question: "Can it handle complex queries?", answer: "Yes. AI SQL Builder handles multi-table joins, nested subqueries, CTEs (WITH clauses), window functions, pivots, and complex aggregations with GROUP BY and HAVING." },
+];
+---
+
+<ToolLayout
+  title="AI SQL Query Builder"
+  description="Convert natural language to optimized SQL queries — supports PostgreSQL, MySQL, SQLite, and more"
+  slug="ai-sql-builder"
+  toolName="AI SQL Query Builder"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <div class="flex items-center gap-3 mb-3">
+      <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">
+        AI SQL Query Builder
+      </h1>
+      <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 text-white text-xs font-bold">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        PRO
+      </span>
+    </div>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Describe what you need in plain English and get optimized SQL queries instantly. Schema-aware, multi-dialect support.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <AiSqlBuilder client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+        </svg>
+      </div>
+      <h3 class="font-semibold mb-2">Natural Language</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Write in plain English — no SQL knowledge needed. The AI translates your intent into optimal queries.</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+        </svg>
+      </div>
+      <h3 class="font-semibold mb-2">Schema-Aware</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Paste your CREATE TABLE statements and get queries that use your exact table/column names and relationships.</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      </div>
+      <h3 class="font-semibold mb-2">5 Dialects</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">PostgreSQL, MySQL, SQLite, SQL Server, Oracle — correct syntax for each database engine.</p>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  {faq && faq.length > 0 && (
+    <div class="mt-12">
+      <h2 class="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+      <div class="space-y-4">
+        {faq.map((item) => (
+          <details class="group bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl">
+            <summary class="flex items-center justify-between cursor-pointer p-5 font-medium">
+              {item.question}
+              <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <div class="px-5 pb-5 text-gray-500 dark:text-gray-400">{item.answer}</div>
+          </details>
+        ))}
+      </div>
+    </div>
+  )}
+</ToolLayout>

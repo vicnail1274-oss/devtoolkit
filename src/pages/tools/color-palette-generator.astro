@@ -1,0 +1,68 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import ColorPaletteGenerator from "../../components/tools/ColorPaletteGenerator";
+
+const faq = [
+  { question: "What are color harmony rules?", answer: "Color harmony rules are mathematical relationships on the color wheel that produce visually pleasing combinations. Common rules include complementary (opposite colors), analogous (adjacent colors), triadic (three evenly spaced colors), and split-complementary." },
+  { question: "How do I export my palette?", answer: "Click the export button to get your palette in CSS custom properties, SCSS variables, Tailwind config, or JSON format. You can also share your palette via a URL that encodes all your color selections." },
+  { question: "Can I lock specific colors in my palette?", answer: "Yes. Click the lock icon on any color to keep it fixed while regenerating the rest of the palette. This is useful when you have a brand color and need complementary colors around it." },
+  { question: "Is this tool free?", answer: "Yes, completely free with no account required. Generate unlimited palettes, export in any format, and share via URL — all running in your browser." },
+];
+---
+
+<ToolLayout title="Color Palette Generator" description="Generate beautiful color palettes with harmony rules, export to CSS/SCSS/Tailwind, and share via URL." slug="color-palette-generator" toolName="Color Palette Generator" faq={faq}>
+  <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
+    <a href="/" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Tools</a>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+    <span class="text-gray-900 dark:text-gray-100 font-medium">Color Palette Generator</span>
+  </nav>
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">Color Palette Generator</h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">Generate beautiful color palettes using harmony rules. Export to CSS, SCSS, Tailwind, or JSON. Lock colors and share via URL.</p>
+  </div>
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <ColorPaletteGenerator client:load />
+  </div>
+
+  <div class="mt-12 space-y-8">
+    <section>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Features</h2>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 p-4">
+          <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Color Harmony Rules</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Complementary, triadic, analogous, split-complementary, and monochromatic palettes.</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 p-4">
+          <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Export Anywhere</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Copy your palette as CSS custom properties, SCSS variables, Tailwind config, or JSON.</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 p-4">
+          <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Lock & Regenerate</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Lock colors you like, then regenerate the rest to find the perfect combination.</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 p-4">
+          <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Share via URL</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Every palette gets a unique URL hash — share your palettes with anyone.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">FAQ</h2>
+      <div class="space-y-4">
+        <details class="group bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 p-4">
+          <summary class="font-medium text-gray-900 dark:text-gray-100 cursor-pointer">What are color harmony rules?</summary>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Color harmony rules define relationships between colors on the color wheel. Complementary colors are opposite each other, triadic colors are evenly spaced at 120°, and analogous colors sit next to each other. These rules help create visually pleasing combinations.</p>
+        </details>
+        <details class="group bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 p-4">
+          <summary class="font-medium text-gray-900 dark:text-gray-100 cursor-pointer">Can I use these palettes in my projects?</summary>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Yes! All generated palettes are free to use in personal and commercial projects. Export them directly to CSS, SCSS, Tailwind, or JSON for instant integration.</p>
+        </details>
+        <details class="group bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 p-4">
+          <summary class="font-medium text-gray-900 dark:text-gray-100 cursor-pointer">How does the share URL work?</summary>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Each palette is encoded in the URL hash as hex values. When someone opens the link, the palette is automatically restored. No server storage needed — it's all in the URL.</p>
+        </details>
+      </div>
+    </section>
+  </div>
+</ToolLayout>

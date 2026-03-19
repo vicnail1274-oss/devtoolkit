@@ -1,0 +1,543 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const content = `
+<p>
+  JSON Web Tokens (JWTs) are everywhere. If you've built a modern web application, integrated with an OAuth provider, or worked with any API that requires authentication, you've almost certainly encountered JWTs. Yet despite their ubiquity, JWTs are one of the most misunderstood and misused tools in web development.
+</p>
+
+<p>
+  In this guide, we'll break down exactly what JWTs are, how they work, how to decode and debug them, and — critically — how to use them securely. Want to inspect a token right now? Paste it into our <a href="/tools/jwt-decoder">JWT Decoder</a> to see the header, payload, and expiration instantly.
+</p>
+
+<h2>What Is a JWT?</h2>
+
+<p>
+  A JSON Web Token is a compact, URL-safe means of representing claims between two parties. It's defined in <strong>RFC 7519</strong> and is the de facto standard for stateless authentication in web applications.
+</p>
+
+<p>
+  A JWT looks like this:
+</p>
+
+<pre><code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</code></pre>
+
+<p>
+  It's three Base64URL-encoded strings separated by dots. That's it. No magic — just encoded JSON with a cryptographic signature appended.
+</p>
+
+<h2>JWT Structure: The Three Parts</h2>
+
+<p>
+  Every JWT consists of three parts: <strong>Header</strong>, <strong>Payload</strong>, and <strong>Signature</strong>.
+</p>
+
+<h3>1. Header</h3>
+
+<p>
+  The header typically contains two fields:
+</p>
+
+<pre><code>{
+  "alg": "HS256",
+  "typ": "JWT"
+}</code></pre>
+
+<ul>
+  <li><code>alg</code> — The signing algorithm (HS256, RS256, ES256, etc.)</li>
+  <li><code>typ</code> — The token type (always "JWT")</li>
+</ul>
+
+<p>
+  This JSON is Base64URL-encoded to form the first part of the token. You can decode it with our <a href="/tools/base64">Base64 Encoder/Decoder</a> or directly with the <a href="/tools/jwt-decoder">JWT Decoder</a>.
+</p>
+
+<h3>2. Payload (Claims)</h3>
+
+<p>
+  The payload contains the actual data — called <strong>claims</strong>. There are three types:
+</p>
+
+<p><strong>Registered claims</strong> (standardized, optional but recommended):</p>
+
+<pre><code>{
+  "iss": "https://auth.example.com",     // Issuer
+  "sub": "user-123",                     // Subject (user ID)
+  "aud": "https://api.example.com",      // Audience
+  "exp": 1748505600,                     // Expiration (Unix timestamp)
+  "nbf": 1748419200,                     // Not Before
+  "iat": 1748419200,                     // Issued At
+  "jti": "unique-token-id"              // JWT ID (for revocation)
+}</code></pre>
+
+<p><strong>Public claims</strong> (custom, registered in the IANA JWT Claims Registry):</p>
+
+<pre><code>{
+  "name": "John Doe",
+  "email": "john@example.com"
+}</code></pre>
+
+<p><strong>Private claims</strong> (custom, agreed between parties):</p>
+
+<pre><code>{
+  "role": "admin",
+  "permissions": ["read", "write", "delete"],
+  "tenant_id": "acme-corp"
+}</code></pre>
+
+<p>
+  Important: the payload is <strong>not encrypted</strong>. Anyone who has the token can decode and read the payload. Never put sensitive data (passwords, API keys, PII) in a JWT payload. The signature only ensures the data hasn't been <em>tampered with</em>, not that it's <em>secret</em>.
+</p>
+
+<h3>3. Signature</h3>
+
+<p>
+  The signature verifies that the token hasn't been modified. It's computed by:
+</p>
+
+<pre><code>HMACSHA256(
+  base64UrlEncode(header) + "." + base64UrlEncode(payload),
+  secret
+)</code></pre>
+
+<p>
+  For asymmetric algorithms (RS256, ES256), the signature is created with a private key and verified with the corresponding public key. This is essential for microservices architectures where the signing service and verifying services are separate.
+</p>
+
+<h2>How JWT Authentication Works</h2>
+
+<p>
+  Here's the typical JWT authentication flow:
+</p>
+
+<pre><code>1. User sends credentials (email + password) to /auth/login
+2. Server validates credentials against database
+3. Server creates a JWT with user claims and signs it
+4. Server returns the JWT to the client
+5. Client stores the JWT (localStorage, cookie, or memory)
+6. Client sends JWT in Authorization header: Bearer &lt;token&gt;
+7. Server verifies JWT signature and extracts claims
+8. Server processes the request using the claims (user ID, role, etc.)</code></pre>
+
+<p>
+  The key advantage: the server doesn't need to store session data. The JWT itself contains all the information needed to authenticate the request. This makes JWTs ideal for stateless, horizontally scalable architectures.
+</p>
+
+<h2>Signing Algorithms Explained</h2>
+
+<p>
+  Choosing the right algorithm is critical for security. Here's what each algorithm family does:
+</p>
+
+<h3>HMAC (HS256, HS384, HS512)</h3>
+
+<p>
+  Symmetric signing — the same secret key is used to create and verify the signature. Simple and fast, but every service that needs to verify the token must have the secret key.
+</p>
+
+<pre><code>// Node.js example
+const jwt = require('jsonwebtoken');
+const token = jwt.sign({ userId: '123' }, 'your-secret-key', { expiresIn: '1h' });
+const decoded = jwt.verify(token, 'your-secret-key');</code></pre>
+
+<p>
+  Best for: monolithic applications, single-service architectures.
+</p>
+
+<h3>RSA (RS256, RS384, RS512)</h3>
+
+<p>
+  Asymmetric signing — a private key creates the signature, a public key verifies it. The auth server keeps the private key; all other services only need the public key.
+</p>
+
+<pre><code>// Sign with private key
+const token = jwt.sign({ userId: '123' }, privateKey, { algorithm: 'RS256' });
+
+// Verify with public key (any service can do this)
+const decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] });</code></pre>
+
+<p>
+  Best for: microservices, multi-service architectures, OAuth 2.0 providers.
+</p>
+
+<h3>ECDSA (ES256, ES384, ES512)</h3>
+
+<p>
+  Asymmetric signing using elliptic curves. Same security as RSA but with smaller keys and faster operations.
+</p>
+
+<p>
+  Best for: mobile applications, IoT devices, performance-sensitive systems.
+</p>
+
+<h2>Decoding and Debugging JWTs</h2>
+
+<p>
+  Debugging JWTs is straightforward because the header and payload are just Base64URL-encoded JSON. Here are several ways to inspect tokens:
+</p>
+
+<h3>Using DevToolkit's JWT Decoder</h3>
+
+<p>
+  Our <a href="/tools/jwt-decoder">JWT Decoder</a> provides instant decoding with:
+</p>
+
+<ul>
+  <li>Header and payload parsed and formatted</li>
+  <li>Expiration time displayed in human-readable format</li>
+  <li>Token validity status (expired or active)</li>
+  <li>100% client-side — your tokens never leave your browser</li>
+</ul>
+
+<h3>Using the Command Line</h3>
+
+<pre><code># Decode header
+echo "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" | base64 -d
+
+# Decode payload
+echo "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0" | base64 -d
+
+# Full decode with jq
+echo "$TOKEN" | cut -d. -f2 | base64 -d 2>/dev/null | jq .</code></pre>
+
+<h3>Using JavaScript</h3>
+
+<pre><code>function decodeJwt(token) {
+  const parts = token.split('.');
+  return {
+    header: JSON.parse(atob(parts[0])),
+    payload: JSON.parse(atob(parts[1])),
+  };
+}
+
+const { header, payload } = decodeJwt(token);
+console.log('Expires:', new Date(payload.exp * 1000));</code></pre>
+
+<p>
+  Note: <code>atob()</code> decodes standard Base64. JWTs use Base64URL encoding (replacing <code>+</code> with <code>-</code> and <code>/</code> with <code>_</code>). Most browsers handle this correctly, but for edge cases you may need to normalize first. Use our <a href="/tools/base64">Base64 tool</a> for quick encoding/decoding.
+</p>
+
+<h2>JWT Security Best Practices</h2>
+
+<p>
+  JWTs are secure when used correctly, but dangerous when misused. Follow these rules:
+</p>
+
+<h3>1. Always Verify the Signature</h3>
+
+<p>
+  Never trust a JWT without verifying its signature. The whole point of the signature is to prove the token hasn't been tampered with. Always specify the expected algorithm to prevent algorithm confusion attacks:
+</p>
+
+<pre><code>// GOOD: specify expected algorithm
+jwt.verify(token, secret, { algorithms: ['HS256'] });
+
+// BAD: accept any algorithm (vulnerable to alg:none attack)
+jwt.verify(token, secret);</code></pre>
+
+<h3>2. Set Short Expiration Times</h3>
+
+<p>
+  JWTs can't be revoked after issuance (without a blocklist). Keep expiration times short:
+</p>
+
+<ul>
+  <li><strong>Access tokens:</strong> 15 minutes to 1 hour</li>
+  <li><strong>Refresh tokens:</strong> 7 to 30 days (stored securely, used to get new access tokens)</li>
+</ul>
+
+<p>
+  Always check the <code>exp</code> claim. Our <a href="/tools/timestamp-converter">Timestamp Converter</a> can help you convert Unix timestamps to human-readable dates for debugging.
+</p>
+
+<h3>3. Use Strong Secrets</h3>
+
+<p>
+  For HMAC algorithms, use a randomly generated secret of at least 256 bits (32 bytes). Never use dictionary words or short strings. Generate secure random strings with our <a href="/tools/password-generator">Password Generator</a>.
+</p>
+
+<h3>4. Store Tokens Securely</h3>
+
+<pre><code>// BEST: HttpOnly cookie (not accessible to JavaScript, immune to XSS)
+Set-Cookie: token=eyJ...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600
+
+// OK: Memory (lost on page refresh, but immune to XSS and CSRF)
+let token = null; // in-memory variable
+
+// AVOID: localStorage (accessible to any JavaScript on the page)
+localStorage.setItem('token', jwt); // Vulnerable to XSS</code></pre>
+
+<h3>5. Never Put Sensitive Data in the Payload</h3>
+
+<p>
+  The payload is Base64-encoded, not encrypted. Anyone with the token can read it. Never include:
+</p>
+
+<ul>
+  <li>Passwords or password hashes</li>
+  <li>API keys or secrets</li>
+  <li>Personal data beyond what's necessary (SSN, credit cards)</li>
+  <li>Internal system details</li>
+</ul>
+
+<h3>6. Validate All Claims</h3>
+
+<p>
+  Don't just verify the signature — also validate:
+</p>
+
+<ul>
+  <li><code>exp</code> — Token isn't expired</li>
+  <li><code>iss</code> — Token was issued by a trusted authority</li>
+  <li><code>aud</code> — Token is intended for your service</li>
+  <li><code>nbf</code> — Token is valid for use (not too early)</li>
+</ul>
+
+<h2>JWT vs Sessions vs API Keys</h2>
+
+<p>
+  When should you use JWTs vs other authentication methods?
+</p>
+
+<pre><code>                  JWT             Sessions         API Keys
+Stateless         Yes             No               Yes
+Scalable          High            Medium           High
+Revocable         Hard            Easy             Easy
+Size              Medium          Small (ID only)  Small
+Best for          SPAs, APIs,     Traditional      Server-to-server,
+                  microservices   web apps         third-party access</code></pre>
+
+<p>
+  JWTs are ideal when you need stateless, scalable authentication — especially for SPAs and microservices. For traditional server-rendered applications with simple session needs, cookie-based sessions may be simpler and more secure.
+</p>
+
+<h2>Common JWT Vulnerabilities</h2>
+
+<h3>Algorithm Confusion (alg:none)</h3>
+
+<p>
+  Some libraries accept tokens with <code>"alg": "none"</code>, which means no signature verification. Always whitelist allowed algorithms:
+</p>
+
+<pre><code>jwt.verify(token, secret, { algorithms: ['HS256'] });</code></pre>
+
+<h3>Key Confusion (RS256 to HS256)</h3>
+
+<p>
+  If a server expects RS256 (asymmetric) but an attacker sends HS256 (symmetric) and signs with the public key (which is publicly available), the server might accept it. Fix: always specify the expected algorithm.
+</p>
+
+<h3>Token Leakage</h3>
+
+<p>
+  JWTs in URLs, logs, or error messages can be stolen. Always transmit via HTTPS, use Authorization headers (not query parameters), and sanitize logs.
+</p>
+
+<h3>Missing Expiration</h3>
+
+<p>
+  A JWT without <code>exp</code> never expires. Always set and validate expiration. Use our <a href="/tools/jwt-decoder">JWT Decoder</a> to quickly check if a token has an expiration claim.
+</p>
+
+<h2>Implementing JWT in Production</h2>
+
+<h3>Node.js (Express)</h3>
+
+<pre><code>const jwt = require('jsonwebtoken');
+const SECRET = process.env.JWT_SECRET; // 256-bit random secret
+
+// Issue token
+app.post('/auth/login', async (req, res) =&gt; {
+  const user = await authenticateUser(req.body.email, req.body.password);
+  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+
+  const token = jwt.sign(
+    { sub: user.id, role: user.role },
+    SECRET,
+    { expiresIn: '1h', issuer: 'https://api.example.com' }
+  );
+
+  res.cookie('token', token, {
+    httpOnly: true, secure: true, sameSite: 'strict', maxAge: 3600000
+  });
+  res.json({ success: true });
+});
+
+// Verify middleware
+function authMiddleware(req, res, next) {
+  const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token' });
+
+  try {
+    req.user = jwt.verify(token, SECRET, { algorithms: ['HS256'] });
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+}</code></pre>
+
+<h3>Python (FastAPI)</h3>
+
+<pre><code>from jose import jwt, JWTError
+from datetime import datetime, timedelta
+
+SECRET_KEY = os.environ["JWT_SECRET"]
+ALGORITHM = "HS256"
+
+def create_token(user_id: str, role: str) -&gt; str:
+    payload = {
+        "sub": user_id,
+        "role": role,
+        "exp": datetime.utcnow() + timedelta(hours=1),
+        "iss": "https://api.example.com",
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def verify_token(token: str) -&gt; dict:
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")</code></pre>
+
+<h2>Refresh Token Pattern</h2>
+
+<p>
+  Since access tokens should be short-lived, use refresh tokens to get new access tokens without re-authenticating:
+</p>
+
+<pre><code>1. User logs in → receives access token (15 min) + refresh token (30 days)
+2. Access token expires → client sends refresh token to /auth/refresh
+3. Server validates refresh token → issues new access token
+4. Refresh token expires → user must log in again</code></pre>
+
+<p>
+  Store refresh tokens in a database so they can be revoked. This gives you the stateless benefits of JWTs for most requests, with the ability to revoke access when needed.
+</p>
+
+<h2>FAQ</h2>
+
+<h3>Can JWTs be decoded without the secret key?</h3>
+
+<p>
+  Yes. The header and payload are Base64-encoded, not encrypted. Anyone can decode them. The secret key is only needed to <em>verify</em> the signature (i.e., confirm the token hasn't been tampered with).
+</p>
+
+<h3>Are JWTs encrypted?</h3>
+
+<p>
+  Standard JWTs (JWS) are signed but not encrypted. If you need encrypted tokens, use JWE (JSON Web Encryption), defined in RFC 7516. However, this adds complexity — in most cases, just don't put sensitive data in the payload.
+</p>
+
+<h3>How do I revoke a JWT?</h3>
+
+<p>
+  You can't revoke a JWT directly — it's valid until it expires. Workarounds: use short expiration times, maintain a token blocklist (checked on every request), or use a version counter in the user record.
+</p>
+
+<h3>Should I use JWT for session management?</h3>
+
+<p>
+  It depends. For SPAs and APIs, JWTs work well. For traditional server-rendered apps, cookie-based sessions are simpler and easier to revoke. Don't use JWTs just because they're trendy — use them when stateless authentication is a genuine requirement.
+</p>
+
+<h3>What is the difference between JWS and JWE?</h3>
+
+<p>
+  JWS (JSON Web Signature) is what most people mean when they say "JWT." It signs the token so you can verify it hasn't been tampered with, but the payload remains readable by anyone. JWE (JSON Web Encryption) encrypts the entire payload so only the intended recipient can read it. In practice, JWS covers the vast majority of use cases — just avoid putting secrets in the payload. If you truly need confidential claims, consider JWE or encrypt the payload before embedding it.
+</p>
+
+<h3>Can I use JWT with GraphQL APIs?</h3>
+
+<p>
+  Absolutely. JWTs work with any transport layer. In a GraphQL setup, the client sends the JWT via the <code>Authorization: Bearer &lt;token&gt;</code> header just like a REST API. Your GraphQL server middleware verifies the token and attaches the decoded claims to the request context. This lets resolvers access user information (ID, role, permissions) without an extra database lookup on every query.
+</p>
+
+<h3>How do I handle JWT token size issues?</h3>
+
+<p>
+  JWTs grow as you add more claims. A token with dozens of permissions or nested objects can exceed cookie size limits (typically 4 KB). To keep tokens small: store only essential claims (user ID, role), move detailed permissions to a server-side cache keyed by user ID, and avoid duplicating data already available from an API call. If your token is large, paste it into our <a href="/tools/jwt-decoder">JWT Decoder</a> to see exactly which claims are consuming space.
+</p>
+
+<h2>JWT Alternatives: PASETO and Opaque Tokens</h2>
+
+<p>
+  JWTs are the dominant standard, but they are not the only option. Two notable alternatives address specific shortcomings of the JWT specification.
+</p>
+
+<h3>PASETO (Platform-Agnostic Security Tokens)</h3>
+
+<p>
+  PASETO was created as a direct response to JWT's flexibility-related security pitfalls. Where JWT lets developers choose from many algorithms (including the dangerous <code>"alg": "none"</code>), PASETO restricts choices to a small set of vetted, versioned protocols. Each PASETO version locks in a specific set of cryptographic primitives, eliminating algorithm confusion attacks entirely.
+</p>
+
+<p>
+  A PASETO token looks similar to a JWT but uses a version prefix:
+</p>
+
+<pre><code>v4.public.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0...</code></pre>
+
+<p>
+  PASETO supports two purposes: <strong>local</strong> (symmetric authenticated encryption — the payload is encrypted and authenticated) and <strong>public</strong> (asymmetric signing — like JWS, the payload is readable but tamper-proof). The "local" purpose gives you encryption by default, something that requires the separate JWE spec in the JWT ecosystem.
+</p>
+
+<p>
+  The trade-off is ecosystem maturity. JWT libraries exist for virtually every language and framework. PASETO libraries are available for most popular languages but have a smaller community and fewer battle-tested integrations with identity providers and API gateways.
+</p>
+
+<h3>Opaque Tokens</h3>
+
+<p>
+  Opaque tokens are the conceptual opposite of JWTs. Instead of encoding claims into the token itself, an opaque token is simply a random string (e.g., a UUID or a cryptographically random hex string) that maps to session data stored server-side.
+</p>
+
+<pre><code>// Opaque token example
+Authorization: Bearer 7f3c8a2b-4d1e-9f6c-a5b0-3e8d7c2f1a4b</code></pre>
+
+<p>
+  The server looks up this token in a database or cache (like Redis) to retrieve the associated user data. This makes revocation trivial — just delete the record. It also means no sensitive data can leak from the token, because the token contains no data at all.
+</p>
+
+<p>
+  The downside is that every request requires a lookup, which adds latency and creates a single point of failure (your token store). For high-throughput APIs or microservices architectures where you want to avoid per-request database calls, JWTs remain the better choice.
+</p>
+
+<p>
+  In many production systems, the best approach is a hybrid: use short-lived JWTs as access tokens (stateless, fast verification) and opaque strings as refresh tokens (stored server-side, easily revocable).
+</p>
+
+<h2>JWT Implementation Security Checklist</h2>
+
+<p>
+  Before deploying JWTs in production, walk through this checklist. Each item addresses a real-world vulnerability or misconfiguration that has led to breaches.
+</p>
+
+<ul>
+  <li><strong>Algorithm whitelist:</strong> Explicitly specify accepted algorithms in your verification logic (e.g., <code>&#123; algorithms: ['RS256'] &#125;</code>). Never allow the token's <code>alg</code> header to dictate which algorithm the server uses.</li>
+  <li><strong>Reject <code>alg: none</code>:</strong> Ensure your JWT library does not accept unsigned tokens. Test this by crafting a token with <code>"alg": "none"</code> and an empty signature — your server must reject it.</li>
+  <li><strong>Strong signing keys:</strong> For HMAC, use at least 256 bits of cryptographic randomness. For RSA, use 2048-bit keys minimum (4096 recommended). For ECDSA, use P-256 or stronger curves. Generate keys with our <a href="/tools/password-generator">Password Generator</a> or a dedicated key generation tool.</li>
+  <li><strong>Short access token lifetimes:</strong> Set <code>exp</code> to 15 minutes for access tokens. Use the refresh token pattern for longer sessions.</li>
+  <li><strong>Validate all registered claims:</strong> Check <code>exp</code>, <code>iss</code>, <code>aud</code>, and <code>nbf</code> on every request. Do not skip audience validation — a token meant for Service A should not be accepted by Service B.</li>
+  <li><strong>Secure token storage:</strong> Use <code>HttpOnly</code>, <code>Secure</code>, and <code>SameSite=Strict</code> cookies for browser-based apps. Avoid <code>localStorage</code> in XSS-prone environments.</li>
+  <li><strong>HTTPS only:</strong> Never transmit JWTs over unencrypted HTTP. A single intercepted token grants full access until expiration.</li>
+  <li><strong>No sensitive data in payload:</strong> The payload is only Base64-encoded, not encrypted. Decode any token with our <a href="/tools/jwt-decoder">JWT Decoder</a> to verify no secrets are exposed.</li>
+  <li><strong>Token revocation strategy:</strong> Decide upfront how you will handle compromised tokens. Options include short expiration, a server-side blocklist, or a per-user token version counter.</li>
+  <li><strong>Log sanitization:</strong> Strip or mask JWTs from application logs, error messages, and URLs. A leaked log file should not grant authentication access.</li>
+  <li><strong>Key rotation plan:</strong> Rotate signing keys periodically. Use JWKS (JSON Web Key Sets) endpoints so verifying services can discover new keys without downtime. During rotation, accept tokens signed with both old and new keys for a grace period.</li>
+  <li><strong>Rate-limit token issuance:</strong> Protect your <code>/auth/login</code> and <code>/auth/refresh</code> endpoints with rate limiting to prevent brute-force attacks and token flooding.</li>
+</ul>
+
+<p>
+  Ready to inspect your own tokens? Head over to our <a href="/tools/jwt-decoder">JWT Decoder</a> to paste and decode any JWT instantly — everything runs in your browser, so your tokens stay private.
+</p>
+`;
+---
+
+<BlogLayout
+  title="JWT Token Explained: How to Decode, Debug, and Secure Your Tokens"
+  description="Understand JSON Web Tokens from the ground up. Learn JWT structure, signing algorithms, common vulnerabilities, and how to decode and debug tokens with free tools."
+  slug="jwt-token-explained"
+  publishDate="2026-03-19"
+  readTime="15 min read"
+>
+  <Fragment set:html={content} />
+</BlogLayout>

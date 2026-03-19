@@ -1,0 +1,74 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import TokenCounter from '../../components/tools/TokenCounter';
+
+const faq = [
+  { question: "How does the token counter estimate tokens?", answer: "The tool uses a combination of word-based and character-based heuristics to estimate token counts. For natural text, word count multiplied by ~1.3 gives accurate results. For short inputs, character-based estimation is used. Actual tokenization may vary by model." },
+  { question: "Are the cost estimates accurate?", answer: "Cost estimates use official API pricing for each model. Token counts are approximations, so actual costs may differ slightly. Use this tool for quick budgeting and cost planning before making API calls." },
+  { question: "What models are supported?", answer: "The tool supports GPT-4o, GPT-4o mini, Claude Opus, Claude Sonnet, and Llama. Each model has different tokenization characteristics and pricing." },
+  { question: "Is my text sent to any server?", answer: "No. All token estimation runs entirely in your browser using JavaScript. Your text never leaves your device — there is no server-side processing, tracking, or logging." },
+  { question: "Why do different models show different token counts?", answer: "Each model family uses a different tokenizer with varying vocabulary sizes. For example, Claude models average about 3.5 characters per token while GPT models average about 4. This means the same text produces different token counts across models." },
+];
+---
+
+<ToolLayout
+  title="LLM Token Counter"
+  description="Estimate token counts for GPT-4, Claude, and Llama models. Free online tool."
+  slug="token-counter"
+  toolName="LLM Token Counter"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      LLM Token Counter
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Estimate token counts and costs for GPT-4, Claude, and Llama models instantly. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <TokenCounter client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Real-Time Counting</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Token counts update instantly as you type. No button clicks needed for quick estimates.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Cost Estimation</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        See estimated API costs for GPT-4, Claude Opus, and Claude Sonnet models at a glance.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your text never leaves your browser. No tracking, no cookies, no server-side processing.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

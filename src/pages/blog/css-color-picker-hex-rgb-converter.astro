@@ -1,0 +1,736 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="CSS Color Picker: HEX, RGB &amp; HSL Converter Guide for Developers"
+  description="Master CSS colors with this complete guide to HEX, RGB, and HSL formats — learn color theory, conversion formulas, and use free online color picker tools."
+  slug="css-color-picker-hex-rgb-converter"
+  publishDate="2026-03-19"
+  readTime="13 min read"
+>
+
+<p>
+  Every CSS stylesheet relies on color values — whether you're styling a button, setting a background gradient, or defining a design system. But the sheer number of CSS color formats can be confusing. Should you use HEX codes like <code>#3b82f6</code>, RGB values like <code>rgb(59, 130, 246)</code>, or HSL notation like <code>hsl(217, 91%, 60%)</code>? And how do you convert between them?
+</p>
+
+<p>
+  This guide covers everything developers need to know about CSS color formats — HEX, RGB, RGBA, HSL, HSLA, named colors, and the modern <code>color()</code> function. You'll learn how each format works, how to convert between them (with formulas), color theory fundamentals for better design choices, accessibility considerations, and how to use CSS custom properties to build maintainable color systems. If you need a quick conversion right now, try our <a href="/tools/color-converter">CSS color converter tool</a>.
+</p>
+
+<h2>Understanding CSS Color Formats</h2>
+
+<p>
+  CSS supports several ways to define colors. Each format has trade-offs in readability, precision, and developer experience. Here's a breakdown of every format you'll encounter in modern CSS.
+</p>
+
+<h3>HEX Color Codes</h3>
+
+<p>
+  HEX (hexadecimal) is the most widely used CSS color format. A HEX color starts with <code>#</code> followed by six hexadecimal digits representing red, green, and blue channels — each channel ranges from <code>00</code> (0) to <code>FF</code> (255).
+</p>
+
+<pre><code>/* 6-digit HEX */
+color: #3b82f6;    /* Blue */
+color: #ef4444;    /* Red */
+color: #10b981;    /* Green */
+color: #000000;    /* Black */
+color: #ffffff;    /* White */
+
+/* 3-digit shorthand (when each pair repeats) */
+color: #fff;       /* Same as #ffffff */
+color: #000;       /* Same as #000000 */
+color: #f00;       /* Same as #ff0000 — pure red */
+
+/* 8-digit HEX with alpha (transparency) */
+color: #3b82f680;  /* Blue at 50% opacity */
+color: #00000033;  /* Black at 20% opacity */</code></pre>
+
+<p>
+  The 3-digit shorthand works by doubling each digit: <code>#abc</code> expands to <code>#aabbcc</code>. The 8-digit variant adds two characters for alpha transparency, where <code>00</code> is fully transparent and <code>FF</code> is fully opaque.
+</p>
+
+<p>
+  <strong>When to use HEX:</strong> HEX codes are compact, universally supported, and the standard output from most design tools like Figma and Photoshop. They're ideal when copying colors from a design spec. The downside is that HEX values are not human-readable — you can't easily tell what <code>#6366f1</code> looks like without a css color picker.
+</p>
+
+<h3>RGB and RGBA</h3>
+
+<p>
+  RGB defines colors using three decimal values (0–255) for red, green, and blue. RGBA adds an alpha channel for transparency (0 to 1).
+</p>
+
+<pre><code>/* RGB */
+color: rgb(59, 130, 246);      /* Blue */
+color: rgb(239, 68, 68);       /* Red */
+color: rgb(16, 185, 129);      /* Green */
+
+/* RGBA with transparency */
+color: rgba(59, 130, 246, 0.5);  /* Blue at 50% opacity */
+color: rgba(0, 0, 0, 0.1);      /* Black at 10% opacity — subtle shadow */
+
+/* Modern syntax (CSS Level 4) — space-separated, slash for alpha */
+color: rgb(59 130 246);
+color: rgb(59 130 246 / 0.5);
+color: rgb(59 130 246 / 50%);</code></pre>
+
+<p>
+  <strong>When to use RGB:</strong> RGB is useful when you need to programmatically manipulate colors with JavaScript (each channel is a simple integer) or when you need alpha transparency. It's also the native format for the <code>&lt;canvas&gt;</code> API and WebGL.
+</p>
+
+<h3>HSL and HSLA</h3>
+
+<p>
+  HSL stands for Hue, Saturation, and Lightness — a format designed to be more intuitive for humans. Instead of mixing abstract red/green/blue channels, you specify a color by its position on the color wheel (hue), how vivid it is (saturation), and how bright it is (lightness).
+</p>
+
+<pre><code>/* HSL */
+color: hsl(217, 91%, 60%);     /* Blue — 217° on color wheel */
+color: hsl(0, 84%, 60%);       /* Red — 0° on color wheel */
+color: hsl(160, 84%, 39%);     /* Green — 160° on color wheel */
+
+/* HSLA with transparency */
+color: hsla(217, 91%, 60%, 0.5);  /* Blue at 50% opacity */
+
+/* Modern syntax */
+color: hsl(217 91% 60%);
+color: hsl(217 91% 60% / 0.5);</code></pre>
+
+<p>
+  The hue value is an angle on the color wheel: 0° is red, 120° is green, 240° is blue, and 360° wraps back to red. Saturation goes from 0% (gray) to 100% (fully vivid). Lightness goes from 0% (black) to 100% (white), with 50% being the "pure" color.
+</p>
+
+<p>
+  <strong>When to use HSL:</strong> HSL is the best format for building color systems and design tokens. Want a darker shade? Lower lightness. Want a muted version? Reduce saturation. Want a complementary color? Add 180° to the hue. This makes HSL perfect for CSS custom properties and dynamic theming.
+</p>
+
+<h3>CSS Named Colors</h3>
+
+<p>
+  CSS defines 148 named colors — from <code>aliceblue</code> to <code>yellowgreen</code>. While convenient for prototyping, they are limited and rarely match brand colors.
+</p>
+
+<pre><code>color: tomato;         /* #ff6347 */
+color: cornflowerblue; /* #6495ed */
+color: slategray;      /* #708090 */
+color: rebeccapurple;  /* #663399 — added in CSS4 as a tribute */
+color: transparent;    /* rgba(0, 0, 0, 0) */
+color: currentColor;   /* Inherits from parent's color property */</code></pre>
+
+<p>
+  Two special keywords are worth knowing: <code>transparent</code> is a fully transparent black, and <code>currentColor</code> references the element's current <code>color</code> property value — extremely useful for SVG icons and borders that should match text color.
+</p>
+
+<h3>Modern CSS Color Functions</h3>
+
+<p>
+  CSS Color Level 4 and Level 5 introduce powerful new functions that go beyond the traditional sRGB color space. These enable wider gamut colors on modern displays.
+</p>
+
+<pre><code>/* Lab color — perceptually uniform lightness */
+color: lab(60% 50 -30);
+
+/* LCH — like HSL but perceptually uniform */
+color: lch(60% 50 270);
+
+/* oklch — improved perceptual model, preferred in 2026 */
+color: oklch(0.65 0.2 270);
+
+/* color() — access any color space */
+color: color(display-p3 0.3 0.5 1.0);
+
+/* color-mix() — blend two colors in any color space */
+color: color-mix(in oklch, #3b82f6 70%, white);
+
+/* relative color syntax — derive new colors from existing ones */
+color: hsl(from var(--brand) h s calc(l - 20%));</code></pre>
+
+<p>
+  The <code>oklch()</code> function is quickly becoming the recommended format for new projects. It offers perceptually uniform lightness (unlike HSL, where different hues at the same lightness look visually different in brightness), wide gamut support for P3 displays, and predictable color manipulation. The <code>color-mix()</code> function is already well-supported and eliminates the need for Sass color functions in many cases.
+</p>
+
+<h2>CSS Color Format Conversion</h2>
+
+<p>
+  Converting between CSS color formats is a common task. Here's how each conversion works, with formulas and examples. For instant conversions without manual math, use our <a href="/tools/color-converter">hex rgb converter tool</a>.
+</p>
+
+<h3>HEX to RGB Conversion</h3>
+
+<p>
+  HEX to RGB conversion is straightforward — each pair of hex digits converts to a decimal value between 0 and 255.
+</p>
+
+<pre><code>/* HEX: #3b82f6 */
+R = 0x3b = 3×16 + 11 = 59
+G = 0x82 = 8×16 + 2  = 130
+B = 0xf6 = 15×16 + 6 = 246
+
+/* Result: rgb(59, 130, 246) */</code></pre>
+
+<p>
+  In JavaScript, you can automate this:
+</p>
+
+<pre><code>function hexToRgb(hex) &#123;
+  const result = /^#?([a-f\d]&#123;2&#123;)([a-f\d]&#123;2&#123;)([a-f\d]&#123;2&#123;)$/i.exec(hex);
+  return result ? &#123;
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  &#123; : null;
+&#123;
+
+hexToRgb('#3b82f6'); // &#123; r: 59, g: 130, b: 246 &#123;</code></pre>
+
+<h3>RGB to HEX Conversion</h3>
+
+<p>
+  The reverse: convert each decimal channel (0–255) to a two-digit hexadecimal string.
+</p>
+
+<pre><code>function rgbToHex(r, g, b) &#123;
+  return '#' + [r, g, b]
+    .map(x => x.toString(16).padStart(2, '0'))
+    .join('');
+&#123;
+
+rgbToHex(59, 130, 246); // '#3b82f6'</code></pre>
+
+<h3>RGB to HSL Conversion</h3>
+
+<p>
+  This conversion is more complex. You first normalize RGB values to the 0–1 range, find the min and max channels, then calculate hue, saturation, and lightness.
+</p>
+
+<pre><code>function rgbToHsl(r, g, b) &#123;
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h, s;
+
+  if (max === min) &#123;
+    h = s = 0; // achromatic (gray)
+  &#123; else &#123;
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) &#123;
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    &#123;
+  &#123;
+
+  return &#123;
+    h: Math.round(h * 360),
+    s: Math.round(s * 100),
+    l: Math.round(l * 100)
+  &#123;;
+&#123;
+
+rgbToHsl(59, 130, 246); // &#123; h: 217, s: 91, l: 60 &#123;</code></pre>
+
+<h3>Common Color Conversion Reference Table</h3>
+
+<p>
+  Here are popular colors across all three formats for quick reference:
+</p>
+
+<pre><code>Color Name      | HEX       | RGB                  | HSL
+----------------|-----------|----------------------|------------------------
+White           | #ffffff   | rgb(255, 255, 255)   | hsl(0, 0%, 100%)
+Black           | #000000   | rgb(0, 0, 0)         | hsl(0, 0%, 0%)
+Pure Red        | #ff0000   | rgb(255, 0, 0)       | hsl(0, 100%, 50%)
+Pure Green      | #00ff00   | rgb(0, 255, 0)       | hsl(120, 100%, 50%)
+Pure Blue       | #0000ff   | rgb(0, 0, 255)       | hsl(240, 100%, 50%)
+Tailwind Blue   | #3b82f6   | rgb(59, 130, 246)    | hsl(217, 91%, 60%)
+Tailwind Red    | #ef4444   | rgb(239, 68, 68)     | hsl(0, 84%, 60%)
+Tailwind Green  | #10b981   | rgb(16, 185, 129)    | hsl(160, 84%, 39%)
+Coral           | #ff7f50   | rgb(255, 127, 80)    | hsl(16, 100%, 66%)
+Indigo          | #6366f1   | rgb(99, 102, 241)    | hsl(239, 84%, 67%)
+Amber           | #f59e0b   | rgb(245, 158, 11)    | hsl(38, 92%, 50%)
+Slate Gray      | #64748b   | rgb(100, 116, 139)   | hsl(215, 16%, 47%)</code></pre>
+
+<h2>Color Theory Basics for Web Developers</h2>
+
+<p>
+  You don't need a design degree to choose good colors. Understanding a few fundamentals will dramatically improve your UI work.
+</p>
+
+<h3>The Color Wheel</h3>
+
+<p>
+  The color wheel arranges hues in a circle: red at 0°, yellow at 60°, green at 120°, cyan at 180°, blue at 240°, and magenta at 300°. This is exactly what the H value in HSL represents. Knowing the wheel lets you build color relationships mathematically.
+</p>
+
+<h3>Color Harmonies</h3>
+
+<p>
+  Color harmonies are combinations that naturally look good together. Using HSL, you can compute them directly:
+</p>
+
+<pre><code>/* Starting hue: 217° (blue) */
+
+/* Complementary — opposite on the wheel (±180°) */
+--primary: hsl(217, 91%, 60%);    /* Blue */
+--complement: hsl(37, 91%, 60%);  /* Orange */
+
+/* Analogous — neighbors on the wheel (±30°) */
+--primary: hsl(217, 91%, 60%);
+--analog-1: hsl(187, 91%, 60%);   /* Cyan-ish */
+--analog-2: hsl(247, 91%, 60%);   /* Purple-ish */
+
+/* Triadic — three equally spaced hues (±120°) */
+--primary: hsl(217, 91%, 60%);
+--triad-1: hsl(337, 91%, 60%);    /* Pink */
+--triad-2: hsl(97, 91%, 60%);     /* Lime */
+
+/* Split-complementary — complement's neighbors */
+--primary: hsl(217, 91%, 60%);
+--split-1: hsl(7, 91%, 60%);      /* Red-orange */
+--split-2: hsl(67, 91%, 60%);     /* Yellow-green */</code></pre>
+
+<p>
+  Want to explore these harmonies visually? Our <a href="/tools/color-palette-generator">color palette generator</a> creates complete palettes from a single starting color using these relationships.
+</p>
+
+<h3>Building Shade Scales with HSL</h3>
+
+<p>
+  A single hue can produce an entire shade scale by varying lightness. This is how frameworks like Tailwind CSS generate their color palettes — and you can do it with plain CSS.
+</p>
+
+<pre><code>:root &#123;
+  --blue-50:  hsl(217, 91%, 97%);   /* Lightest */
+  --blue-100: hsl(217, 91%, 93%);
+  --blue-200: hsl(217, 91%, 84%);
+  --blue-300: hsl(217, 91%, 74%);
+  --blue-400: hsl(217, 91%, 67%);
+  --blue-500: hsl(217, 91%, 60%);   /* Base */
+  --blue-600: hsl(217, 91%, 50%);
+  --blue-700: hsl(217, 91%, 40%);
+  --blue-800: hsl(217, 91%, 30%);
+  --blue-900: hsl(217, 91%, 20%);   /* Darkest */
+&#123;</code></pre>
+
+<p>
+  In practice, you'll often want to also slightly decrease saturation as you go darker and increase it slightly for lighter shades — this prevents colors from looking neon or muddy at the extremes.
+</p>
+
+<h2>CSS Custom Properties for Color Systems</h2>
+
+<p>
+  CSS custom properties (variables) transform how you manage colors across a project. Instead of scattering hex codes throughout your stylesheet, you define a single source of truth.
+</p>
+
+<h3>Basic Color Tokens</h3>
+
+<pre><code>:root &#123;
+  /* Brand colors */
+  --color-primary: #3b82f6;
+  --color-primary-light: #93c5fd;
+  --color-primary-dark: #1d4ed8;
+
+  /* Semantic colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #06b6d4;
+
+  /* Neutral palette */
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f8fafc;
+  --color-border: #e2e8f0;
+&#123;
+
+/* Dark mode — override only what changes */
+@media (prefers-color-scheme: dark) &#123;
+  :root &#123;
+    --color-text: #f1f5f9;
+    --color-text-muted: #94a3b8;
+    --color-bg: #0f172a;
+    --color-bg-subtle: #1e293b;
+    --color-border: #334155;
+  &#123;
+&#123;</code></pre>
+
+<h3>Advanced: HSL Channel Splitting</h3>
+
+<p>
+  A powerful technique is storing individual HSL channels, then composing them on the fly. This lets you create alpha variants and shade adjustments without duplicating colors.
+</p>
+
+<pre><code>:root &#123;
+  --primary-h: 217;
+  --primary-s: 91%;
+  --primary-l: 60%;
+
+  --color-primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  --color-primary-hover: hsl(var(--primary-h), var(--primary-s), 55%);
+  --color-primary-active: hsl(var(--primary-h), var(--primary-s), 48%);
+  --color-primary-bg: hsl(var(--primary-h), var(--primary-s), 95%);
+&#123;
+
+.button-primary &#123;
+  background: var(--color-primary);
+  color: white;
+&#123;
+
+.button-primary:hover &#123;
+  background: var(--color-primary-hover);
+&#123;
+
+.alert-primary &#123;
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary);
+  color: hsl(var(--primary-h), var(--primary-s), 30%);
+&#123;</code></pre>
+
+<h3>Using color-mix() for Modern Color Systems</h3>
+
+<p>
+  The <code>color-mix()</code> function, now supported in all major browsers, simplifies creating color variations without channel splitting:
+</p>
+
+<pre><code>:root &#123;
+  --brand: #3b82f6;
+  --brand-hover: color-mix(in oklch, var(--brand) 85%, black);
+  --brand-light: color-mix(in oklch, var(--brand) 20%, white);
+  --brand-muted: color-mix(in oklch, var(--brand) 60%, gray);
+
+  /* Create alpha variants */
+  --brand-10: color-mix(in srgb, var(--brand) 10%, transparent);
+  --brand-50: color-mix(in srgb, var(--brand) 50%, transparent);
+&#123;</code></pre>
+
+<p>
+  The <code>in oklch</code> parameter produces better perceptual results than mixing in sRGB — darker shades stay vibrant instead of turning muddy.
+</p>
+
+<h2>Color Accessibility and Contrast Ratios</h2>
+
+<p>
+  Choosing the right CSS color isn't just aesthetic — it's an accessibility requirement. The Web Content Accessibility Guidelines (WCAG) define minimum contrast ratios between text and background colors.
+</p>
+
+<h3>WCAG Contrast Requirements</h3>
+
+<pre><code>Level AA (minimum):
+- Normal text (under 18px):  4.5:1 contrast ratio
+- Large text (18px+ bold or 24px+): 3:1 contrast ratio
+- UI components and graphics: 3:1 contrast ratio
+
+Level AAA (enhanced):
+- Normal text: 7:1 contrast ratio
+- Large text: 4.5:1 contrast ratio</code></pre>
+
+<h3>Contrast Ratio Examples</h3>
+
+<pre><code>/* GOOD — passes AA for normal text */
+color: #1e293b;              /* Dark slate */
+background: #ffffff;         /* White */
+/* Contrast ratio: 13.5:1 ✓ */
+
+/* GOOD — passes AA for large text */
+color: #64748b;              /* Slate gray */
+background: #ffffff;         /* White */
+/* Contrast ratio: 4.6:1 — passes AA for large text, fails for normal text */
+
+/* BAD — fails AA entirely */
+color: #93c5fd;              /* Light blue */
+background: #ffffff;         /* White */
+/* Contrast ratio: 2.3:1 ✗ — unreadable for many users */
+
+/* Common mistake: light gray on white */
+color: #d1d5db;
+background: #ffffff;
+/* Contrast ratio: 1.6:1 ✗ — fails all levels */</code></pre>
+
+<h3>Calculating Contrast Ratios</h3>
+
+<p>
+  The contrast ratio formula uses relative luminance. You first convert each sRGB channel to linear light, compute luminance, then calculate the ratio.
+</p>
+
+<pre><code>function getRelativeLuminance(r, g, b) &#123;
+  const [rs, gs, bs] = [r, g, b].map(c => &#123;
+    c /= 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  &#123;);
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+&#123;
+
+function getContrastRatio(color1, color2) &#123;
+  const l1 = getRelativeLuminance(...color1);
+  const l2 = getRelativeLuminance(...color2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+&#123;
+
+// Example: dark text on white background
+getContrastRatio([30, 41, 59], [255, 255, 255]);
+// Returns: 13.5 — passes AAA</code></pre>
+
+<p>
+  Tip: when designing a color palette, always check each shade against both white and dark backgrounds. A good css color picker tool will display contrast ratios automatically. Our <a href="/tools/color-converter">color converter</a> includes WCAG contrast checking.
+</p>
+
+<h3>Tips for Accessible Color Usage</h3>
+
+<ul>
+  <li><strong>Never rely on color alone</strong> to convey information — pair colored indicators with icons, text labels, or patterns</li>
+  <li><strong>Test with color blindness simulators</strong> — roughly 8% of men have some form of color vision deficiency</li>
+  <li><strong>Provide sufficient contrast for interactive elements</strong> — focus rings, borders, and hover states all need 3:1 minimum against adjacent colors</li>
+  <li><strong>Use your shade scale wisely</strong> — for text on a white background, 700-900 shades typically pass AA; 500-600 often fail for body text</li>
+  <li><strong>Check dark mode separately</strong> — contrast that works on white may fail on dark backgrounds, and vice versa</li>
+</ul>
+
+<h2>Practical CSS Color Patterns</h2>
+
+<p>
+  Here are real-world CSS patterns that use color effectively.
+</p>
+
+<h3>Gradient Buttons with Color Harmony</h3>
+
+<pre><code>.button-gradient &#123;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+&#123;
+
+.button-gradient:hover &#123;
+  opacity: 0.9;
+&#123;
+
+.button-gradient:focus-visible &#123;
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+&#123;</code></pre>
+
+<h3>Semantic Status Colors with Alpha Variants</h3>
+
+<pre><code>.badge &#123;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+&#123;
+
+.badge-success &#123;
+  background: rgb(16 185 129 / 0.1);
+  color: #065f46;
+  border: 1px solid rgb(16 185 129 / 0.2);
+&#123;
+
+.badge-error &#123;
+  background: rgb(239 68 68 / 0.1);
+  color: #991b1b;
+  border: 1px solid rgb(239 68 68 / 0.2);
+&#123;
+
+.badge-warning &#123;
+  background: rgb(245 158 11 / 0.1);
+  color: #92400e;
+  border: 1px solid rgb(245 158 11 / 0.2);
+&#123;</code></pre>
+
+<h3>Smooth Dark Mode Transitions</h3>
+
+<pre><code>:root &#123;
+  --surface: #ffffff;
+  --on-surface: #1e293b;
+  --surface-elevated: #ffffff;
+  --shadow-color: 220 3% 15%;
+
+  color-scheme: light;
+&#123;
+
+@media (prefers-color-scheme: dark) &#123;
+  :root &#123;
+    --surface: #0f172a;
+    --on-surface: #e2e8f0;
+    --surface-elevated: #1e293b;
+    --shadow-color: 220 40% 2%;
+
+    color-scheme: dark;
+  &#123;
+&#123;
+
+body &#123;
+  background: var(--surface);
+  color: var(--on-surface);
+  transition: background-color 0.3s ease, color 0.3s ease;
+&#123;
+
+.card &#123;
+  background: var(--surface-elevated);
+  box-shadow: 0 4px 6px -1px hsl(var(--shadow-color) / 0.1);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+&#123;</code></pre>
+
+<h2>CSS Color Picker Tools Compared</h2>
+
+<p>
+  There are many tools available for picking and converting CSS colors. Here's how the popular options compare for developers working with a css color picker hex rgb converter workflow.
+</p>
+
+<h3>Browser DevTools Color Picker</h3>
+
+<p>
+  Every browser includes a built-in color picker in the CSS inspector. Click any color swatch in the Styles panel to open it. Chrome DevTools is particularly full-featured — it shows contrast ratios, supports all color formats, and lets you toggle between HEX, RGB, HSL, and HWB with a single click. This is the fastest option when you're already debugging styles.
+</p>
+
+<h3>VS Code Color Picker</h3>
+
+<p>
+  VS Code shows a color swatch next to any CSS color value. Hovering over it opens a mini picker where you can adjust hue, saturation, opacity, and toggle between formats. For quick edits while coding, it's hard to beat.
+</p>
+
+<h3>Online Color Converter Tools</h3>
+
+<p>
+  Dedicated web tools like our <a href="/tools/color-converter">color converter</a> are ideal for batch conversions and when you need to see all formats simultaneously. The best online css color picker tools display HEX, RGB, HSL, and OKLCH side by side, show the color visually, provide contrast checking, and let you copy any format with one click.
+</p>
+
+<h3>Palette Generation Tools</h3>
+
+<p>
+  When you need to build a complete color system — not just convert a single value — use a <a href="/tools/color-palette-generator">color palette generator</a>. These tools create harmonious multi-color palettes, generate shade scales, and ensure accessibility. They save hours compared to manually tweaking HSL values.
+</p>
+
+<h2>Common CSS Color Mistakes and How to Avoid Them</h2>
+
+<ul>
+  <li><strong>Using pure black <code>#000000</code> for text:</strong> On white backgrounds, pure black creates harsh contrast. Use dark gray like <code>#1e293b</code> or <code>#111827</code> instead — it's easier on the eyes while still passing AAA contrast.</li>
+  <li><strong>Inconsistent opacity approaches:</strong> Mixing <code>opacity: 0.5</code> (affects entire element including children) with <code>rgba()</code> alpha (affects only that color) causes unexpected results. Prefer per-color alpha for backgrounds.</li>
+  <li><strong>Hardcoding colors everywhere:</strong> Without CSS custom properties, changing your brand blue means find-and-replace across hundreds of files. Define colors once, reference everywhere.</li>
+  <li><strong>Ignoring the P3 color gamut:</strong> Modern displays can show millions more colors than sRGB. Consider using <code>color(display-p3 ...)</code> with an sRGB fallback for more vibrant hero sections and illustrations.</li>
+  <li><strong>Forgetting <code>forced-colors</code> mode:</strong> Windows High Contrast Mode overrides your colors. Use <code>@media (forced-colors: active)</code> to ensure critical UI elements remain visible.</li>
+</ul>
+
+<h2>Frequently Asked Questions</h2>
+
+<h3>What's the difference between HEX and RGB colors in CSS?</h3>
+<p>
+  HEX and RGB represent the same color model — both define colors using red, green, and blue channels. HEX uses hexadecimal notation (<code>#3b82f6</code>) while RGB uses decimal values (<code>rgb(59, 130, 246)</code>). They are fully interchangeable. HEX is more compact; RGB is easier to read and manipulate programmatically.
+</p>
+
+<h3>When should I use HSL instead of HEX or RGB?</h3>
+<p>
+  Use HSL when building color systems, creating shade scales, or deriving related colors. HSL separates the hue (color identity) from saturation and lightness, making it trivial to create lighter/darker variants or find complementary colors. HEX or RGB is fine for individual one-off color values.
+</p>
+
+<h3>How do I convert HEX to RGB manually?</h3>
+<p>
+  Split the 6-digit hex code into three pairs (e.g., <code>#3b82f6</code> becomes <code>3b</code>, <code>82</code>, <code>f6</code>). Convert each pair from hexadecimal to decimal: <code>3b</code> = 59, <code>82</code> = 130, <code>f6</code> = 246. The result is <code>rgb(59, 130, 246)</code>.
+</p>
+
+<h3>What is a good contrast ratio for accessible text?</h3>
+<p>
+  WCAG 2.1 requires a minimum contrast ratio of 4.5:1 for normal-sized text (Level AA) and 3:1 for large text (18px bold or 24px regular). For enhanced accessibility (Level AAA), aim for 7:1 for normal text and 4.5:1 for large text.
+</p>
+
+<h3>What is OKLCH and should I use it?</h3>
+<p>
+  OKLCH is a perceptually uniform color space that improves on HSL's shortcomings. In HSL, yellow at 50% lightness looks much brighter than blue at 50% lightness. OKLCH corrects this, making lightness values consistent across hues. It's supported in all modern browsers and recommended for new color systems in 2026.
+</p>
+
+<h3>Can I use CSS custom properties for colors with fallbacks?</h3>
+<p>
+  Yes. Use the two-value syntax: <code>color: var(--primary, #3b82f6)</code>. If <code>--primary</code> is not defined, the browser falls back to <code>#3b82f6</code>. You can also use <code>@supports</code> queries to provide fallbacks for modern color functions like <code>oklch()</code>.
+</p>
+
+<h3>How do I add transparency to a HEX color?</h3>
+<p>
+  Append two hex digits to the 6-digit code: <code>#3b82f680</code> is approximately 50% opacity (<code>80</code> hex = 128 decimal, which is 128/255 ≈ 50%). Alternatively, convert to <code>rgb()</code> and use the alpha parameter: <code>rgb(59 130 246 / 0.5)</code>.
+</p>
+
+<h3>What CSS color format is best for performance?</h3>
+<p>
+  All CSS color formats parse to the same internal representation — there is no measurable performance difference between HEX, RGB, and HSL. Choose the format that best serves readability and maintainability for your team.
+</p>
+
+<!-- FAQ Schema -->
+<script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What's the difference between HEX and RGB colors in CSS?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "HEX and RGB represent the same color model — both define colors using red, green, and blue channels. HEX uses hexadecimal notation (#3b82f6) while RGB uses decimal values (rgb(59, 130, 246)). They are fully interchangeable. HEX is more compact; RGB is easier to read and manipulate programmatically."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When should I use HSL instead of HEX or RGB?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use HSL when building color systems, creating shade scales, or deriving related colors. HSL separates the hue (color identity) from saturation and lightness, making it trivial to create lighter/darker variants or find complementary colors. HEX or RGB is fine for individual one-off color values."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I convert HEX to RGB manually?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Split the 6-digit hex code into three pairs (e.g., #3b82f6 becomes 3b, 82, f6). Convert each pair from hexadecimal to decimal: 3b = 59, 82 = 130, f6 = 246. The result is rgb(59, 130, 246)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a good contrast ratio for accessible text?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "WCAG 2.1 requires a minimum contrast ratio of 4.5:1 for normal-sized text (Level AA) and 3:1 for large text (18px bold or 24px regular). For enhanced accessibility (Level AAA), aim for 7:1 for normal text and 4.5:1 for large text."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is OKLCH and should I use it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "OKLCH is a perceptually uniform color space that improves on HSL's shortcomings. In HSL, yellow at 50% lightness looks much brighter than blue at 50% lightness. OKLCH corrects this, making lightness values consistent across hues. It's supported in all modern browsers and recommended for new color systems in 2026."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use CSS custom properties for colors with fallbacks?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Use the two-value syntax: color: var(--primary, #3b82f6). If --primary is not defined, the browser falls back to #3b82f6. You can also use @supports queries to provide fallbacks for modern color functions like oklch()."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I add transparency to a HEX color?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Append two hex digits to the 6-digit code: #3b82f680 is approximately 50% opacity (80 hex = 128 decimal, which is 128/255 ≈ 50%). Alternatively, convert to rgb() and use the alpha parameter: rgb(59 130 246 / 0.5)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What CSS color format is best for performance?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "All CSS color formats parse to the same internal representation — there is no measurable performance difference between HEX, RGB, and HSL. Choose the format that best serves readability and maintainability for your team."
+      }
+    }
+  ]
+})} />
+
+</BlogLayout>

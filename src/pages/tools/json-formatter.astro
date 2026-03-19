@@ -1,0 +1,128 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import JsonFormatter from '../../components/tools/JsonFormatter';
+
+const faq = [
+  { question: "How do I format JSON online?", answer: "Paste your JSON into the editor and click Format. The tool instantly pretty-prints your JSON with proper indentation. You can choose 2, 4, or 8 space indentation." },
+  { question: "Is my JSON data safe?", answer: "Yes. Everything runs entirely in your browser using JavaScript. No data is ever sent to a server. Your JSON never leaves your device." },
+  { question: "Can I validate JSON for errors?", answer: "Yes. Switch to the Validate tab and the tool will check your JSON syntax, displaying detailed error messages with position information so you can fix issues quickly." },
+  { question: "What is the difference between formatting and minifying JSON?", answer: "Formatting (pretty-printing) adds indentation and line breaks to make JSON human-readable. Minifying removes all whitespace to reduce file size for production use." },
+  { question: "What is the Tree View?", answer: "The Tree View displays your JSON as a collapsible, interactive tree structure. You can expand and collapse nested objects and arrays to explore large JSON documents easily. Values are color-coded by type." },
+  { question: "How does JSON Path query work?", answer: "JSON Path lets you extract specific values from your JSON using path expressions like $.store.book[0].title. Enter a path and click Query to see matching results. Supports dot notation, bracket notation, and wildcards." },
+  { question: "Can I download the formatted JSON?", answer: "Yes. After formatting or minifying, click the Download button to save the result as a .json file. Minified output saves as data.min.json." },
+];
+---
+
+<ToolLayout
+  title="JSON Formatter & Validator"
+  description="Format, validate, minify, and explore JSON data online for free. Collapsible tree view, JSON Path query, download, and more."
+  slug="json-formatter"
+  toolName="JSON Formatter & Validator"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      JSON Formatter & Validator
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Format, validate, minify, and explore your JSON data instantly. Tree view, JSON Path query, and download &mdash; all in your browser.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <JsonFormatter client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Instant Processing</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Format, validate, or minify JSON in milliseconds. No server roundtrips needed.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Collapsible Tree View</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Explore large JSON documents with an interactive, color-coded tree. Expand and collapse any level.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">JSON Path Query</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Extract specific values using JSON Path expressions. Supports dot notation, arrays, and wildcards.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your data never leaves your browser. No tracking, no cookies, no server-side processing.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Copy & Download</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        One-click copy to clipboard or download as a .json file. Minified output saves as data.min.json.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Flexible Output</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Choose 2, 4, or 8 space indentation. Minify for production or beautify for readability.
+      </p>
+    </div>
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="mt-12">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Frequently Asked Questions</h2>
+    <div class="space-y-4">
+      {faq.map(item => (
+        <details class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 group">
+          <summary class="font-semibold text-gray-900 dark:text-gray-100 cursor-pointer list-none flex items-center justify-between">
+            {item.question}
+            <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</ToolLayout>

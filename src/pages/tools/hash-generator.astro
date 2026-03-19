@@ -1,0 +1,74 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import HashGenerator from '../../components/tools/HashGenerator';
+
+const faq = [
+  { question: "What hash algorithms are supported?", answer: "This tool supports MD5, SHA-1, SHA-256, SHA-384, and SHA-512. All five hashes are computed simultaneously in real-time as you type." },
+  { question: "Which hash algorithm should I use?", answer: "For security purposes (password hashing, data integrity), use SHA-256 or SHA-512. MD5 and SHA-1 are considered cryptographically broken and should only be used for checksums or non-security purposes." },
+  { question: "Is my data sent to a server?", answer: "No. All hashing is performed entirely in your browser using the Web Crypto API. Your data never leaves your device." },
+  { question: "Can I reverse a hash to get the original text?", answer: "No. Cryptographic hash functions are one-way — you cannot reverse a hash to recover the original input. This is by design and is what makes hashes useful for password storage and data verification." },
+  { question: "Why do small changes produce completely different hashes?", answer: "This is called the avalanche effect — a fundamental property of good hash functions. Even a single character change produces a completely different hash output, making it impossible to predict the hash from similar inputs." },
+];
+---
+
+<ToolLayout
+  title="Hash Generator"
+  description="Generate SHA-256, SHA-512, SHA-1, and MD5 hashes. Free online tool."
+  slug="hash-generator"
+  toolName="Hash Generator"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Hash Generator
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Generate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes instantly. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <HashGenerator client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Real-time Hashing</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Hashes update instantly as you type. All five algorithms computed simultaneously.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your data never leaves your browser. No tracking, no cookies, no server-side processing.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Easy Copy</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        One-click copy for each hash. Toggle between uppercase and lowercase output.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

@@ -1,0 +1,28 @@
+---
+import ToolCard from './ToolCard.astro';
+import { getRelatedTools } from '../data/tools';
+import type { Tool } from '../data/tools';
+
+export interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const related = getRelatedTools(slug, 4);
+---
+
+{related.length > 0 && (
+  <div class="mt-12">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Related Tools</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {related.map((tool) => (
+        <ToolCard {...tool} />
+      ))}
+    </div>
+    <div class="text-center mt-6">
+      <a href="/tools" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">
+        Browse all tools &rarr;
+      </a>
+    </div>
+  </div>
+)}

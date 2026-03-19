@@ -1,0 +1,89 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import AiDocGenerator from '../../components/tools/AiDocGenerator';
+
+const faq = [
+  { question: "What documentation formats are supported?", answer: "AI Doc Generator supports JSDoc, TSDoc, Python Docstrings (Google/NumPy style), Markdown README files, and OpenAPI/Swagger specifications." },
+  { question: "Can it generate documentation for entire files?", answer: "Yes. Paste an entire file and the AI will generate documentation for all functions, classes, and exports. It understands relationships between components." },
+  { question: "Is the generated documentation accurate?", answer: "The AI analyzes your code's logic, parameters, return types, and side effects to generate accurate documentation. Always review the output for your specific context." },
+  { question: "Does it work with any programming language?", answer: "While documentation style options target specific ecosystems, the AI can analyze code in any major language and adapt the documentation format accordingly." },
+];
+---
+
+<ToolLayout
+  title="AI Documentation Generator"
+  description="Auto-generate comprehensive documentation from your code — JSDoc, TSDoc, Python docstrings, and OpenAPI specs"
+  slug="ai-doc-generator"
+  toolName="AI Documentation Generator"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <div class="flex items-center gap-3 mb-3">
+      <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">
+        AI Documentation Generator
+      </h1>
+      <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 text-white text-xs font-bold">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        PRO
+      </span>
+    </div>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Auto-generate comprehensive documentation from your code. Supports JSDoc, TSDoc, Python docstrings, Markdown, and OpenAPI specs.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <AiDocGenerator client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h3 class="font-semibold mb-2">Multiple Formats</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">JSDoc, TSDoc, Python Docstrings, Markdown README, and OpenAPI/Swagger — all from the same code.</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="font-semibold mb-2">Context-Aware</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Understands class hierarchies, function relationships, and side effects to generate meaningful descriptions.</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <h3 class="font-semibold mb-2">Copy & Paste</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Generated docs are ready to paste directly into your codebase. No reformatting needed.</p>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  {faq && faq.length > 0 && (
+    <div class="mt-12">
+      <h2 class="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+      <div class="space-y-4">
+        {faq.map((item) => (
+          <details class="group bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl">
+            <summary class="flex items-center justify-between cursor-pointer p-5 font-medium">
+              {item.question}
+              <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <div class="px-5 pb-5 text-gray-500 dark:text-gray-400">{item.answer}</div>
+          </details>
+        ))}
+      </div>
+    </div>
+  )}
+</ToolLayout>

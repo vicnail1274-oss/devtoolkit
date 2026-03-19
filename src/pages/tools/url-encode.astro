@@ -1,0 +1,73 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import UrlEncode from '../../components/tools/UrlEncode';
+
+const faq = [
+  { question: "What is URL encoding?", answer: "URL encoding (percent-encoding) converts special characters into a format that can be safely transmitted in URLs. For example, spaces become %20, ampersands become %26, and non-ASCII characters are encoded as UTF-8 byte sequences." },
+  { question: "When do I need to URL encode?", answer: "URL encode when passing user input as query parameters, handling filenames with special characters in URLs, or working with API endpoints that require encoded values. Most programming languages have built-in functions for this." },
+  { question: "What is the difference between encodeURI and encodeURIComponent?", answer: "encodeURI encodes a full URI but preserves characters like : / ? # that have special meaning in URLs. encodeURIComponent encodes everything except alphanumeric characters and - _ . ~, making it suitable for encoding individual query parameter values." },
+  { question: "Is my data private?", answer: "Yes. All encoding and decoding runs in your browser using JavaScript. No data is transmitted to any server." },
+];
+---
+
+<ToolLayout
+  title="URL Encode/Decode"
+  description="Encode and decode URL components for safe web usage. Free online tool."
+  slug="url-encode"
+  toolName="URL Encode/Decode"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      URL Encode/Decode
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Encode and decode URL components instantly. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <UrlEncode client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Instant Processing</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Encode or decode URLs in milliseconds. No server roundtrips needed.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Private</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Your data never leaves your browser. No tracking, no cookies, no server-side processing.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Two Encoding Modes</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Choose between component encoding (encodeURIComponent) for query parameters, or full URL encoding (encodeURI) for complete URLs.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

@@ -1,0 +1,79 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import FaviconGenerator from '../../components/tools/FaviconGenerator';
+
+const faq = [
+  { question: "What sizes do I need for a favicon?", answer: "At minimum, you need 16x16 (browser tab), 32x32 (retina tab), 180x180 (Apple touch icon), 192x192 (Android Chrome), and 512x512 (PWA splash screen). Our tool generates all common sizes with one click." },
+  { question: "What image format should I upload?", answer: "PNG or SVG work best. Use a square image for best results. The tool will handle resizing to all needed dimensions." },
+  { question: "What is manifest.json?", answer: "manifest.json (or site.webmanifest) is a JSON file that tells browsers about your web application. It includes icon references for PWA install prompts and home screen shortcuts. Our tool generates this file automatically." },
+  { question: "Do I need all the sizes?", answer: "For basic browser support, 16x16 and 32x32 are sufficient. For full cross-platform support including iOS, Android, and PWA, use all sizes our tool provides." },
+];
+---
+
+<ToolLayout
+  title="Favicon Generator"
+  description="Generate multi-size favicons from any image. Includes manifest.json and HTML tags. Free online tool."
+  slug="favicon-generator"
+  toolName="Favicon Generator"
+  faq={faq}
+>
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Favicon Generator
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Upload any image and generate favicons in all sizes. Get ready-to-use HTML tags and manifest.json &mdash; everything runs in your browser.
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <FaviconGenerator client:load />
+  </div>
+
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">12 Sizes</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Generate 12 standard favicon sizes from 16x16 to 512x512 covering all platforms.</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Ready-to-Use Code</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Get HTML link tags and manifest.json ready to paste into your project.</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Custom Shapes</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Choose square, rounded, or circle shapes with adjustable padding and background color.</p>
+    </div>
+  </div>
+
+  <div class="mt-12">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Frequently Asked Questions</h2>
+    <div class="space-y-4">
+      {faq.map(item => (
+        <details class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 group">
+          <summary class="font-semibold text-gray-900 dark:text-gray-100 cursor-pointer list-none flex items-center justify-between">
+            {item.question}
+            <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</ToolLayout>

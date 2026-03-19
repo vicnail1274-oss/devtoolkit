@@ -1,0 +1,50 @@
+[
+  {
+    "id": "token-counter",
+    "name": "LLM Token Counter",
+    "description": "Count tokens for GPT, Claude, and Llama models",
+    "category": "AI/LLM",
+    "difficulty": "low",
+    "status": "generation_failed"
+  },
+  {
+    "id": "base64",
+    "name": "Base64 Encode/Decode",
+    "description": "Encode and decode text and files to/from Base64",
+    "category": "Encoding",
+    "difficulty": "low",
+    "status": "generation_failed"
+  },
+  {
+    "id": "url-encode",
+    "name": "URL Encode/Decode",
+    "description": "URL encoding and decoding for safe web usage",
+    "category": "Encoding",
+    "difficulty": "low",
+    "status": "pending"
+  },
+  {
+    "id": "cron-generator",
+    "name": "Cron Expression Generator",
+    "description": "Visual cron expression builder with next run preview",
+    "category": "DevOps",
+    "difficulty": "medium",
+    "status": "pending"
+  },
+  {
+    "id": "markdown-to-html",
+    "name": "Markdown to HTML",
+    "description": "Convert Markdown to HTML with live preview",
+    "category": "Content",
+    "difficulty": "low",
+    "status": "pending"
+  },
+  {
+    "id": "llm-price-calculator",
+    "name": "LLM Price Calculator",
+    "description": "Compare costs across different LLM providers",
+    "category": "AI/LLM",
+    "difficulty": "medium",
+    "status": "pending"
+  }
+]

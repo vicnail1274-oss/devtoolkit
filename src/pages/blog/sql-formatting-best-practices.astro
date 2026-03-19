@@ -1,0 +1,849 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="SQL Formatting Best Practices: Write Clean, Readable Queries"
+  description="Master SQL formatting best practices — learn indentation rules, naming conventions, keyword casing, subquery alignment, and use the best free SQL formatter tools."
+  slug="sql-formatting-best-practices"
+  publishDate="2026-03-19"
+  readTime="13 min read"
+>
+
+<p>
+  SQL is one of the most universally used languages in software development. Whether you are building data pipelines, writing reports, or debugging production issues, you will read and write SQL queries every day. Yet badly formatted SQL remains one of the most common sources of confusion, bugs, and wasted time on engineering teams.
+</p>
+
+<p>
+  This guide covers everything you need to know about SQL formatting best practices — from keyword casing and indentation to CTE alignment, naming conventions, and tooling. By the end, you will have a clear set of rules you can adopt immediately and share with your team.
+</p>
+
+<h2>Why SQL Formatting Matters</h2>
+
+<p>
+  Before diving into specific rules, it is worth understanding why formatting matters at all. Some developers dismiss formatting as cosmetic. It is not. Consistent SQL formatting delivers concrete benefits:
+</p>
+
+<ul>
+  <li><strong>Faster code reviews</strong> — reviewers can scan well-formatted queries in seconds instead of minutes. When every query follows the same structure, deviations and logic errors jump out immediately.</li>
+  <li><strong>Fewer bugs</strong> — misplaced <code>AND</code>/<code>OR</code> conditions, accidental cross joins, and missing <code>GROUP BY</code> columns are far easier to spot in formatted SQL.</li>
+  <li><strong>Easier onboarding</strong> — new team members can read the codebase without asking "what does this query do?" every five minutes.</li>
+  <li><strong>Better diffs</strong> — when each clause sits on its own line, version control diffs show exactly what changed. A one-line query that wraps at 400 characters produces unreadable diffs.</li>
+  <li><strong>Reduced cognitive load</strong> — you can hold the query structure in your head when it follows a predictable pattern.</li>
+</ul>
+
+<p>
+  Teams that adopt a shared SQL style guide report measurably faster development cycles. The investment in formatting pays for itself within the first week.
+</p>
+
+<h2>Common SQL Formatting Rules</h2>
+
+<h3>1. Keyword Casing</h3>
+
+<p>
+  The most debated formatting decision is whether SQL keywords should be uppercase or lowercase. Both are syntactically valid. The industry has largely settled on <strong>uppercase keywords</strong> as the standard:
+</p>
+
+<pre><code>-- Recommended: uppercase keywords
+SELECT
+    first_name,
+    last_name,
+    email
+FROM users
+WHERE is_active = 1
+ORDER BY last_name ASC;
+
+-- Avoid: lowercase keywords (harder to distinguish from column names)
+select
+    first_name,
+    last_name,
+    email
+from users
+where is_active = 1
+order by last_name asc;</code></pre>
+
+<p>
+  Uppercase keywords create a clear visual distinction between SQL syntax and your data model (table names, column names). This makes queries scannable at a glance. If your team prefers lowercase, that is fine — the important thing is consistency. Pick one style and enforce it everywhere.
+</p>
+
+<h3>2. Indentation</h3>
+
+<p>
+  Use consistent indentation to show the hierarchical structure of your query. The most common convention is <strong>4 spaces</strong> (not tabs) for column lists and conditions:
+</p>
+
+<pre><code>SELECT
+    u.first_name,
+    u.last_name,
+    o.order_date,
+    o.total_amount
+FROM users u
+INNER JOIN orders o
+    ON u.id = o.user_id
+WHERE o.order_date >= '2026-01-01'
+    AND o.total_amount > 100
+ORDER BY o.order_date DESC;</code></pre>
+
+<p>
+  Notice how the column list is indented under <code>SELECT</code>, the join condition is indented under the <code>JOIN</code>, and additional <code>WHERE</code> conditions are indented under the first condition. This indentation makes the query's logical structure immediately visible.
+</p>
+
+<h3>3. One Column Per Line</h3>
+
+<p>
+  Always place each column on its own line in <code>SELECT</code>, <code>GROUP BY</code>, and <code>ORDER BY</code> clauses. This rule is non-negotiable for queries with more than two or three columns:
+</p>
+
+<pre><code>-- Good: one column per line
+SELECT
+    customer_id,
+    first_name,
+    last_name,
+    email,
+    created_at
+FROM customers;
+
+-- Bad: all columns on one line
+SELECT customer_id, first_name, last_name, email, created_at FROM customers;</code></pre>
+
+<p>
+  One column per line makes it trivial to add, remove, or reorder columns. It also produces clean diffs in version control — adding a column shows as a single added line instead of a rewrite of the entire <code>SELECT</code> clause.
+</p>
+
+<h3>4. Leading Commas vs. Trailing Commas</h3>
+
+<p>
+  This is another hotly debated topic. Leading commas place the comma at the beginning of each line; trailing commas place it at the end:
+</p>
+
+<pre><code>-- Trailing commas (more common)
+SELECT
+    first_name,
+    last_name,
+    email
+FROM users;
+
+-- Leading commas (easier to comment out lines)
+SELECT
+    first_name
+    , last_name
+    , email
+FROM users;</code></pre>
+
+<p>
+  Both styles have merit. Trailing commas are more natural to read and are the dominant convention. Leading commas make it easier to comment out the last column without worrying about a dangling comma. Choose one and stick with it across your entire codebase.
+</p>
+
+<h3>5. Clause Alignment</h3>
+
+<p>
+  Major SQL clauses (<code>SELECT</code>, <code>FROM</code>, <code>WHERE</code>, <code>GROUP BY</code>, <code>HAVING</code>, <code>ORDER BY</code>, <code>LIMIT</code>) should each start on their own line at the same indentation level:
+</p>
+
+<pre><code>SELECT
+    department,
+    COUNT(*) AS employee_count,
+    AVG(salary) AS avg_salary
+FROM employees
+WHERE hire_date >= '2024-01-01'
+GROUP BY department
+HAVING COUNT(*) >= 5
+ORDER BY avg_salary DESC
+LIMIT 10;</code></pre>
+
+<p>
+  This left-aligned clause structure creates a clear visual "spine" on the left side of the query. You can instantly see the query's overall shape: what it selects, where the data comes from, how it filters, and how it orders.
+</p>
+
+<h2>Naming Conventions</h2>
+
+<p>
+  Formatting is not just about whitespace and keywords. Consistent naming conventions are equally important for readability.
+</p>
+
+<h3>Table Names</h3>
+
+<ul>
+  <li>Use <strong>snake_case</strong> for table names: <code>user_accounts</code>, not <code>UserAccounts</code> or <code>useraccounts</code></li>
+  <li>Use <strong>plural nouns</strong> for tables: <code>orders</code>, <code>customers</code>, <code>products</code></li>
+  <li>Prefix junction tables with both entity names: <code>user_roles</code>, <code>order_items</code></li>
+</ul>
+
+<h3>Column Names</h3>
+
+<ul>
+  <li>Use <strong>snake_case</strong>: <code>first_name</code>, <code>created_at</code>, <code>is_active</code></li>
+  <li>Use descriptive names — <code>created_at</code> is better than <code>ca</code> or <code>date1</code></li>
+  <li>Boolean columns should start with <code>is_</code>, <code>has_</code>, or <code>can_</code>: <code>is_active</code>, <code>has_verified_email</code></li>
+  <li>Foreign keys should reference the parent table: <code>user_id</code>, <code>order_id</code></li>
+  <li>Avoid reserved words as column names (<code>order</code>, <code>group</code>, <code>select</code>)</li>
+</ul>
+
+<h3>Aliases</h3>
+
+<ul>
+  <li>Always use the <code>AS</code> keyword for column aliases: <code>COUNT(*) AS total</code>, not <code>COUNT(*) total</code></li>
+  <li>Use meaningful table aliases: <code>FROM orders o</code> or <code>FROM orders ord</code> — not <code>FROM orders x</code></li>
+  <li>Keep aliases short but recognizable — one to three characters that relate to the table name</li>
+</ul>
+
+<h2>Formatting SELECT Statements</h2>
+
+<p>
+  The <code>SELECT</code> statement is the most common SQL operation. Here is the recommended format for a typical query:
+</p>
+
+<pre><code>SELECT
+    u.id AS user_id,
+    u.first_name,
+    u.last_name,
+    u.email,
+    COUNT(o.id) AS order_count,
+    SUM(o.total_amount) AS total_spent,
+    MAX(o.order_date) AS last_order_date
+FROM users u
+LEFT JOIN orders o
+    ON u.id = o.user_id
+    AND o.status = 'completed'
+WHERE u.is_active = 1
+    AND u.created_at >= '2025-01-01'
+GROUP BY
+    u.id,
+    u.first_name,
+    u.last_name,
+    u.email
+HAVING COUNT(o.id) >= 3
+ORDER BY total_spent DESC
+LIMIT 50;</code></pre>
+
+<p>
+  Key points in this example: the <code>SELECT</code> list uses one column per line with consistent indentation; the <code>JOIN</code> condition is indented under the join; multiple <code>WHERE</code> conditions are aligned; and the <code>GROUP BY</code> columns are listed individually.
+</p>
+
+<h2>Formatting JOINs</h2>
+
+<p>
+  JOIN formatting is critical because joins are where most query logic errors occur. Follow these rules:
+</p>
+
+<ul>
+  <li>Always specify the join type explicitly: <code>INNER JOIN</code>, <code>LEFT JOIN</code>, <code>RIGHT JOIN</code>, <code>CROSS JOIN</code>. Never use implicit joins with comma-separated tables in the <code>FROM</code> clause.</li>
+  <li>Place each <code>JOIN</code> on its own line, aligned with <code>FROM</code>.</li>
+  <li>Indent the <code>ON</code> clause under the <code>JOIN</code>.</li>
+  <li>For multi-condition joins, place each condition on its own line with <code>AND</code> aligned.</li>
+</ul>
+
+<pre><code>-- Good: explicit, well-formatted joins
+SELECT
+    c.name AS customer_name,
+    p.name AS product_name,
+    oi.quantity,
+    oi.unit_price
+FROM customers c
+INNER JOIN orders o
+    ON c.id = o.customer_id
+INNER JOIN order_items oi
+    ON o.id = oi.order_id
+INNER JOIN products p
+    ON oi.product_id = p.id
+WHERE o.order_date >= '2026-01-01';
+
+-- Bad: implicit join (hard to read, easy to create accidental cross joins)
+SELECT c.name, p.name, oi.quantity, oi.unit_price
+FROM customers c, orders o, order_items oi, products p
+WHERE c.id = o.customer_id
+AND o.id = oi.order_id
+AND oi.product_id = p.id
+AND o.order_date >= '2026-01-01';</code></pre>
+
+<p>
+  The explicit join syntax separates join conditions from filter conditions, making the query's intent much clearer.
+</p>
+
+<h2>Formatting WHERE Clauses</h2>
+
+<p>
+  Complex <code>WHERE</code> clauses are a common source of bugs. Format them carefully:
+</p>
+
+<pre><code>SELECT *
+FROM orders
+WHERE status = 'shipped'
+    AND total_amount > 50
+    AND (
+        shipping_country = 'US'
+        OR shipping_country = 'CA'
+    )
+    AND order_date BETWEEN '2026-01-01' AND '2026-03-31';</code></pre>
+
+<p>
+  Rules for <code>WHERE</code> formatting:
+</p>
+
+<ul>
+  <li>Place each condition on its own line.</li>
+  <li>Start continuation lines with <code>AND</code> or <code>OR</code>, indented to align with the first condition.</li>
+  <li>Use parentheses to group <code>OR</code> conditions, and indent the contents of the parentheses.</li>
+  <li>Prefer <code>IN</code> over multiple <code>OR</code> conditions for the same column:</li>
+</ul>
+
+<pre><code>-- Better: use IN
+WHERE shipping_country IN ('US', 'CA', 'MX')
+
+-- Worse: multiple ORs
+WHERE shipping_country = 'US'
+    OR shipping_country = 'CA'
+    OR shipping_country = 'MX'</code></pre>
+
+<h2>Formatting GROUP BY and ORDER BY</h2>
+
+<p>
+  When grouping or ordering by multiple columns, list each column on its own line:
+</p>
+
+<pre><code>SELECT
+    department,
+    job_title,
+    COUNT(*) AS employee_count,
+    AVG(salary) AS avg_salary
+FROM employees
+WHERE is_active = 1
+GROUP BY
+    department,
+    job_title
+ORDER BY
+    department ASC,
+    avg_salary DESC;</code></pre>
+
+<p>
+  For simple single-column grouping or ordering, keeping it on one line is acceptable:
+</p>
+
+<pre><code>SELECT department, COUNT(*) AS cnt
+FROM employees
+GROUP BY department
+ORDER BY cnt DESC;</code></pre>
+
+<h2>Formatting Subqueries</h2>
+
+<p>
+  Subqueries should be indented and clearly delimited. Treat the subquery as a nested block:
+</p>
+
+<pre><code>SELECT
+    u.first_name,
+    u.last_name,
+    u.email
+FROM users u
+WHERE u.id IN (
+    SELECT DISTINCT o.user_id
+    FROM orders o
+    WHERE o.total_amount > 500
+        AND o.order_date >= '2026-01-01'
+)
+ORDER BY u.last_name;</code></pre>
+
+<p>
+  For subqueries in the <code>FROM</code> clause, use a clear alias and indent the entire subquery:
+</p>
+
+<pre><code>SELECT
+    top_customers.user_id,
+    top_customers.total_spent,
+    u.email
+FROM (
+    SELECT
+        user_id,
+        SUM(total_amount) AS total_spent
+    FROM orders
+    WHERE order_date >= '2025-01-01'
+    GROUP BY user_id
+    HAVING SUM(total_amount) > 1000
+) top_customers
+INNER JOIN users u
+    ON top_customers.user_id = u.id
+ORDER BY top_customers.total_spent DESC;</code></pre>
+
+<p>
+  However, if you find yourself nesting subqueries more than one level deep, consider refactoring to use CTEs (Common Table Expressions) instead.
+</p>
+
+<h2>Formatting CTEs (Common Table Expressions)</h2>
+
+<p>
+  CTEs are one of the most powerful tools for writing readable SQL. They let you break complex queries into named, logical steps. Proper CTE formatting is essential:
+</p>
+
+<pre><code>WITH monthly_revenue AS (
+    SELECT
+        DATE_TRUNC('month', order_date) AS month,
+        SUM(total_amount) AS revenue
+    FROM orders
+    WHERE status = 'completed'
+    GROUP BY DATE_TRUNC('month', order_date)
+),
+
+revenue_growth AS (
+    SELECT
+        month,
+        revenue,
+        LAG(revenue) OVER (ORDER BY month) AS prev_month_revenue,
+        ROUND(
+            (revenue - LAG(revenue) OVER (ORDER BY month))
+            / LAG(revenue) OVER (ORDER BY month) * 100,
+            2
+        ) AS growth_pct
+    FROM monthly_revenue
+)
+
+SELECT
+    month,
+    revenue,
+    prev_month_revenue,
+    growth_pct
+FROM revenue_growth
+WHERE month >= '2025-07-01'
+ORDER BY month;</code></pre>
+
+<p>
+  CTE formatting rules:
+</p>
+
+<ul>
+  <li>Place <code>WITH</code> on the first line, followed by the CTE name and <code>AS (</code>.</li>
+  <li>Indent the CTE body like a normal query.</li>
+  <li>Separate multiple CTEs with a comma and a blank line.</li>
+  <li>Give CTEs descriptive names that explain what they compute: <code>monthly_revenue</code>, <code>active_users</code>, <code>revenue_growth</code>.</li>
+  <li>Place the final <code>SELECT</code> after all CTEs, at the same indentation level as <code>WITH</code>.</li>
+</ul>
+
+<p>
+  CTEs make complex queries self-documenting. Instead of reading a nested mess of subqueries from the inside out, you read CTEs from top to bottom like a story.
+</p>
+
+<h2>Formatting INSERT, UPDATE, and DELETE</h2>
+
+<p>
+  Data modification statements deserve the same formatting attention as queries:
+</p>
+
+<h3>INSERT</h3>
+
+<pre><code>INSERT INTO users (
+    first_name,
+    last_name,
+    email,
+    is_active,
+    created_at
+)
+VALUES (
+    'Jane',
+    'Doe',
+    'jane.doe@example.com',
+    1,
+    CURRENT_TIMESTAMP
+);</code></pre>
+
+<h3>UPDATE</h3>
+
+<pre><code>UPDATE orders
+SET
+    status = 'cancelled',
+    cancelled_at = CURRENT_TIMESTAMP,
+    cancelled_by = 'system'
+WHERE status = 'pending'
+    AND created_at < '2026-01-01';</code></pre>
+
+<h3>DELETE</h3>
+
+<pre><code>DELETE FROM session_tokens
+WHERE expires_at < CURRENT_TIMESTAMP
+    AND is_revoked = 1;</code></pre>
+
+<h2>Step-by-Step: Format SQL with DevToolkit SQL Formatter</h2>
+
+<p>
+  You do not have to format SQL manually. The <a href="/tools/sql-formatter">DevToolkit SQL Formatter</a> handles it automatically. Here is how to use it:
+</p>
+
+<h3>Step 1: Open the Tool</h3>
+
+<p>
+  Navigate to <a href="/tools/sql-formatter">devtoolkit.cc/tools/sql-formatter</a>. The tool loads instantly in your browser — no sign-up, no installation, no data sent to any server.
+</p>
+
+<h3>Step 2: Paste Your SQL</h3>
+
+<p>
+  Paste your unformatted SQL into the input area. The formatter accepts any valid SQL, including queries with subqueries, CTEs, window functions, and complex joins. For example, paste this messy query:
+</p>
+
+<pre><code>select u.id,u.first_name,u.last_name,count(o.id) as order_count,sum(o.total_amount) as total_spent from users u left join orders o on u.id=o.user_id where u.is_active=1 and u.created_at>='2025-01-01' group by u.id,u.first_name,u.last_name having count(o.id)>=3 order by total_spent desc limit 50;</code></pre>
+
+<h3>Step 3: Click Format</h3>
+
+<p>
+  Click the Format button. The tool instantly transforms your query into clean, properly indented SQL following industry-standard conventions:
+</p>
+
+<pre><code>SELECT
+    u.id,
+    u.first_name,
+    u.last_name,
+    COUNT(o.id) AS order_count,
+    SUM(o.total_amount) AS total_spent
+FROM users u
+LEFT JOIN orders o
+    ON u.id = o.user_id
+WHERE u.is_active = 1
+    AND u.created_at >= '2025-01-01'
+GROUP BY
+    u.id,
+    u.first_name,
+    u.last_name
+HAVING COUNT(o.id) >= 3
+ORDER BY total_spent DESC
+LIMIT 50;</code></pre>
+
+<h3>Step 4: Copy and Use</h3>
+
+<p>
+  Copy the formatted result and paste it into your codebase, documentation, or code review. The entire process takes less than five seconds.
+</p>
+
+<p>
+  The <a href="/tools/sql-formatter">SQL Formatter</a> is particularly useful when you inherit legacy code, review pull requests with unformatted SQL, or need to quickly clean up a query before sharing it with your team. You can also use our <a href="/tools/json-formatter">JSON Formatter</a> for cleaning up JSON payloads that often accompany database work.
+</p>
+
+<h2>Establishing Team SQL Standards</h2>
+
+<p>
+  Individual formatting discipline is good. Team-wide automated enforcement is better. Here are the most popular tools for enforcing SQL formatting standards:
+</p>
+
+<h3>SQLFluff</h3>
+
+<p>
+  <strong>SQLFluff</strong> is the most popular open-source SQL linter and formatter. It supports multiple SQL dialects (PostgreSQL, MySQL, BigQuery, Snowflake, and more) and integrates into CI/CD pipelines:
+</p>
+
+<pre><code># Install SQLFluff
+pip install sqlfluff
+
+# Lint a SQL file
+sqlfluff lint query.sql
+
+# Auto-fix formatting issues
+sqlfluff fix query.sql
+
+# Specify dialect
+sqlfluff lint query.sql --dialect postgres</code></pre>
+
+<p>
+  SQLFluff has over 60 configurable rules. You can create a <code>.sqlfluff</code> configuration file in your repository to enforce your team's specific conventions:
+</p>
+
+<pre><code>[sqlfluff]
+dialect = postgres
+max_line_length = 120
+
+[sqlfluff:indentation]
+indent_unit = space
+tab_space_size = 4
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.functions]
+capitalisation_policy = upper</code></pre>
+
+<h3>pgFormatter</h3>
+
+<p>
+  <strong>pgFormatter</strong> is a PostgreSQL-specific formatter that focuses on producing clean, readable output. It is available as a command-line tool and as a web service:
+</p>
+
+<pre><code># Install on macOS
+brew install pgformatter
+
+# Format a file
+pg_format -s 4 -u 1 input.sql -o output.sql</code></pre>
+
+<p>
+  pgFormatter is simpler than SQLFluff but produces excellent results for PostgreSQL queries specifically.
+</p>
+
+<h3>Prettier with SQL Plugin</h3>
+
+<p>
+  If your team already uses Prettier for JavaScript and TypeScript formatting, you can add SQL support with the <code>prettier-plugin-sql</code> package. This gives you a unified formatting pipeline across all languages in your codebase.
+</p>
+
+<h3>Editor Extensions</h3>
+
+<p>
+  Most code editors have SQL formatting extensions: VS Code has "SQL Formatter" and "SQLTools", JetBrains IDEs have built-in SQL formatting, and Vim has plugins like "vim-sqlfmt". Configure your editor to format SQL on save for zero-effort consistency.
+</p>
+
+<h2>Comparison of SQL Formatting Tools</h2>
+
+<p>
+  Here is how the most common SQL formatting approaches compare:
+</p>
+
+<ul>
+  <li><strong><a href="/tools/sql-formatter">DevToolkit SQL Formatter</a></strong> — Best for quick, one-off formatting. Browser-based, free, no installation. Ideal when you need to format a query right now without setting up any tooling. All processing happens client-side so your SQL never leaves your machine.</li>
+  <li><strong>SQLFluff</strong> — Best for CI/CD enforcement. Highly configurable, supports many dialects, catches logic issues beyond formatting. Requires Python installation and configuration. Best for teams that want automated enforcement in their deployment pipeline.</li>
+  <li><strong>pgFormatter</strong> — Best for PostgreSQL-specific projects. Simple, fast, produces excellent output. Limited to PostgreSQL dialect.</li>
+  <li><strong>Prettier SQL Plugin</strong> — Best for full-stack teams already using Prettier. Unified formatting pipeline across languages. Fewer SQL-specific configuration options than SQLFluff.</li>
+  <li><strong>IDE Extensions</strong> — Best for individual developer productivity. Format-on-save integration. Configuration may not be shared across the team without additional setup.</li>
+</ul>
+
+<p>
+  For most teams, the ideal workflow combines an online tool like the <a href="/tools/sql-formatter">DevToolkit SQL Formatter</a> for quick formatting with a CI/CD linter like SQLFluff for automated enforcement.
+</p>
+
+<h2>Before and After: Real-World Examples</h2>
+
+<h3>Example 1: E-Commerce Revenue Report</h3>
+
+<p><strong>Before (unformatted):</strong></p>
+
+<pre><code>select c.name as category,count(distinct o.id) as num_orders,count(distinct o.customer_id) as num_customers,sum(oi.quantity*oi.unit_price) as gross_revenue,sum(case when o.status='returned' then oi.quantity*oi.unit_price else 0 end) as returned_revenue,sum(oi.quantity*oi.unit_price)-sum(case when o.status='returned' then oi.quantity*oi.unit_price else 0 end) as net_revenue from categories c inner join products p on c.id=p.category_id inner join order_items oi on p.id=oi.product_id inner join orders o on oi.order_id=o.id where o.order_date between '2025-01-01' and '2025-12-31' group by c.name having sum(oi.quantity*oi.unit_price)>10000 order by net_revenue desc;</code></pre>
+
+<p><strong>After (formatted):</strong></p>
+
+<pre><code>SELECT
+    c.name AS category,
+    COUNT(DISTINCT o.id) AS num_orders,
+    COUNT(DISTINCT o.customer_id) AS num_customers,
+    SUM(oi.quantity * oi.unit_price) AS gross_revenue,
+    SUM(
+        CASE
+            WHEN o.status = 'returned'
+            THEN oi.quantity * oi.unit_price
+            ELSE 0
+        END
+    ) AS returned_revenue,
+    SUM(oi.quantity * oi.unit_price) - SUM(
+        CASE
+            WHEN o.status = 'returned'
+            THEN oi.quantity * oi.unit_price
+            ELSE 0
+        END
+    ) AS net_revenue
+FROM categories c
+INNER JOIN products p
+    ON c.id = p.category_id
+INNER JOIN order_items oi
+    ON p.id = oi.product_id
+INNER JOIN orders o
+    ON oi.order_id = o.id
+WHERE o.order_date BETWEEN '2025-01-01' AND '2025-12-31'
+GROUP BY c.name
+HAVING SUM(oi.quantity * oi.unit_price) > 10000
+ORDER BY net_revenue DESC;</code></pre>
+
+<p>
+  The formatted version is immediately readable. You can see the six calculated columns, the three joins, the date filter, and the revenue threshold at a glance.
+</p>
+
+<h3>Example 2: CTE-Based User Cohort Analysis</h3>
+
+<p><strong>Before (unformatted):</strong></p>
+
+<pre><code>with first_orders as (select user_id,min(order_date) as first_order_date from orders group by user_id),cohorts as (select user_id,date_trunc('month',first_order_date) as cohort_month from first_orders),activity as (select c.cohort_month,date_trunc('month',o.order_date) as activity_month,count(distinct o.user_id) as active_users from cohorts c inner join orders o on c.user_id=o.user_id group by c.cohort_month,date_trunc('month',o.order_date)) select cohort_month,activity_month,active_users,(select count(distinct user_id) from cohorts c2 where c2.cohort_month=a.cohort_month) as cohort_size,round(active_users::numeric/(select count(distinct user_id) from cohorts c2 where c2.cohort_month=a.cohort_month)*100,1) as retention_pct from activity a order by cohort_month,activity_month;</code></pre>
+
+<p><strong>After (formatted):</strong></p>
+
+<pre><code>WITH first_orders AS (
+    SELECT
+        user_id,
+        MIN(order_date) AS first_order_date
+    FROM orders
+    GROUP BY user_id
+),
+
+cohorts AS (
+    SELECT
+        user_id,
+        DATE_TRUNC('month', first_order_date) AS cohort_month
+    FROM first_orders
+),
+
+activity AS (
+    SELECT
+        c.cohort_month,
+        DATE_TRUNC('month', o.order_date) AS activity_month,
+        COUNT(DISTINCT o.user_id) AS active_users
+    FROM cohorts c
+    INNER JOIN orders o
+        ON c.user_id = o.user_id
+    GROUP BY
+        c.cohort_month,
+        DATE_TRUNC('month', o.order_date)
+)
+
+SELECT
+    cohort_month,
+    activity_month,
+    active_users,
+    (
+        SELECT COUNT(DISTINCT user_id)
+        FROM cohorts c2
+        WHERE c2.cohort_month = a.cohort_month
+    ) AS cohort_size,
+    ROUND(
+        active_users::NUMERIC / (
+            SELECT COUNT(DISTINCT user_id)
+            FROM cohorts c2
+            WHERE c2.cohort_month = a.cohort_month
+        ) * 100,
+        1
+    ) AS retention_pct
+FROM activity a
+ORDER BY
+    cohort_month,
+    activity_month;</code></pre>
+
+<p>
+  The CTE version reads like a pipeline: first compute first orders, then assign cohorts, then compute activity, and finally calculate retention. Each step is self-contained and testable in isolation.
+</p>
+
+<h2>Advanced Formatting Tips</h2>
+
+<h3>CASE Expressions</h3>
+
+<p>
+  Format <code>CASE</code> expressions with each <code>WHEN</code>/<code>THEN</code> on its own line, indented:
+</p>
+
+<pre><code>SELECT
+    order_id,
+    total_amount,
+    CASE
+        WHEN total_amount >= 1000 THEN 'high'
+        WHEN total_amount >= 100 THEN 'medium'
+        ELSE 'low'
+    END AS order_tier
+FROM orders;</code></pre>
+
+<h3>Window Functions</h3>
+
+<p>
+  For complex window functions, break the <code>OVER</code> clause across multiple lines:
+</p>
+
+<pre><code>SELECT
+    employee_id,
+    department,
+    salary,
+    ROW_NUMBER() OVER (
+        PARTITION BY department
+        ORDER BY salary DESC
+    ) AS salary_rank,
+    salary - AVG(salary) OVER (
+        PARTITION BY department
+    ) AS salary_diff_from_avg
+FROM employees;</code></pre>
+
+<h3>Long IN Lists</h3>
+
+<p>
+  When filtering with a long list of values, place each value on its own line or group them logically:
+</p>
+
+<pre><code>WHERE country_code IN (
+    'US', 'CA', 'MX',     -- North America
+    'GB', 'DE', 'FR',     -- Europe
+    'JP', 'KR', 'AU'      -- Asia-Pacific
+)</code></pre>
+
+<h3>Comments</h3>
+
+<p>
+  Use comments to explain the <em>why</em>, not the <em>what</em>. Place them above the clause they explain:
+</p>
+
+<pre><code>-- Exclude test accounts created by the QA team
+WHERE u.email NOT LIKE '%@test.example.com'
+    -- Only include users who completed onboarding
+    AND u.onboarding_completed_at IS NOT NULL</code></pre>
+
+<h2>Frequently Asked Questions</h2>
+
+<h3>Should SQL keywords be uppercase or lowercase?</h3>
+
+<p>
+  The industry standard is <strong>uppercase keywords</strong> (<code>SELECT</code>, <code>FROM</code>, <code>WHERE</code>). This creates a clear visual distinction between SQL syntax and identifiers (table and column names). However, consistency matters more than the specific choice. If your entire team uses lowercase, that is acceptable — just do not mix styles.
+</p>
+
+<h3>Should I use tabs or spaces for SQL indentation?</h3>
+
+<p>
+  Use <strong>spaces</strong> (4 spaces is the most common convention). Tabs render differently in different editors, terminals, and code review tools, which defeats the purpose of consistent formatting. Spaces ensure your SQL looks the same everywhere.
+</p>
+
+<h3>How do I format SQL automatically?</h3>
+
+<p>
+  Use the <a href="/tools/sql-formatter">DevToolkit SQL Formatter</a> for instant browser-based formatting. For CI/CD automation, use SQLFluff or pgFormatter. For editor integration, install a SQL formatting extension and configure format-on-save.
+</p>
+
+<h3>Is there a standard SQL style guide?</h3>
+
+<p>
+  There is no single official standard, but several widely adopted guides exist: Simon Holywell's SQL Style Guide, GitLab's SQL Style Guide, and Mozilla's SQL Style Guide. All of them agree on the fundamentals covered in this article: uppercase keywords, consistent indentation, one column per line, and explicit join syntax.
+</p>
+
+<h3>Should I use CTEs or subqueries?</h3>
+
+<p>
+  Prefer <strong>CTEs</strong> for readability, especially when the query has multiple logical steps. CTEs are named, sequential, and testable in isolation. Use subqueries only for simple, single-use cases like <code>WHERE id IN (SELECT ...)</code>. If you have nested subqueries more than one level deep, refactor to CTEs.
+</p>
+
+<h3>How long should a SQL query line be?</h3>
+
+<p>
+  Keep lines under <strong>120 characters</strong>. Most style guides recommend 80–120 characters as the maximum line length. If a line exceeds this limit, break it at a logical point (after a comma, before an operator, or at a clause boundary).
+</p>
+
+<h3>Does SQL formatting affect query performance?</h3>
+
+<p>
+  <strong>No.</strong> SQL formatting is purely cosmetic — whitespace, line breaks, and keyword casing have zero impact on query execution. The database engine parses your query into an execution plan regardless of formatting. Format for humans, not for machines.
+</p>
+
+<h2>SQL Formatting Checklist</h2>
+
+<p>
+  Use this checklist before committing any SQL to your codebase:
+</p>
+
+<ul>
+  <li>Keywords are consistently cased (preferably uppercase)</li>
+  <li>Each major clause starts on its own line (<code>SELECT</code>, <code>FROM</code>, <code>WHERE</code>, etc.)</li>
+  <li>Column lists use one column per line</li>
+  <li>Indentation is consistent (4 spaces)</li>
+  <li>Joins use explicit syntax (<code>INNER JOIN</code>, <code>LEFT JOIN</code>)</li>
+  <li>Join conditions are indented under the <code>JOIN</code></li>
+  <li><code>WHERE</code> conditions each get their own line</li>
+  <li>Parentheses are used to clarify <code>AND</code>/<code>OR</code> precedence</li>
+  <li>Table and column names use snake_case</li>
+  <li>Column aliases use <code>AS</code></li>
+  <li>CTEs have descriptive names</li>
+  <li>No lines exceed 120 characters</li>
+  <li>Comments explain "why", not "what"</li>
+</ul>
+
+<h2>Start Formatting Your SQL Now</h2>
+
+<p>
+  Clean SQL is not a luxury — it is a fundamental engineering practice that saves time, prevents bugs, and makes your entire team more productive. Whether you are writing a quick ad-hoc query or building a complex data pipeline, consistent formatting pays dividends every single day.
+</p>
+
+<p>
+  Ready to clean up your queries? Open the <a href="/tools/sql-formatter"><strong>DevToolkit SQL Formatter</strong></a> and paste in your messiest SQL. In seconds, you will have perfectly formatted, readable queries that any developer on your team can understand at a glance. No sign-up, no installation — just clean SQL, instantly.
+</p>
+
+</BlogLayout>

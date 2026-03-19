@@ -1,0 +1,80 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import MarkdownPreviewEditor from '../../components/tools/MarkdownPreviewEditor';
+
+const faq = [
+  {
+    question: 'What Markdown features does this editor support?',
+    answer: 'This editor supports full GitHub Flavored Markdown (GFM) including headings, bold, italic, code blocks with syntax highlighting, tables, task lists, blockquotes, links, images, horizontal rules, and more.',
+  },
+  {
+    question: 'Is my content saved automatically?',
+    answer: 'Yes, your content is automatically saved to your browser\'s localStorage as you type. When you return to this page, your previous work will be restored. No data is sent to any server.',
+  },
+  {
+    question: 'Which programming languages are supported for syntax highlighting?',
+    answer: 'Code blocks support syntax highlighting for JavaScript, TypeScript, Python, HTML, CSS, JSON, Bash, SQL, YAML, Go, Rust, Java, and more. Just specify the language after the opening triple backticks.',
+  },
+  {
+    question: 'Can I export my Markdown as HTML?',
+    answer: 'Yes! Click the "Export HTML" button to download a complete, styled HTML file. You can also copy the raw HTML source using the "Copy HTML" button.',
+  },
+  {
+    question: 'Is this editor free to use?',
+    answer: 'Yes, this Markdown editor is completely free. Everything runs in your browser with no sign-up, no ads on the tool, and no data collection.',
+  },
+];
+---
+
+<ToolLayout
+  title="Markdown Preview & Editor"
+  description="Full-featured online Markdown editor with live preview, GFM tables, task lists, syntax highlighting, toolbar, auto-save, and HTML export. Free, no sign-up."
+  slug="markdown-preview-editor"
+  toolName="Markdown Preview & Editor"
+  faq={faq}
+>
+  <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
+    <a href="/" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Tools</a>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    <span class="text-gray-900 dark:text-gray-100 font-medium">Markdown Preview & Editor</span>
+  </nav>
+
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Markdown Preview & Editor
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Write and preview Markdown with GFM support, syntax highlighting, and instant HTML export. Auto-saves to your browser.
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <MarkdownPreviewEditor client:load />
+  </div>
+
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="p-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
+      <div class="text-2xl mb-3">⚡</div>
+      <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Real-Time Preview</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        See your formatted Markdown instantly as you type. Split, editor-only, or preview-only views.
+      </p>
+    </div>
+    <div class="p-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
+      <div class="text-2xl mb-3">📋</div>
+      <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">GFM & Syntax Highlighting</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Full GitHub Flavored Markdown with tables, task lists, and code highlighting for 14+ languages.
+      </p>
+    </div>
+    <div class="p-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
+      <div class="text-2xl mb-3">💾</div>
+      <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Auto-Save & Export</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Content auto-saves to localStorage. Export as a styled HTML file or copy raw HTML anytime.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

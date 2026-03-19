@@ -1,0 +1,107 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+
+const tools = [
+  { name: 'JSON Formatter', slug: 'json-formatter', description: 'Format, validate, and minify JSON data' },
+  { name: 'Base64 Encode/Decode', slug: 'base64', description: 'Encode or decode Base64 strings' },
+  { name: 'Regex Tester', slug: 'regex-tester', description: 'Test and debug regular expressions in real time' },
+  { name: 'Password Generator', slug: 'password-generator', description: 'Generate strong, secure passwords' },
+  { name: 'Color Converter', slug: 'color-converter', description: 'Convert colors between HEX, RGB, HSL, and more' },
+  { name: 'UUID Generator', slug: 'uuid-generator', description: 'Generate random UUIDs (v4) instantly' },
+];
+---
+
+<ToolLayout title="Embed DevToolkit" description="Embed free developer tools on your website with a simple iframe code.">
+  <!-- Hero -->
+  <div class="text-center mb-12">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+      Embed DevToolkit on Your Site
+    </h1>
+    <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+      Add free developer tools to your website, blog, or documentation with a simple iframe embed code. No API key required.
+    </p>
+  </div>
+
+  <!-- How it works -->
+  <div class="mb-12 grid grid-cols-1 sm:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+      <div class="w-10 h-10 mx-auto mb-3 bg-primary-100 dark:bg-primary-900/40 rounded-lg flex items-center justify-center">
+        <span class="text-primary-600 dark:text-primary-400 font-bold text-lg">1</span>
+      </div>
+      <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Pick a Tool</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Choose from the tools below</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+      <div class="w-10 h-10 mx-auto mb-3 bg-primary-100 dark:bg-primary-900/40 rounded-lg flex items-center justify-center">
+        <span class="text-primary-600 dark:text-primary-400 font-bold text-lg">2</span>
+      </div>
+      <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Copy the Code</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Click the copy button to grab the iframe snippet</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+      <div class="w-10 h-10 mx-auto mb-3 bg-primary-100 dark:bg-primary-900/40 rounded-lg flex items-center justify-center">
+        <span class="text-primary-600 dark:text-primary-400 font-bold text-lg">3</span>
+      </div>
+      <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Paste &amp; Publish</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Add it to your HTML and you're done</p>
+    </div>
+  </div>
+
+  <!-- Embed Cards -->
+  <div class="space-y-6">
+    {tools.map((tool) => {
+      const embedCode = `<iframe src="https://devtoolkit.cc/tools/${tool.slug}?embed=true" width="100%" height="500" style="border:none;border-radius:12px;" loading="lazy" title="${tool.name} - DevToolkit"></iframe>`;
+      return (
+        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+          <div class="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 dark:border-gray-800">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{tool.name}</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{tool.description}</p>
+            </div>
+            <a
+              href={`/tools/${tool.slug}`}
+              class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline whitespace-nowrap"
+            >
+              Open tool &rarr;
+            </a>
+          </div>
+          <div class="p-6">
+            <div class="relative">
+              <pre class="bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm font-mono text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre-wrap break-all"><code>{embedCode}</code></pre>
+              <button
+                data-embed-code={embedCode}
+                class="copy-btn absolute top-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium transition-colors duration-200"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copy Code
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  <!-- Attribution note -->
+  <div class="mt-12 text-center text-sm text-gray-500 dark:text-gray-400">
+    <p>Embeds are free to use. A small "Powered by DevToolkit" link is shown inside the iframe.</p>
+    <p class="mt-1">Need custom styling or a white-label solution? <a href="/pricing" class="text-primary-600 dark:text-primary-400 hover:underline">Check out Pro</a>.</p>
+  </div>
+
+  <!-- Copy script -->
+  <script is:inline>
+    document.querySelectorAll('.copy-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var code = this.getAttribute('data-embed-code');
+        navigator.clipboard.writeText(code).then(function() {
+          btn.textContent = 'Copied!';
+          setTimeout(function() {
+            btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>Copy Code';
+          }, 2000);
+        });
+      });
+    });
+  </script>
+</ToolLayout>

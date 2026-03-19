@@ -1,0 +1,399 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="Open Graph Tags — Complete Developer Guide"
+  description="A complete developer guide to Open Graph tags: every OG property explained, full tag sets for articles, products, and homepages, Twitter Card integration, debugging tools, and best practices for image sizes and dynamic OG generation."
+  slug="open-graph-tags-complete-guide"
+  publishDate="2026-03-19"
+  readTime="14 min read"
+>
+
+<p>
+  You've spent days building a feature. You share the link on Slack, Discord, or LinkedIn — and the preview is a blank box with a URL. No image, no title, no description. It looks broken, and people scroll past without clicking.
+</p>
+
+<p>
+  Open Graph tags are the fix. They are a small set of <code>&lt;meta&gt;</code> tags in your page's <code>&lt;head&gt;</code> that control exactly how your URL looks when it's shared on social networks, messaging apps, and any platform that generates link previews. Get them right and your links stand out. Get them wrong — or omit them — and you're invisible.
+</p>
+
+<p>
+  This guide covers everything: what every OG property does, complete tag sets for different page types, Twitter Card integration, how to debug previews, and best practices for image sizes, character limits, and dynamic OG generation in single-page apps. If you want to preview your tags immediately as you build them, use DevToolkit's <a href="/tools/og-image-preview">OG Image Preview tool</a> — paste any URL and see exactly what it renders on each platform.
+</p>
+
+<h2>What Are Open Graph Tags?</h2>
+
+<p>
+  Open Graph (OG) is a protocol originally created by Facebook in 2010 to standardise how web pages describe themselves to social crawlers. When you paste a URL into Facebook, LinkedIn, Slack, Discord, iMessage, or Telegram, those platforms send an HTTP request to your URL and parse the <code>&lt;meta property="og:..."&gt;</code> tags in your HTML <code>&lt;head&gt;</code>. That metadata is what populates the link preview card.
+</p>
+
+<p>
+  The protocol is defined at <strong>ogp.me</strong> and has become a de facto web standard. Even platforms that use their own card format (Twitter/X) fall back to OG tags when their own tags are absent.
+</p>
+
+<p>
+  At a minimum, every public page should declare four properties — known as the "basic metadata" set:
+</p>
+
+<ul>
+  <li><code>og:title</code> — the title shown in the preview card</li>
+  <li><code>og:description</code> — the short description below the title</li>
+  <li><code>og:image</code> — the image shown in the preview card</li>
+  <li><code>og:url</code> — the canonical URL of the page</li>
+</ul>
+
+<p>
+  Without these, platforms try to guess the content from the page's <code>&lt;title&gt;</code> tag, body text, and random images — results are unpredictable and usually poor.
+</p>
+
+<h2>Every Major OG Property Explained</h2>
+
+<h3>og:title</h3>
+
+<p>
+  This is the headline of your link preview. It is not required to match your page's <code>&lt;title&gt;</code> tag, though it usually does. Write it as a standalone, attention-grabbing title — no site name suffix needed here (use <code>og:site_name</code> for that).
+</p>
+
+<pre><code>&lt;meta property="og:title" content="Open Graph Tags — Complete Developer Guide" /&gt;</code></pre>
+
+<p>
+  <strong>Character limit:</strong> Facebook truncates at around 88 characters; LinkedIn at around 70. Keep it under 60–70 characters for safe display across all platforms.
+</p>
+
+<h3>og:description</h3>
+
+<p>
+  A one-to-two sentence summary of what the page contains. This appears below the title in most preview cards. Write it for humans first: it should make someone want to click, not just restate the title.
+</p>
+
+<pre><code>&lt;meta property="og:description" content="A complete guide to every Open Graph property, with full tag sets for articles, products, and homepages, debugging tips, and best practices." /&gt;</code></pre>
+
+<p>
+  <strong>Character limit:</strong> Facebook shows roughly 200 characters; Twitter/X cuts at 200 as well. LinkedIn shows around 120 characters in some layouts. Aim for 120–160 characters.
+</p>
+
+<h3>og:image</h3>
+
+<p>
+  The single most impactful OG tag. A compelling image dramatically increases click-through rate. The value must be an absolute URL — relative paths will not work because social crawlers request the image directly without a base URL context.
+</p>
+
+<pre><code>&lt;meta property="og:image" content="https://example.com/images/og/open-graph-guide.png" /&gt;</code></pre>
+
+<p>
+  You can also add supporting image tags for better control:
+</p>
+
+<pre><code>&lt;meta property="og:image:width" content="1200" /&gt;
+&lt;meta property="og:image:height" content="630" /&gt;
+&lt;meta property="og:image:alt" content="Diagram showing OG tag structure in an HTML head element" /&gt;
+&lt;meta property="og:image:type" content="image/png" /&gt;</code></pre>
+
+<p>
+  <strong>Image size best practices:</strong> The canonical OG image size is <strong>1200 × 630 px</strong> (1.91:1 ratio). This renders well on Facebook, LinkedIn, Discord, and Slack. Twitter/X prefers <strong>1200 × 675 px</strong> (16:9) for large card formats. Use PNG or JPEG. Keep file size under 8 MB (Facebook hard limit is 8 MB; smaller is faster to crawl). Avoid putting critical text within 50px of any edge — some platforms crop.
+</p>
+
+<h3>og:url</h3>
+
+<p>
+  The canonical URL of the page. This tells platforms which URL to treat as the "true" address when the same content is accessible at multiple URLs (with/without trailing slashes, with UTM parameters, etc.). Always use the full absolute URL.
+</p>
+
+<pre><code>&lt;meta property="og:url" content="https://example.com/blog/open-graph-tags-complete-guide" /&gt;</code></pre>
+
+<h3>og:type</h3>
+
+<p>
+  Describes what kind of content the page represents. The default is <code>website</code>. Use <code>article</code> for blog posts and news articles, <code>product</code> for e-commerce item pages, and <code>video.movie</code> or <code>video.episode</code> for video content.
+</p>
+
+<pre><code>&lt;meta property="og:type" content="article" /&gt;</code></pre>
+
+<p>
+  When <code>og:type</code> is <code>article</code>, you can add additional article-specific metadata:
+</p>
+
+<pre><code>&lt;meta property="article:published_time" content="2026-03-19T09:00:00Z" /&gt;
+&lt;meta property="article:author" content="https://example.com/authors/jane-doe" /&gt;
+&lt;meta property="article:section" content="Developer Guides" /&gt;
+&lt;meta property="article:tag" content="SEO" /&gt;
+&lt;meta property="article:tag" content="HTML" /&gt;</code></pre>
+
+<h3>og:site_name</h3>
+
+<p>
+  The name of the website, displayed separately from the title. Facebook shows it above the title. LinkedIn shows it as a subdued label. It's how users know which site a link is from without reading the URL.
+</p>
+
+<pre><code>&lt;meta property="og:site_name" content="DevToolkit" /&gt;</code></pre>
+
+<h3>og:locale</h3>
+
+<p>
+  Specifies the language and region of the content using a standard locale string. Defaults to <code>en_US</code> if omitted. Important for international sites.
+</p>
+
+<pre><code>&lt;meta property="og:locale" content="en_US" /&gt;
+&lt;meta property="og:locale:alternate" content="zh_TW" /&gt;</code></pre>
+
+<h2>Twitter Card Tags</h2>
+
+<p>
+  Twitter (now X) introduced its own card system that predates broad OG adoption on the platform. Twitter Card tags use the <code>name</code> attribute rather than <code>property</code>, so they coexist cleanly with OG tags. If Twitter Card tags are absent, Twitter falls back to OG tags — but you get more control with explicit Twitter tags.
+</p>
+
+<h3>twitter:card</h3>
+
+<p>
+  Required. Sets the card layout. The two most useful values are <code>summary_large_image</code> (big image above the text) and <code>summary</code> (small thumbnail beside the text). Use <code>summary_large_image</code> for content-rich pages — it occupies more feed space and drives higher engagement.
+</p>
+
+<pre><code>&lt;meta name="twitter:card" content="summary_large_image" /&gt;</code></pre>
+
+<h3>twitter:title, twitter:description, twitter:image</h3>
+
+<p>
+  These override the OG equivalents on Twitter. If you're fine with Twitter using the same values, you can omit them and rely on the OG fallback. Specify them when you want Twitter-specific copy or a different image crop optimised for 16:9.
+</p>
+
+<pre><code>&lt;meta name="twitter:title" content="Open Graph Tags — Complete Developer Guide" /&gt;
+&lt;meta name="twitter:description" content="Every OG property explained with full tag sets, debugging tips, and best practices for social sharing." /&gt;
+&lt;meta name="twitter:image" content="https://example.com/images/og/open-graph-guide-twitter.png" /&gt;
+&lt;meta name="twitter:image:alt" content="OG tag code example in an HTML editor" /&gt;</code></pre>
+
+<h3>twitter:site and twitter:creator</h3>
+
+<p>
+  Optional attribution tags. <code>twitter:site</code> is the Twitter/X handle of the website; <code>twitter:creator</code> is the handle of the individual author.
+</p>
+
+<pre><code>&lt;meta name="twitter:site" content="@devtoolkit" /&gt;
+&lt;meta name="twitter:creator" content="@janedoe" /&gt;</code></pre>
+
+<h2>Complete OG Tag Sets by Page Type</h2>
+
+<h3>Blog Article / Documentation Page</h3>
+
+<pre><code>&lt;!-- Core OG --&gt;
+&lt;meta property="og:title" content="Open Graph Tags — Complete Developer Guide" /&gt;
+&lt;meta property="og:description" content="Every OG property explained with full tag sets, debugging tips, and best practices for social sharing." /&gt;
+&lt;meta property="og:image" content="https://example.com/images/og/open-graph-guide.png" /&gt;
+&lt;meta property="og:image:width" content="1200" /&gt;
+&lt;meta property="og:image:height" content="630" /&gt;
+&lt;meta property="og:image:alt" content="OG tag code example in an HTML editor" /&gt;
+&lt;meta property="og:url" content="https://example.com/blog/open-graph-tags-complete-guide" /&gt;
+&lt;meta property="og:type" content="article" /&gt;
+&lt;meta property="og:site_name" content="DevToolkit" /&gt;
+&lt;meta property="og:locale" content="en_US" /&gt;
+
+&lt;!-- Article metadata --&gt;
+&lt;meta property="article:published_time" content="2026-03-19T09:00:00Z" /&gt;
+&lt;meta property="article:author" content="https://example.com/authors/jane-doe" /&gt;
+&lt;meta property="article:section" content="Developer Guides" /&gt;
+&lt;meta property="article:tag" content="SEO" /&gt;
+&lt;meta property="article:tag" content="HTML" /&gt;
+&lt;meta property="article:tag" content="Social Sharing" /&gt;
+
+&lt;!-- Twitter Card --&gt;
+&lt;meta name="twitter:card" content="summary_large_image" /&gt;
+&lt;meta name="twitter:site" content="@devtoolkit" /&gt;
+&lt;meta name="twitter:creator" content="@janedoe" /&gt;</code></pre>
+
+<h3>E-commerce Product Page</h3>
+
+<pre><code>&lt;!-- Core OG --&gt;
+&lt;meta property="og:title" content="Wireless Noise-Cancelling Headphones — AudioPro X9" /&gt;
+&lt;meta property="og:description" content="40-hour battery life, active noise cancellation, and studio-grade audio. Free shipping on orders over $50." /&gt;
+&lt;meta property="og:image" content="https://shop.example.com/products/audiopro-x9-og.jpg" /&gt;
+&lt;meta property="og:image:width" content="1200" /&gt;
+&lt;meta property="og:image:height" content="630" /&gt;
+&lt;meta property="og:url" content="https://shop.example.com/products/audiopro-x9" /&gt;
+&lt;meta property="og:type" content="product" /&gt;
+&lt;meta property="og:site_name" content="AudioPro Store" /&gt;
+
+&lt;!-- Product metadata --&gt;
+&lt;meta property="product:price:amount" content="199.99" /&gt;
+&lt;meta property="product:price:currency" content="USD" /&gt;
+&lt;meta property="product:availability" content="in stock" /&gt;
+
+&lt;!-- Twitter Card --&gt;
+&lt;meta name="twitter:card" content="summary_large_image" /&gt;
+&lt;meta name="twitter:site" content="@audiopro" /&gt;</code></pre>
+
+<h3>Homepage / Brand Page</h3>
+
+<pre><code>&lt;!-- Core OG --&gt;
+&lt;meta property="og:title" content="DevToolkit — Free Online Developer Tools" /&gt;
+&lt;meta property="og:description" content="JSON formatter, Base64 encoder, UUID generator, regex tester, and 40+ more free browser-based tools. No signup, no tracking." /&gt;
+&lt;meta property="og:image" content="https://devtoolkit.io/images/og/homepage.png" /&gt;
+&lt;meta property="og:image:width" content="1200" /&gt;
+&lt;meta property="og:image:height" content="630" /&gt;
+&lt;meta property="og:url" content="https://devtoolkit.io/" /&gt;
+&lt;meta property="og:type" content="website" /&gt;
+&lt;meta property="og:site_name" content="DevToolkit" /&gt;
+&lt;meta property="og:locale" content="en_US" /&gt;
+
+&lt;!-- Twitter Card --&gt;
+&lt;meta name="twitter:card" content="summary_large_image" /&gt;
+&lt;meta name="twitter:site" content="@devtoolkit" /&gt;</code></pre>
+
+<h2>Debugging OG Tags</h2>
+
+<p>
+  After deploying or updating OG tags, you need to verify them — and, critically, clear cached previews so platforms show the new data. Here are the three essential debugging tools.
+</p>
+
+<h3>Facebook Sharing Debugger</h3>
+
+<p>
+  The <strong>Facebook Sharing Debugger</strong> (developers.facebook.com/tools/debug) is the most authoritative tool for OG validation. Paste your URL and it shows:
+</p>
+
+<ul>
+  <li>Which OG tags Facebook parsed</li>
+  <li>Any warnings or missing required properties</li>
+  <li>A preview of exactly how your link will look on Facebook and Messenger</li>
+  <li>A "Scrape Again" button to force a cache refresh</li>
+</ul>
+
+<p>
+  Important: Facebook aggressively caches OG metadata. If you update tags, click "Scrape Again" in the debugger to force a fresh crawl. Without this step, Facebook continues showing the old cached data to users.
+</p>
+
+<h3>Twitter Card Validator</h3>
+
+<p>
+  Twitter's Card Validator (cards-dev.twitter.com/validator) works similarly. Paste a URL to see the rendered card, check for tag errors, and verify that <code>twitter:card</code>, <code>twitter:title</code>, and <code>twitter:image</code> are resolving correctly.
+</p>
+
+<p>
+  Note: Twitter's cache TTL is much shorter than Facebook's (typically minutes, not hours), so previews update faster after a deploy.
+</p>
+
+<h3>DevToolkit OG Image Preview</h3>
+
+<p>
+  For a fast, multi-platform preview without leaving your workflow, use DevToolkit's <a href="/tools/og-image-preview">OG Image Preview tool</a>. Paste any public URL and see how the link card renders on Facebook, Twitter, LinkedIn, and Slack side by side. It also surfaces missing or malformed tags with actionable recommendations, and links directly to our <a href="/tools/meta-tag-generator">Meta Tag Generator</a> so you can generate a corrected tag set in seconds.
+</p>
+
+<h3>Checking Raw Tags with curl</h3>
+
+<p>
+  Sometimes you need to verify what a crawler actually sees — your server may serve different HTML to bots, or a CDN may be caching stale content. Use curl with a bot-like User-Agent to check:
+</p>
+
+<pre><code>curl -s -A "facebookexternalhit/1.1" https://example.com/your-page \
+  | grep -i 'og:'</code></pre>
+
+<p>
+  Replace <code>facebookexternalhit/1.1</code> with <code>Twitterbot/1.0</code> or <code>LinkedInBot/1.0</code> to simulate those crawlers. If you get different HTML than a normal browser request, your server has bot-detection or conditional rendering logic affecting OG output.
+</p>
+
+<h2>Best Practices</h2>
+
+<h3>Image Sizes and Formats</h3>
+
+<ul>
+  <li><strong>Minimum size:</strong> 600 × 315 px. Facebook will not display images smaller than this in large-card format.</li>
+  <li><strong>Recommended size:</strong> 1200 × 630 px for standard OG; 1200 × 675 px for Twitter large card.</li>
+  <li><strong>Format:</strong> PNG for graphics and text-heavy images; JPEG for photos. Both are universally supported.</li>
+  <li><strong>File size:</strong> Under 1 MB for fast crawling and rendering; Facebook's hard cap is 8 MB.</li>
+  <li><strong>Safe zone:</strong> Keep all text and important visual content at least 50 px from each edge. Some platforms crop or round-corner the image, and aspect-ratio cropping on mobile can hide edge content.</li>
+  <li><strong>HTTPS only:</strong> All image URLs must use HTTPS. HTTP images are blocked on most platforms.</li>
+</ul>
+
+<h3>Character Limits Quick Reference</h3>
+
+<ul>
+  <li><strong>og:title:</strong> 60–70 characters (Facebook truncates at ~88, LinkedIn at ~70)</li>
+  <li><strong>og:description:</strong> 120–160 characters (most platforms show 120–200)</li>
+  <li><strong>twitter:title:</strong> 70 characters</li>
+  <li><strong>twitter:description:</strong> 200 characters</li>
+</ul>
+
+<h3>Always Use Absolute URLs</h3>
+
+<p>
+  Every URL in an OG tag — <code>og:url</code>, <code>og:image</code>, and any article namespace URLs — must be absolute (including the protocol and domain). Social crawlers do not have a base URL context to resolve relative paths. <code>/images/og.png</code> will simply fail silently; <code>https://example.com/images/og.png</code> will work.
+</p>
+
+<h3>Dynamic OG Tags for SPAs and Frameworks</h3>
+
+<p>
+  Single-page applications (React, Vue, Angular) have a fundamental OG problem: social crawlers typically do not execute JavaScript, so they see the bare HTML shell — no title, no description, no image. There are three standard solutions:
+</p>
+
+<ol>
+  <li>
+    <strong>Server-Side Rendering (SSR) or Static Site Generation (SSG):</strong> Frameworks like Next.js, Nuxt.js, SvelteKit, and Astro render the full HTML — including OG tags — on the server or at build time. This is the cleanest solution and is recommended for any public-facing content.
+  </li>
+  <li>
+    <strong>Dynamic OG image generation:</strong> Services like Vercel's <code>@vercel/og</code> or Cloudflare Workers can render custom OG images at the edge by combining templates with per-page data. This lets you generate unique branded images for every article, product, or user profile without pre-generating thousands of static images.
+  </li>
+  <li>
+    <strong>Prerendering middleware:</strong> Tools like Rendertron or prerender.io sit in front of your SPA and serve a server-side-rendered snapshot to bots while serving the normal SPA to browsers. Identified by User-Agent. Less elegant than SSR but viable for legacy SPAs.
+  </li>
+</ol>
+
+<p>
+  If you are using Astro (the framework powering this site), OG tags are trivially straightforward — write them directly in your layout's <code>&lt;head&gt;</code>, interpolate page-level variables, and Astro renders full HTML at build time or request time. No extra configuration needed.
+</p>
+
+<h3>Don't Rely on Inference</h3>
+
+<p>
+  Platforms that don't find OG tags will try to infer a title from the <code>&lt;title&gt;</code> tag, a description from the first paragraph, and an image from the largest visible image on the page. This is unpredictable — you might get a cookie banner screenshot or a nav logo as your preview image. Always declare OG tags explicitly on every page you want to be shareable.
+</p>
+
+<h3>One og:image Tag or Multiple?</h3>
+
+<p>
+  The OG spec allows multiple <code>og:image</code> tags. Facebook's crawler will use the first valid one. However, in practice most teams use a single image and rely on <code>og:image:width</code> and <code>og:image:height</code> hints to avoid the extra HTTP round-trip Facebook uses when dimensions are unknown. If you must include multiple images (e.g., for fallback), put the highest-quality, correctly-sized image first.
+</p>
+
+<h2>Common Mistakes and How to Fix Them</h2>
+
+<ul>
+  <li>
+    <strong>Missing og:image on interior pages:</strong> Many developers set OG tags on the homepage but forget them on blog posts and product pages. Audit your site with a crawler or check Google Search Console for pages missing OG metadata.
+  </li>
+  <li>
+    <strong>Relative image paths:</strong> Use a build-time variable or environment variable to prefix image URLs with your full domain. Never hardcode relative paths in OG tags.
+  </li>
+  <li>
+    <strong>Stale cached previews:</strong> After updating tags, use the Facebook Sharing Debugger's "Scrape Again" and LinkedIn's Post Inspector to force a cache bust. For Slack and Discord, adding a query parameter (<code>?v=2</code>) to the URL forces a fresh crawl.
+  </li>
+  <li>
+    <strong>HTTP images blocked by HTTPS pages:</strong> Mixed content rules mean platforms will refuse to load an HTTP image URL on an HTTPS page. Use HTTPS for all image assets.
+  </li>
+  <li>
+    <strong>og:description duplicating og:title:</strong> The description should add information, not restate the title. Write it as a second sentence that answers "why should I click this?"
+  </li>
+</ul>
+
+<h2>OG Tags and SEO</h2>
+
+<p>
+  OG tags are not a direct Google ranking factor — Googlebot primarily uses structured data (schema.org JSON-LD), canonical tags, and page content for indexing decisions. However, there is an indirect SEO benefit: pages with good OG tags get shared more on social media, which generates backlinks and referral traffic, which are positive ranking signals.
+</p>
+
+<p>
+  For thorough metadata coverage, implement both OG tags and standard HTML meta tags. The <code>&lt;title&gt;</code> tag is still what Google shows in search results; <code>&lt;meta name="description"&gt;</code> is still the description Google shows below the title. Use our <a href="/tools/meta-tag-generator">Meta Tag Generator</a> to generate both sets simultaneously — fill in your page details once and get the complete <code>&lt;head&gt;</code> block covering OG, Twitter Cards, standard HTML meta, and canonical tags.
+</p>
+
+<p>
+  For more on developer tooling and productivity, see our guides on <a href="/blog/rest-api-testing-guide">REST API Testing</a> and the <a href="/blog/best-free-developer-tools-2026">Best Free Developer Tools for 2026</a>.
+</p>
+
+<h2>Try It Right Now</h2>
+
+<p>
+  The fastest way to verify your OG implementation — or diagnose why a link preview looks wrong — is to paste the URL into DevToolkit's <a href="/tools/og-image-preview"><strong>OG Image Preview tool</strong></a>. You'll see a rendered preview for each major platform, a full breakdown of every OG tag found on the page, warnings for missing or incorrect values, and direct links to the platform-official debuggers for a cache bust.
+</p>
+
+<p>
+  If you're starting from scratch or refreshing your metadata, the <a href="/tools/meta-tag-generator">Meta Tag Generator</a> builds a complete, copy-paste-ready <code>&lt;head&gt;</code> block in seconds — OG tags, Twitter Cards, canonical URL, and standard HTML meta, all from a single form.
+</p>
+
+</BlogLayout>

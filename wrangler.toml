@@ -1,0 +1,34 @@
+name = "devtoolkit"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "./dist"
+
+# D1 Database binding
+# After creating the D1 database, uncomment and fill in the database_id:
+# wrangler d1 create devtoolkit-db
+# Then run migrations: wrangler d1 execute devtoolkit-db --file=./migrations/0001_init.sql
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "devtoolkit-db"
+# database_id = "TODO_REPLACE_WITH_D1_DATABASE_ID"
+
+# KV Namespace for analytics tracking
+# Create with: wrangler kv namespace create ANALYTICS
+# Then fill in the id below
+# [[kv_namespaces]]
+# binding = "ANALYTICS"
+# id = "TODO_REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Optional: protect /api/analytics/query with a secret key
+# Set ANALYTICS_SECRET via Cloudflare Dashboard > Pages > Settings > Environment Variables
+
+# Environment variables (set via Cloudflare Dashboard > Pages > Settings > Environment Variables)
+# Required secrets (do NOT put actual values here):
+# - GOOGLE_CLIENT_ID
+# - GOOGLE_CLIENT_SECRET
+# - STRIPE_SECRET_KEY
+# - STRIPE_WEBHOOK_SECRET
+# - STRIPE_PRICE_ID
+# - AI_API_KEY
+# - JWT_SECRET (generate with: openssl rand -hex 32)
+# - SITE_URL (https://devtoolkit.cc)
+# - AI_MODEL (optional, defaults to claude-sonnet-4-20250514)

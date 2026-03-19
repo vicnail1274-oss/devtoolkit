@@ -1,0 +1,64 @@
+{
+  "name": "devtoolkit-utils",
+  "version": "1.0.0",
+  "description": "40+ developer utility functions: Base64, hashing, JSON, CSV, color conversion, text case, URL encoding, and more.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./encoding": {
+      "types": "./dist/encoding/index.d.ts",
+      "import": "./dist/encoding/index.mjs",
+      "require": "./dist/encoding/index.js"
+    },
+    "./hashing": {
+      "types": "./dist/hashing/index.d.ts",
+      "import": "./dist/hashing/index.mjs",
+      "require": "./dist/hashing/index.js"
+    },
+    "./data": {
+      "types": "./dist/data/index.d.ts",
+      "import": "./dist/data/index.mjs",
+      "require": "./dist/data/index.js"
+    },
+    "./conversion": {
+      "types": "./dist/conversion/index.d.ts",
+      "import": "./dist/conversion/index.mjs",
+      "require": "./dist/conversion/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "devtools", "utilities", "base64", "hash", "md5", "sha256",
+    "json", "csv", "color", "hex", "rgb", "hsl",
+    "text-case", "camelcase", "kebab-case", "snake_case",
+    "url-encode", "jwt", "developer-tools"
+  ],
+  "author": "DevToolkit",
+  "license": "MIT",
+  "homepage": "https://devtoolkit.cc",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devtoolkit-cc/devtoolkit-utils"
+  },
+  "bugs": {
+    "url": "https://github.com/devtoolkit-cc/devtoolkit-utils/issues"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

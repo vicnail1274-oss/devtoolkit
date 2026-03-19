@@ -1,0 +1,70 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import TextCaseConverter from '../../components/tools/TextCaseConverter';
+
+const faq = [
+  { question: "What text cases are supported?", answer: "The tool supports uppercase, lowercase, title case, sentence case, camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE, and more. Click any case button to instantly convert your text." },
+  { question: "What is the difference between camelCase and PascalCase?", answer: "camelCase starts with a lowercase letter and capitalizes subsequent words (e.g., myVariableName). PascalCase capitalizes every word including the first (e.g., MyVariableName). camelCase is used for variables in JavaScript; PascalCase for class names." },
+  { question: "When should I use snake_case vs kebab-case?", answer: "snake_case (words_separated_by_underscores) is standard in Python and Ruby. kebab-case (words-separated-by-hyphens) is used in CSS class names, URLs, and file names. Choose based on your language or framework conventions." },
+  { question: "Is my text private?", answer: "Yes. All text conversion happens in your browser. No data is sent to any server or stored anywhere." },
+];
+---
+
+<ToolLayout
+  title="Text Case Converter"
+  description="Convert text between uppercase, lowercase, title case, camelCase, snake_case, kebab-case, and more."
+  slug="text-case-converter"
+  toolName="Text Case Converter"
+  faq={faq}
+>
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Text Case Converter
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Convert text between 10 different cases: UPPERCASE, lowercase, Title Case, camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE, dot.case, and Sentence case.
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <TextCaseConverter client:load />
+  </div>
+
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">10 Case Formats</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Convert between programming naming conventions: camelCase, PascalCase, snake_case, kebab-case, and more.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Smart Word Detection</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Automatically detects word boundaries in camelCase, snake_case, kebab-case, and mixed input text.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">100% Client-Side</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        All conversion happens in your browser. No data is sent to any server. Fast and private.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

@@ -1,0 +1,381 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="UUID vs ULID — Which Should You Use?"
+  description="A comprehensive comparison of UUID and ULID identifiers — covering structure, sortability, database indexing performance, and when to choose each format in your projects."
+  slug="uuid-vs-ulid"
+  publishDate="2026-03-19"
+  readTime="13 min read"
+>
+
+<p>
+  Every application needs unique identifiers. Whether you're identifying database rows, tracking distributed events, or generating public-facing resource IDs, the format you choose has real consequences for performance, readability, and correctness. The two most common options are <strong>UUID</strong> and <strong>ULID</strong> — and they differ in more ways than most developers realise.
+</p>
+
+<p>
+  In this guide we'll cover the full anatomy of both formats, walk through code examples in JavaScript and Python, dig into database B-tree fragmentation, and give you a clear framework for deciding which to reach for in any given situation.
+</p>
+
+<h2>What Is a UUID?</h2>
+
+<p>
+  UUID stands for <strong>Universally Unique Identifier</strong>. Defined in <a href="https://www.rfc-editor.org/rfc/rfc4122" target="_blank" rel="noopener noreferrer">RFC 4122</a> (and later updated in RFC 9562), a UUID is a 128-bit value typically rendered as 32 hexadecimal characters split into five hyphen-separated groups:
+</p>
+
+<pre><code>xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
+└──────┘ └──┘ └──┘ └──┘ └──────────┘
+  8 hex   4    4    4       12 hex</code></pre>
+
+<p>
+  The <code>M</code> nibble encodes the version (1–8) and <code>N</code> encodes the variant. The total human-readable length is always 36 characters including hyphens, or 32 without.
+</p>
+
+<h3>UUID v1 — Timestamp + MAC Address</h3>
+
+<p>
+  Version 1 encodes a 60-bit timestamp (100-nanosecond intervals since 15 October 1582), a clock sequence, and the generating node's MAC address. It is time-ordered, but the timestamp bits are scrambled across the 128-bit layout rather than placed at the front, so lexicographic sort order does <em>not</em> match creation order. It also leaks the host MAC address, which caused privacy concerns and led to its decline.
+</p>
+
+<h3>UUID v4 — Pure Random</h3>
+
+<p>
+  Version 4 fills 122 bits with cryptographically random data and sets the version and variant bits. It is by far the most widely used UUID version today. There is zero risk of MAC address leakage, and collision probability is astronomically low (roughly 1 in 5.3 × 10<sup>36</sup> for each new ID). The downside is that it is entirely unordered, which creates indexing problems we'll return to shortly.
+</p>
+
+<h3>UUID v5 — Namespace + SHA-1 Hash</h3>
+
+<p>
+  Version 5 is deterministic: given the same namespace UUID and name string, it always produces the same output UUID. This makes it suitable for content-addressable identifiers — for example, generating a stable ID for a URL or an email address. Version 3 is the same concept but uses MD5; v5 with SHA-1 is preferred.
+</p>
+
+<h3>UUID v7 — Time-Ordered Random (The Modern Standard)</h3>
+
+<p>
+  RFC 9562 introduced UUID v7 in 2024. It places a 48-bit Unix millisecond timestamp in the most significant bits, followed by random data. Because the timestamp is at the front, v7 UUIDs are <strong>monotonically increasing within a millisecond window</strong> and sort correctly in both binary and lexicographic order. UUID v7 is the recommended default for new systems that need a standard UUID format with good database performance.
+</p>
+
+<pre><code>// UUID v7 example
+019640ab-c2f1-7b3e-9a4d-1e8f3c2d5b6a
+└──────────────┘
+  48-bit ms timestamp at the front</code></pre>
+
+<h2>What Is a ULID?</h2>
+
+<p>
+  ULID stands for <strong>Universally Unique Lexicographically Sortable Identifier</strong>. It was designed specifically to fix UUID's sortability and readability problems while maintaining 128-bit uniqueness. A ULID looks like this:
+</p>
+
+<pre><code>01ARZ3NDEKTSV4RRFFQ69G5FAV</code></pre>
+
+<p>
+  That's 26 characters of <a href="https://en.wikipedia.org/wiki/Base32" target="_blank" rel="noopener noreferrer">Crockford Base32</a> — the alphabet <code>0123456789ABCDEFGHJKMNPQRSTVWXYZ</code>, which deliberately excludes visually ambiguous characters like <code>I</code>, <code>L</code>, <code>O</code>, and <code>U</code>.
+</p>
+
+<h3>ULID Structure</h3>
+
+<pre><code> 01ARZ3NDEK    TSSDFRFFQ69G5FAV
+ └────────┘    └──────────────┘
+  10 chars          16 chars
+ 48-bit Unix    80-bit random
+  timestamp       component
+  (ms precision)</code></pre>
+
+<p>
+  The timestamp occupies the first 10 characters (48 bits), encoding milliseconds since the Unix epoch. This means ULIDs generated in the same millisecond share the same prefix and sort together as a group. The remaining 16 characters (80 bits) are random, giving a theoretical ceiling of 2<sup>80</sup> unique IDs per millisecond — far more than any real-world system will ever need.
+</p>
+
+<p>
+  Because the most significant bits are always the timestamp, ULIDs sort lexicographically in creation order without any special database configuration.
+</p>
+
+<h2>Generating UUIDs and ULIDs in Code</h2>
+
+<h3>JavaScript</h3>
+
+<pre><code>// UUID v4 — built into modern runtimes
+const uuidV4 = crypto.randomUUID();
+// "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+
+// UUID v7 — use the 'uuid' npm package (v10+)
+import {'{'} v7 as uuidv7 {'}'} from 'uuid';
+const uuidV7 = uuidv7();
+// "019640ab-c2f1-7000-8000-1e8f3c2d5b6a"
+
+// ULID — use the 'ulid' npm package
+import {'{'} ulid {'}'} from 'ulid';
+const id = ulid();
+// "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+
+// ULID with a specific timestamp (deterministic prefix)
+const idAt = ulid(1711497600000);
+
+// Extract timestamp from a ULID
+import {'{'} decodeTime {'}'} from 'ulid';
+const ts = decodeTime('01ARZ3NDEKTSV4RRFFQ69G5FAV');
+// returns Unix ms timestamp as a number</code></pre>
+
+<h3>Python</h3>
+
+<pre><code>import uuid
+
+# UUID v4
+uid_v4 = uuid.uuid4()
+print(uid_v4)
+# f47ac10b-58cc-4372-a567-0e02b2c3d479
+
+# UUID v5 (namespace + name → deterministic)
+uid_v5 = uuid.uuid5(uuid.NAMESPACE_URL, "https://example.com")
+print(uid_v5)
+# c74a196f-f19d-5a77-9bdf-c4d869f0e4cf
+
+# UUID v7 — use the 'uuid6' package (pip install uuid6)
+import uuid6
+uid_v7 = uuid6.uuid7()
+print(uid_v7)
+
+# ULID — use the 'python-ulid' package (pip install python-ulid)
+from ulid import ULID
+id = ULID()
+print(str(id))
+# 01ARZ3NDEKTSV4RRFFQ69G5FAV
+
+# Extract timestamp from ULID
+print(id.timestamp)   # float Unix seconds
+print(id.milliseconds)  # int Unix ms
+print(id.datetime)    # datetime object (UTC)</code></pre>
+
+<h2>Side-by-Side Comparison</h2>
+
+<p>
+  Here is a structured breakdown of the key properties of each format:
+</p>
+
+<pre><code>Property              UUID v4              UUID v7              ULID
+─────────────────────────────────────────────────────────────────────
+Length (chars)        36 (with hyphens)    36 (with hyphens)    26
+Encoding              Hex + hyphens        Hex + hyphens        Crockford Base32
+Bit width             128                  128                  128
+Sortable              No                   Yes (ms precision)   Yes (ms precision)
+Timestamp embedded    No                   Yes (48-bit ms)      Yes (48-bit ms)
+Timestamp extraction  Impossible           Yes                  Yes
+Randomness bits       122                  74–80                80
+Case sensitive        No                   No                   No (by spec)
+URL safe              Yes (with hyphens)   Yes                  Yes
+Human readable        Low                  Low                  Medium
+RFC standard          RFC 9562             RFC 9562             Community spec
+Widely supported      Very high            Growing              Growing</code></pre>
+
+<h2>Database Indexing: The Core Performance Difference</h2>
+
+<p>
+  This is where the UUID v4 vs ULID debate becomes most consequential in production systems. Understanding it requires a basic understanding of how database indexes work.
+</p>
+
+<h3>How B-Tree Indexes Work</h3>
+
+<p>
+  Most relational databases (PostgreSQL, MySQL, SQLite) store indexes as <strong>B-trees</strong> — balanced tree structures where each leaf page holds a range of key values in sorted order. When you insert a new row, the database must place the new key into the correct leaf page. If that page is full, it splits the page, which can cascade into rebalancing the tree.
+</p>
+
+<h3>UUID v4 Fragmentation</h3>
+
+<p>
+  Because UUID v4 values are purely random, each new insertion lands at a statistically random position in the B-tree. On a large table this means:
+</p>
+
+<ul>
+  <li><strong>Page splits happen constantly</strong> — every new random key may land in an already-full middle page, forcing a split.</li>
+  <li><strong>Low page fill factor</strong> — after many splits, pages are often only 50% full, doubling the storage footprint of the index.</li>
+  <li><strong>Cache thrashing</strong> — recent writes scatter across the entire key space, so the pages needed for new inserts are rarely in the buffer cache. This causes excessive disk I/O.</li>
+  <li><strong>Write amplification</strong> — on NVMe and SSD storage, random writes are less efficient than sequential writes even at the hardware level.</li>
+</ul>
+
+<p>
+  On small tables (under a few hundred thousand rows) this is invisible. On tables with tens of millions of rows, random UUID primary keys can cause insert throughput to drop by 50–80% compared to sequential keys, and index size can balloon to 2–3× what an ordered key would occupy.
+</p>
+
+<h3>ULID and UUID v7 Sequential Inserts</h3>
+
+<p>
+  ULID and UUID v7 both place the timestamp in the high-order bits. New IDs are always greater than any existing ID generated more than 1 ms ago. This means inserts <strong>always append to the rightmost leaf page</strong> of the B-tree — the behaviour is identical to a traditional auto-increment integer primary key. Page splits are rare, pages stay full, and the working set (recently-written pages) remains small and cache-friendly.
+</p>
+
+<p>
+  PostgreSQL benchmarks from the <a href="https://www.cybertec-postgresql.com/en/uuid-serial-or-identity-columns-for-postgresql-auto-generated-primary-keys/" target="_blank" rel="noopener noreferrer">Cybertec blog</a> and similar independent tests consistently show that time-ordered UUIDs (v7) or ULIDs achieve insert throughput within 5–10% of BIGSERIAL, while random UUID v4 can be 3–5× slower on tables with millions of rows and indexes.
+</p>
+
+<h3>A Practical PostgreSQL Example</h3>
+
+<pre><code>-- UUID v4 primary key — index fragmentation over time
+CREATE TABLE events_uuid (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  payload JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ULID stored as text — lexicographic sort = time sort
+CREATE TABLE events_ulid (
+  id TEXT PRIMARY KEY,  -- insert ULID values from application
+  payload JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- UUID v7 — best of both worlds in PostgreSQL 17+
+CREATE TABLE events_uuid7 (
+  id UUID PRIMARY KEY DEFAULT uuidv7(), -- requires pg_uuidv7 extension
+  payload JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);</code></pre>
+
+<h2>Sortability in Practice</h2>
+
+<p>
+  Sortability matters beyond just index performance. When your IDs are time-ordered you get several useful properties for free:
+</p>
+
+<ul>
+  <li><strong>Pagination without a separate <code>created_at</code> column</strong> — cursor-based pagination can use the ID itself as a cursor.</li>
+  <li><strong>Approximate creation time from ID</strong> — useful for debugging, auditing, and data migration without needing an extra timestamp column.</li>
+  <li><strong>Natural ordering in log files and API responses</strong> — IDs sort visually in the order records were created.</li>
+  <li><strong>Distributed event ordering</strong> — in a microservices architecture, events from different services can be merged and sorted by ID without clock synchronisation.</li>
+</ul>
+
+<p>
+  Need to work with Unix timestamps in your project? The <a href="/tools/timestamp-converter">DevToolkit Timestamp Converter</a> lets you convert between Unix ms, ISO 8601, and human-readable formats instantly — handy when you're extracting the timestamp component from a ULID or UUID v7.
+</p>
+
+<h2>When to Choose UUID</h2>
+
+<h3>Use UUID v4 When:</h3>
+
+<ul>
+  <li>You need maximum interoperability — UUID v4 is supported natively by every database, ORM, and programming language without extra dependencies.</li>
+  <li>Your table will stay small (under 1 million rows) and insert performance is not a bottleneck.</li>
+  <li>You are integrating with an existing system that expects standard UUID format.</li>
+  <li>You specifically need IDs with no embedded timestamp (privacy requirement — the creation time must not be inferrable from the ID).</li>
+  <li>You need deterministic IDs from content (use UUID v5).</li>
+</ul>
+
+<h3>Use UUID v7 When:</h3>
+
+<ul>
+  <li>You need standard RFC-compliant UUID format (compatible with existing UUID columns and tooling).</li>
+  <li>You want time-ordered IDs with good database performance but don't want to introduce a new format.</li>
+  <li>You're on PostgreSQL and can use the <code>pg_uuidv7</code> extension for database-level generation.</li>
+  <li>You're migrating an existing UUID v4 system and want a drop-in improvement.</li>
+</ul>
+
+<h2>When to Choose ULID</h2>
+
+<ul>
+  <li>You want time-ordered IDs with a shorter, more readable string representation (26 chars vs 36).</li>
+  <li>You need to embed IDs in URLs, filenames, or log lines where shorter is better.</li>
+  <li>You are building a new system from scratch with no legacy UUID compatibility requirement.</li>
+  <li>You want easy timestamp extraction in application code without a database extension.</li>
+  <li>Your team values the Crockford Base32 alphabet's human-readability (no ambiguous characters, case-insensitive).</li>
+  <li>You are working in a language or framework where good ULID libraries exist (JavaScript, Python, Go, Rust all have mature ULID packages).</li>
+</ul>
+
+<h2>UUID v7 vs ULID: Which Modern Format Wins?</h2>
+
+<p>
+  If you're starting a new project today and want time-ordered IDs, the choice is between UUID v7 and ULID. Both solve the core database performance problem. The deciding factors are:
+</p>
+
+<pre><code>Factor                UUID v7              ULID
+─────────────────────────────────────────────────────
+RFC standard          Yes (RFC 9562)       No (community)
+Native DB support     Growing              Manual (store as TEXT)
+String length         36 chars             26 chars
+Existing UUID tooling Drop-in compatible   Incompatible
+Library maturity      Growing              Mature since 2016
+Timestamp precision   Millisecond          Millisecond
+Monotonicity option   Optional (sub-ms)    Yes (monotonic mode)</code></pre>
+
+<p>
+  For most teams: if you're on PostgreSQL or MySQL and want to stay in the UUID ecosystem, use UUID v7. If you value shorter strings, better readability, or are building a greenfield system without legacy UUID constraints, ULID is an excellent choice.
+</p>
+
+<h2>Monotonic Mode: Solving the Same-Millisecond Problem</h2>
+
+<p>
+  Both UUID v7 and ULID face a subtle edge case: if you generate many IDs within the same millisecond, the random component means they won't necessarily sort in generation order within that millisecond window.
+</p>
+
+<p>
+  ULID's specification includes a <strong>monotonic mode</strong> that increments the random component by 1 for each ID generated within the same millisecond, guaranteeing strict ordering even at very high generation rates:
+</p>
+
+<pre><code>import {'{'} monotonicFactory {'}'} from 'ulid';
+const ulid = monotonicFactory();
+
+// These are generated in the same millisecond
+// but are guaranteed to sort in generation order
+const id1 = ulid();
+const id2 = ulid();
+const id3 = ulid();
+// id1 &lt; id2 &lt; id3 always holds</code></pre>
+
+<p>
+  UUID v7 has a similar optional sub-millisecond precision mechanism where additional random bits can be used as a monotonic counter, though implementation varies by library.
+</p>
+
+<h2>Storage Considerations</h2>
+
+<p>
+  At the binary level, both UUID and ULID are 128 bits (16 bytes). The difference is purely in the string representation:
+</p>
+
+<ul>
+  <li><strong>UUID stored as <code>UUID</code> type</strong> (PostgreSQL, MySQL): 16 bytes — optimal.</li>
+  <li><strong>UUID stored as <code>VARCHAR(36)</code></strong>: 36 bytes — 2.25× overhead.</li>
+  <li><strong>ULID stored as <code>TEXT</code></strong>: 26 bytes — better than VARCHAR UUID but not as good as native binary.</li>
+  <li><strong>ULID stored as <code>UUID</code></strong>: Possible — ULID can be stored in a native UUID column since it's 128 bits. Some teams do this and convert in the application layer.</li>
+</ul>
+
+<p>
+  If you're using PostgreSQL, always use the native <code>UUID</code> type for UUID values, never <code>VARCHAR</code>. The 16-byte binary storage is 2× more compact and indexes are smaller and faster.
+</p>
+
+<h2>Working with UUIDs in Developer Tools</h2>
+
+<p>
+  When debugging or testing, you'll frequently need to generate UUIDs on demand. The <a href="/tools/uuid-generator">DevToolkit UUID Generator</a> lets you create UUID v1, v4, and v7 values instantly in your browser — no installation, no dependencies, just copy and go. It also supports bulk generation when you need a batch of test IDs.
+</p>
+
+<p>
+  For understanding the timestamp embedded in a UUID v7 or ULID, pair it with the <a href="/tools/timestamp-converter">Timestamp Converter</a> to decode the millisecond epoch into a human-readable date and time.
+</p>
+
+<p>
+  If you're working on data pipelines where IDs travel through encoding layers, it's worth understanding how your identifiers behave when Base64-encoded or embedded in JSON payloads — see <a href="/blog/base64-encoding-explained">Base64 Encoding Explained</a> and <a href="/blog/guide-to-json-formatting-and-validation">Guide to JSON Formatting and Validation</a> for the full picture.
+</p>
+
+<h2>Quick Decision Framework</h2>
+
+<ol>
+  <li><strong>Need maximum compatibility with existing systems?</strong> Use UUID v4 if the table is small, UUID v7 if performance matters.</li>
+  <li><strong>Building something new with no legacy constraints?</strong> ULID or UUID v7 — both are excellent.</li>
+  <li><strong>Table will have millions of rows with frequent inserts?</strong> Avoid UUID v4. Use UUID v7 or ULID.</li>
+  <li><strong>Need deterministic IDs from content?</strong> UUID v5.</li>
+  <li><strong>Need shorter strings in URLs or filenames?</strong> ULID wins with 26 chars vs 36.</li>
+  <li><strong>Need strict privacy (no inferrable creation time)?</strong> UUID v4 is the only option.</li>
+</ol>
+
+<h2>Summary</h2>
+
+<p>
+  UUID v4 is a safe, universally supported default, but its random nature makes it a poor choice for primary keys on large tables. ULID and UUID v7 both solve this problem elegantly by embedding a millisecond timestamp in the high-order bits, turning inserts into efficient sequential appends that keep B-tree indexes healthy.
+</p>
+
+<p>
+  If you're working in an existing UUID ecosystem, migrate toward UUID v7. If you're greenfielding and value shorter, more readable identifiers, ULID is a mature and excellent choice. Either way, moving away from random UUID v4 as a primary key on high-write tables is one of the highest-leverage, lowest-effort database performance improvements you can make.
+</p>
+
+<p>
+  Ready to start generating IDs? Try the <a href="/tools/uuid-generator"><strong>DevToolkit UUID Generator</strong></a> — generate UUID v1, v4, and v7 values instantly, in bulk, directly in your browser with zero setup required.
+</p>
+
+</BlogLayout>

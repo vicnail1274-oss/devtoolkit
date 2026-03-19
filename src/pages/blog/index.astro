@@ -1,0 +1,269 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+
+const posts = [
+  {
+    title: 'Structured Income Research Template for AI and Product Ideas',
+    description:
+      'A five-field template for revenue research — target market, revenue math, feasibility score, and validation — so AI and teams stop producing vague income reports.',
+    slug: 'structured-income-research-template-ai-products',
+    date: '2026-03-19',
+    readTime: '9 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'How to Format JSON Online: Complete Guide for Developers',
+    description: 'Learn how to format, beautify, and validate JSON online — step-by-step tutorial with examples, common errors, and the best free JSON formatter tools.',
+    slug: 'how-to-format-json-online',
+    date: '2026-03-19',
+    readTime: '12 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'Regex Tester Tutorial for Beginners: Learn Regular Expressions Step by Step',
+    description: 'A beginner-friendly regex tutorial — learn regular expression basics, test patterns online, and master common regex patterns with practical examples.',
+    slug: 'regex-tester-tutorial-beginners',
+    date: '2026-03-19',
+    readTime: '15 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'CSS Color Picker: HEX, RGB & HSL Converter Guide for Developers',
+    description: 'Master CSS colors with this complete guide to HEX, RGB, and HSL formats — learn color theory, conversion formulas, and use free online color picker tools.',
+    slug: 'css-color-picker-hex-rgb-converter',
+    date: '2026-03-19',
+    readTime: '13 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'Markdown to HTML Converter: Free Online Tool & Complete Guide',
+    description: 'Convert Markdown to HTML instantly with our free online converter — learn Markdown syntax, advanced features, and best practices for documentation.',
+    slug: 'markdown-to-html-converter-free',
+    date: '2026-03-19',
+    readTime: '14 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'Cron Expression Builder Guide: Create Scheduled Tasks Like a Pro',
+    description: 'Master cron expressions with this hands-on builder guide — learn cron syntax, build complex schedules, and use free online tools to generate and test cron jobs.',
+    slug: 'cron-expression-builder-guide',
+    date: '2026-03-19',
+    readTime: '14 min read',
+    category: 'DevOps',
+  },
+  {
+    title: 'URL Encoder/Decoder Online Free: Complete Guide to Percent-Encoding',
+    description: 'Encode and decode URLs online for free — learn how percent-encoding works, when to use it, and master URL encoding in JavaScript, Python, and more.',
+    slug: 'url-encoder-decoder-online-free',
+    date: '2026-03-19',
+    readTime: '13 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'Open Graph Tags — Complete Developer Guide',
+    description: 'Everything you need to know about Open Graph tags — og:title, og:image, Twitter Cards, debugging tools, best practices, and complete tag sets for every page type.',
+    slug: 'open-graph-tags-complete-guide',
+    date: '2026-03-19',
+    readTime: '14 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'UUID vs ULID — Which Should You Use?',
+    description: 'A deep comparison of UUID and ULID — versions, sortability, database indexing, B-tree fragmentation, and when to pick each format.',
+    slug: 'uuid-vs-ulid',
+    date: '2026-03-19',
+    readTime: '13 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'HTTP Status Codes Quick Reference Guide',
+    description: 'The complete HTTP status code reference — 1xx through 5xx with practical examples, debugging tips, and API design guidance.',
+    slug: 'http-status-codes-reference',
+    date: '2026-03-19',
+    readTime: '15 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'Regex Cheat Sheet with Examples: The Complete 2026 Reference',
+    description: 'Master regular expressions with this comprehensive cheat sheet — syntax, quantifiers, groups, lookaheads, and real-world patterns for JavaScript, Python, and more.',
+    slug: 'regex-cheat-sheet',
+    date: '2026-03-19',
+    readTime: '14 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'JWT Token Explained: How to Decode, Debug, and Secure Your Tokens',
+    description: 'Understand JSON Web Tokens from the ground up — JWT structure, signing algorithms, common vulnerabilities, and how to decode and debug tokens with free tools.',
+    slug: 'jwt-token-explained',
+    date: '2026-03-19',
+    readTime: '15 min read',
+    category: 'Security',
+  },
+  {
+    title: 'How to Validate JSON Schema: A Complete Developer Guide',
+    description: 'Learn how to validate JSON Schema — types, required fields, nested objects, $ref, composition, and free tools to generate schemas instantly.',
+    slug: 'how-to-validate-json-schema',
+    date: '2026-03-19',
+    readTime: '12 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'Cron Expression Cheat Sheet & Examples',
+    description: 'The ultimate cron expression reference — syntax breakdown, real-world examples, special characters, and scheduling patterns for every use case.',
+    slug: 'cron-expression-cheat-sheet',
+    date: '2026-03-19',
+    readTime: '14 min read',
+    category: 'DevOps',
+  },
+  {
+    title: 'REST API Testing Guide for Beginners',
+    description: 'Learn how to test REST APIs — HTTP methods, status codes, headers, authentication, and hands-on examples with curl and online tools.',
+    slug: 'rest-api-testing-guide',
+    date: '2026-03-19',
+    readTime: '15 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'DevToolkit vs DevToys: Which Developer Utility Suite Is Better?',
+    description: 'A detailed comparison of DevToolkit and DevToys — features, platform support, AI tools, and which is right for you.',
+    slug: 'devtoolkit-vs-devtoys',
+    date: '2026-03-19',
+    readTime: '9 min read',
+    category: 'Comparison',
+  },
+  {
+    title: 'DevToolkit vs CyberChef: Developer Tools Comparison',
+    description: 'Compare DevToolkit and CyberChef — UX, tool coverage, AI capabilities, and modern developer workflow integration.',
+    slug: 'devtoolkit-vs-cyberchef',
+    date: '2026-03-19',
+    readTime: '9 min read',
+    category: 'Comparison',
+  },
+  {
+    title: 'DevToolkit vs Transform.tools: Online Dev Tools Head-to-Head',
+    description: 'A head-to-head comparison of DevToolkit and Transform.tools — tool breadth, AI features, mobile experience, and pricing.',
+    slug: 'devtoolkit-vs-transform-tools',
+    date: '2026-03-19',
+    readTime: '9 min read',
+    category: 'Comparison',
+  },
+  {
+    title: 'Top 10 Free Online Developer Tools Every Programmer Needs',
+    description: 'The top 10 free online developer tools for formatting, testing, encoding, and security — all browser-based, no signup.',
+    slug: 'top-10-free-online-dev-tools',
+    date: '2026-03-19',
+    readTime: '8 min read',
+    category: 'Resources',
+  },
+  {
+    title: 'Essential AI-Powered Developer Tools in 2026',
+    description: 'The essential AI developer tools for code review, documentation, SQL generation, and more in 2026.',
+    slug: 'essential-ai-developer-tools-2026',
+    date: '2026-03-19',
+    readTime: '10 min read',
+    category: 'AI',
+  },
+  {
+    title: 'Best Free Online Developer Tools in 2026',
+    description: 'A curated list of the best free online developer tools for formatting, encoding, security, and AI-powered development.',
+    slug: 'best-free-developer-tools-2026',
+    date: '2026-03-18',
+    readTime: '10 min read',
+    category: 'Resources',
+  },
+  {
+    title: 'JSON vs YAML vs TOML: Complete Comparison Guide',
+    description: 'An in-depth comparison of JSON, YAML, and TOML configuration formats — syntax, use cases, strengths, and when to use each.',
+    slug: 'json-vs-yaml-vs-toml',
+    date: '2026-03-18',
+    readTime: '12 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'How to Generate Secure Passwords: A Developer Guide',
+    description: 'Learn how to generate, store, and manage secure passwords using cryptographic best practices and modern tools.',
+    slug: 'how-to-generate-secure-passwords',
+    date: '2026-03-18',
+    readTime: '9 min read',
+    category: 'Security',
+  },
+  {
+    title: 'How to Minify JavaScript Without Build Tools',
+    description: 'Learn how to minify JavaScript without webpack, Vite, or any build system. Techniques for quick minification.',
+    slug: 'how-to-minify-javascript-without-build-tools',
+    date: '2026-03-18',
+    readTime: '8 min read',
+    category: 'Performance',
+  },
+  {
+    title: 'Base64 Encoding Explained: When and Why to Use It',
+    description: 'A practical guide to Base64 encoding — what it is, how it works, when to use it, and common pitfalls.',
+    slug: 'base64-encoding-explained',
+    date: '2026-03-18',
+    readTime: '14 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'A Developer Guide to JSON Formatting and Validation',
+    description: 'Everything you need to know about JSON formatting, validation, common errors, and best practices.',
+    slug: 'guide-to-json-formatting-and-validation',
+    date: '2026-03-18',
+    readTime: '9 min read',
+    category: 'Guides',
+  },
+  {
+    title: 'CSS Minification: Why It Matters and How to Do It',
+    description: 'Why CSS minification improves web performance, how minifiers work, and the best tools for minifying CSS.',
+    slug: 'css-minification-why-it-matters',
+    date: '2026-03-18',
+    readTime: '12 min read',
+    category: 'Performance',
+  },
+  {
+    title: 'Understanding Unix File Permissions: A Practical Guide',
+    description: 'Master Unix file permissions — chmod, octal notation, symbolic notation, and common permission patterns.',
+    slug: 'understanding-unix-file-permissions',
+    date: '2026-03-18',
+    readTime: '9 min read',
+    category: 'DevOps',
+  },
+];
+---
+
+<ToolLayout title="Blog" description="Developer guides, tutorials, and tool comparisons from DevToolkit.">
+  <div class="text-center mb-12">
+    <h1 class="text-4xl sm:text-5xl font-bold mb-4">
+      <span class="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+        Blog
+      </span>
+    </h1>
+    <p class="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+      Developer guides, tutorials, and comparisons to help you work smarter.
+    </p>
+  </div>
+
+  <div class="max-w-3xl mx-auto space-y-6">
+    {posts.map((post) => (
+      <a
+        href={`/blog/${post.slug}`}
+        class="group block bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-lg border border-gray-200 dark:border-gray-800 p-6 transition-all duration-200 hover:-translate-y-0.5"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          <span class="inline-block text-xs font-medium px-2.5 py-0.5 rounded-full bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400">
+            {post.category}
+          </span>
+          <span class="text-sm text-gray-400 dark:text-gray-500">{post.readTime}</span>
+        </div>
+        <h2 class="text-xl font-semibold mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
+          {post.title}
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+          {post.description}
+        </p>
+        <div class="mt-4 text-sm text-gray-400 dark:text-gray-500">
+          <time datetime={post.date}>{new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+        </div>
+      </a>
+    ))}
+  </div>
+</ToolLayout>

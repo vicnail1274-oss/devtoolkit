@@ -1,0 +1,73 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import ChmodCalculator from '../../components/tools/ChmodCalculator';
+
+const faq = [
+  { question: "What is chmod?", answer: "chmod (change mode) is a Unix/Linux command that sets file and directory permissions. It controls who can read, write, or execute a file using either octal notation (e.g., 755) or symbolic notation (e.g., rwxr-xr-x)." },
+  { question: "What does chmod 755 mean?", answer: "755 means the owner has full permissions (read, write, execute), while the group and others can only read and execute. This is the standard permission for directories and executable scripts." },
+  { question: "What is the difference between octal and symbolic notation?", answer: "Octal notation uses three digits (e.g., 644) where each digit represents owner, group, and others. Symbolic notation uses letters: r (read=4), w (write=2), x (execute=1). Both achieve the same result." },
+  { question: "What is the most secure file permission?", answer: "600 (rw-------) is commonly used for sensitive files — only the owner can read and write. For directories, 700 restricts all access to the owner only." },
+];
+---
+
+<ToolLayout
+  title="Chmod Calculator"
+  description="Calculate Unix file permissions in octal and symbolic notation. Free online chmod calculator."
+  slug="chmod-calculator"
+  toolName="Chmod Calculator"
+  faq={faq}
+>
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Chmod Calculator
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Calculate Unix/Linux file permissions visually. Toggle permissions for owner, group, and others to get octal, symbolic, and command output.
+    </p>
+  </div>
+
+  <!-- Tool Component -->
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <ChmodCalculator client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Visual Toggle</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Click to toggle read, write, and execute permissions for each role. See results update instantly.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Ready-to-Copy Command</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Get the full chmod command ready to paste into your terminal. One-click copy for octal, symbolic, or command.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Common Presets</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Quick-apply common permission sets like 755, 644, 600 with descriptions of when to use each.
+      </p>
+    </div>
+  </div>
+</ToolLayout>

@@ -1,0 +1,70 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import JsonToCsv from '../../components/tools/JsonToCsv';
+
+const faq = [
+  { question: "What JSON format does the converter accept?", answer: "The converter accepts JSON arrays of objects, e.g., [{\"name\": \"Alice\", \"age\": 30}, {\"name\": \"Bob\", \"age\": 25}]. Each object becomes a CSV row, and object keys become column headers." },
+  { question: "Can I convert CSV back to JSON?", answer: "Yes. The tool supports bidirectional conversion. Paste CSV data and convert it to a JSON array of objects, with column headers becoming object keys." },
+  { question: "Can I use a custom delimiter?", answer: "Yes. You can choose between comma, semicolon, tab, or pipe as your CSV delimiter. This is useful for regional CSV formats that use semicolons instead of commas." },
+  { question: "Is my data sent to any server?", answer: "No. All conversion happens in your browser using JavaScript. Your data stays on your device and is never uploaded anywhere." },
+];
+---
+
+<ToolLayout
+  title="JSON to CSV Converter"
+  description="Convert JSON arrays to CSV and CSV back to JSON. Free online converter with custom delimiter support."
+  slug="json-to-csv"
+  toolName="JSON to CSV Converter"
+  faq={faq}
+>
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      JSON to CSV Converter
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Convert JSON arrays to CSV format and CSV back to JSON. Supports custom delimiters (comma, semicolon, tab, pipe).
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <JsonToCsv client:load />
+  </div>
+
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Bidirectional</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Convert JSON to CSV or CSV to JSON. Swap direction with one click.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Custom Delimiters</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Choose comma, semicolon, tab, or pipe as your CSV delimiter. Handles quoted fields correctly.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Smart Parsing</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Handles nested objects, special characters, and properly escapes CSV fields with quotes.
+      </p>
+    </div>
+  </div>
+</ToolLayout>
