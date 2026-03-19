@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-const SITE = 'https://devtoolkit.cc';
+const SITE = 'https://devplaybook.cc';
 
 const posts = [
   {

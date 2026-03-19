@@ -1,9 +1,10 @@
 import type { APIRoute } from 'astro';
 
-const SITE = 'https://devtoolkit.cc';
+const SITE = 'https://devplaybook.cc';
 
 const pages = [
   { url: '/', changefreq: 'weekly', priority: '1.0' },
+  // Tools
   { url: '/tools/json-formatter', changefreq: 'monthly', priority: '0.8' },
   { url: '/tools/base64', changefreq: 'monthly', priority: '0.8' },
   { url: '/tools/token-counter', changefreq: 'monthly', priority: '0.8' },
@@ -36,9 +37,26 @@ const pages = [
   { url: '/tools/ai-code-review', changefreq: 'monthly', priority: '0.8' },
   { url: '/tools/ai-doc-generator', changefreq: 'monthly', priority: '0.8' },
   { url: '/tools/ai-sql-builder', changefreq: 'monthly', priority: '0.8' },
+  // New tools (were missing from sitemap)
+  { url: '/tools/code-screenshot', changefreq: 'monthly', priority: '0.8' },
+  { url: '/tools/color-palette-generator', changefreq: 'monthly', priority: '0.8' },
+  { url: '/tools/css-gradient-generator', changefreq: 'monthly', priority: '0.8' },
+  { url: '/tools/favicon-generator', changefreq: 'monthly', priority: '0.8' },
+  { url: '/tools/html-to-markdown', changefreq: 'monthly', priority: '0.8' },
+  { url: '/tools/json-to-yaml', changefreq: 'monthly', priority: '0.8' },
+  { url: '/tools/meta-tag-generator', changefreq: 'monthly', priority: '0.8' },
+  { url: '/tools/og-image-preview', changefreq: 'monthly', priority: '0.8' },
+  { url: '/tools/qr-code-generator', changefreq: 'monthly', priority: '0.8' },
+  { url: '/tools/svg-to-png', changefreq: 'monthly', priority: '0.8' },
+  // Pages
   { url: '/pricing', changefreq: 'monthly', priority: '0.6' },
   { url: '/about', changefreq: 'monthly', priority: '0.5' },
   { url: '/newsletter', changefreq: 'monthly', priority: '0.5' },
+  { url: '/sponsors', changefreq: 'monthly', priority: '0.4' },
+  { url: '/thanks', changefreq: 'monthly', priority: '0.4' },
+  { url: '/changelog', changefreq: 'weekly', priority: '0.5' },
+  { url: '/embed', changefreq: 'monthly', priority: '0.6' },
+  // Blog
   { url: '/blog', changefreq: 'weekly', priority: '0.7' },
   { url: '/blog/best-free-developer-tools-2026', changefreq: 'monthly', priority: '0.7' },
   { url: '/blog/json-vs-yaml-vs-toml', changefreq: 'monthly', priority: '0.7' },
@@ -63,8 +81,15 @@ const pages = [
   { url: '/blog/cron-expression-builder-guide', changefreq: 'monthly', priority: '0.7' },
   { url: '/blog/url-encoder-decoder-online-free', changefreq: 'monthly', priority: '0.7' },
   { url: '/blog/social-media-kit', changefreq: 'monthly', priority: '0.5' },
-  { url: '/changelog', changefreq: 'weekly', priority: '0.5' },
-  { url: '/embed', changefreq: 'monthly', priority: '0.6' },
+  // New blog posts (were missing from sitemap)
+  { url: '/blog/how-to-create-qr-codes', changefreq: 'monthly', priority: '0.7' },
+  { url: '/blog/http-status-codes-reference', changefreq: 'monthly', priority: '0.7' },
+  { url: '/blog/jwt-token-explained', changefreq: 'monthly', priority: '0.7' },
+  { url: '/blog/open-graph-tags-complete-guide', changefreq: 'monthly', priority: '0.7' },
+  { url: '/blog/regex-cheat-sheet', changefreq: 'monthly', priority: '0.7' },
+  { url: '/blog/sql-formatting-best-practices', changefreq: 'monthly', priority: '0.7' },
+  { url: '/blog/structured-income-research-template-ai-products', changefreq: 'monthly', priority: '0.7' },
+  { url: '/blog/uuid-vs-ulid', changefreq: 'monthly', priority: '0.7' },
 ];
 
 const today = new Date().toISOString().split('T')[0];
