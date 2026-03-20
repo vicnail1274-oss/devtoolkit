@@ -1,0 +1,348 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="API Versioning Strategies: URL, Header, and Query Parameter Approaches Compared"
+  description="Compare API versioning strategies: URL path versioning, header versioning, query parameter versioning, and content negotiation. Learn when to version and how to sunset old versions gracefully."
+  slug="api-versioning-strategies"
+  publishDate="2026-03-20"
+  readTime="12 min read"
+>
+
+<p>
+  API versioning is one of those decisions that looks simple on day one and becomes a major headache on day 1000. The goal of versioning is to let you evolve your API over time without breaking existing clients — but the wrong strategy creates confusing URLs, complex infrastructure, and frustrated consumers who never know which version to use.
+</p>
+
+<p>
+  This guide compares the four main API versioning strategies, covers when you actually need versioning (and when you don't), and shows how to implement each approach cleanly in Node.js with Express.
+</p>
+
+<h2>When Do You Actually Need Versioning?</h2>
+
+<p>
+  Not every API change requires a version bump. Distinguish between <strong>breaking changes</strong> (require a new version) and <strong>non-breaking changes</strong> (safe to deploy without a version bump):
+</p>
+
+<p><strong>Breaking changes — require new version:</strong></p>
+<ul>
+  <li>Removing a field from a response</li>
+  <li>Renaming a field (e.g., <code>user_name</code> → <code>username</code>)</li>
+  <li>Changing a field's type (e.g., string → number)</li>
+  <li>Changing HTTP method (e.g., PUT → PATCH)</li>
+  <li>Removing an endpoint</li>
+  <li>Changing authentication requirements</li>
+  <li>Changing required fields in requests</li>
+</ul>
+
+<p><strong>Non-breaking changes — safe to ship without versioning:</strong></p>
+<ul>
+  <li>Adding new optional fields to responses</li>
+  <li>Adding new optional request parameters</li>
+  <li>Adding new endpoints</li>
+  <li>Bug fixes that correct behavior to match documented intent</li>
+  <li>Performance improvements</li>
+</ul>
+
+<p>
+  Many teams version too eagerly — every change bumps a version number, leading to v47 of their API that nobody uses. Version conservatively: only when you genuinely need to break backward compatibility.
+</p>
+
+<h2>Strategy 1: URL Path Versioning</h2>
+
+<p>
+  URL path versioning embeds the version in the URL path:
+</p>
+
+<pre><code>GET /api/v1/users/123
+GET /api/v2/users/123
+POST /api/v1/products</code></pre>
+
+<h3>Implementation in Express</h3>
+
+<pre><code>// src/app.ts
+import express from 'express';
+import &#123; v1Router &#125; from './v1/router';
+import &#123; v2Router &#125; from './v2/router';
+
+const app = express();
+
+app.use('/api/v1', v1Router);
+app.use('/api/v2', v2Router);
+
+export &#123; app &#125;;
+
+// src/v1/router.ts
+import &#123; Router &#125; from 'express';
+import &#123; usersRouter as usersV1 &#125; from './users/users.router';
+import &#123; productsRouter as productsV1 &#125; from './products/products.router';
+
+export const v1Router = Router();
+v1Router.use('/users', usersV1);
+v1Router.use('/products', productsV1);
+
+// src/v2/router.ts — can reuse v1 handlers or override
+import &#123; Router &#125; from 'express';
+import &#123; usersRouter as usersV2 &#125; from './users/users.router'; // New v2 implementation
+import &#123; usersRouter as usersV1 &#125; from '../v1/users/users.router'; // Reuse unchanged routes
+
+export const v2Router = Router();
+v2Router.use('/users', usersV2);  // v2 has breaking changes
+v2Router.use('/products', usersV1); // Products unchanged — reuse v1</code></pre>
+
+<h3>Organizing Shared Code</h3>
+
+<pre><code">// When v1 and v2 share most logic, use a service layer:
+src/
+├── v1/
+│   └── users/
+│       ├── users.router.ts    # v1-specific routes and response shapes
+│       └── users.controller.ts
+├── v2/
+│   └── users/
+│       ├── users.router.ts    # v2-specific routes and response shapes
+│       └── users.controller.ts
+└── services/
+    └── users.service.ts       # Shared business logic (no versioning here)</code></pre>
+
+<p><strong>Pros of URL versioning:</strong></p>
+<ul>
+  <li>Immediately visible in browser, logs, and curl commands</li>
+  <li>Easy to route in proxies, CDNs, and API gateways</li>
+  <li>Easy to test — just change the URL</li>
+  <li>Most commonly understood by API consumers</li>
+</ul>
+
+<p><strong>Cons:</strong></p>
+<ul>
+  <li>Violates REST principle that URIs should identify resources, not versions</li>
+  <li>Multiple URLs for the same resource can confuse caching</li>
+  <li>URLs must change even if the resource didn't</li>
+</ul>
+
+<h2>Strategy 2: Header Versioning</h2>
+
+<p>
+  Header versioning passes the version in a request header, keeping URLs clean:
+</p>
+
+<pre><code>GET /api/users/123
+Accept-Version: v2
+
+# Or using a custom header:
+GET /api/users/123
+API-Version: 2026-03-01</code></pre>
+
+<h3>Implementation in Express</h3>
+
+<pre><code>// src/middleware/versionRouter.ts
+import &#123; Request, Response, NextFunction, RequestHandler &#125; from 'express';
+
+type VersionedHandlers = &#123;
+  [version: string]: RequestHandler;
+  default: RequestHandler;
+&#125;;
+
+export function versionRoute(handlers: VersionedHandlers): RequestHandler &#123;
+  return (req: Request, res: Response, next: NextFunction) =&gt; &#123;
+    const version = req.headers['accept-version'] as string
+      || req.headers['api-version'] as string
+      || 'default';
+
+    const handler = handlers[version] ?? handlers['default'];
+    return handler(req, res, next);
+  &#125;;
+&#125;
+
+// Usage:
+import &#123; getUserV1, getUserV2 &#125; from './users.controller';
+
+router.get('/:id', versionRoute(&#123;
+  v1: getUserV1,
+  v2: getUserV2,
+  default: getUserV2, // Default to latest
+&#125;));</code></pre>
+
+<h3>Date-Based Header Versioning (Stripe's Approach)</h3>
+
+<p>
+  Stripe uses date-based versioning: the version is a date string representing an API snapshot. When you sign up, you're locked to the Stripe API as it existed on that date. You can explicitly upgrade by changing the date:
+</p>
+
+<pre><code>// Server: track API version per request
+app.use((req: Request, res: Response, next: NextFunction) =&gt; &#123;
+  const stripeVersion = req.headers['stripe-version'] as string;
+  const apiDate = stripeVersion || process.env.DEFAULT_API_VERSION || '2026-01-01';
+
+  // Validate it's a known version
+  const knownVersions = ['2024-06-01', '2025-01-15', '2026-01-01'];
+  if (!knownVersions.includes(apiDate)) &#123;
+    return res.status(400).json(&#123;
+      error: &#123; code: 'INVALID_API_VERSION', message: `Unknown API version: $&#123;apiDate&#125;` &#125;
+    &#125;);
+  &#125;
+
+  req.apiVersion = apiDate;
+  res.setHeader('Stripe-Version', apiDate);
+  next();
+&#125;);
+
+// Route handler selects behavior based on version
+router.get('/charges/:id', async (req, res) =&gt; &#123;
+  const charge = await getCharge(req.params.id);
+
+  // Transform response based on version
+  if (req.apiVersion &gt;= '2026-01-01') &#123;
+    // New: amount is in decimal format
+    res.json(&#123; id: charge.id, amount: charge.amount / 100 &#125;);
+  &#125; else &#123;
+    // Old: amount is in cents
+    res.json(&#123; id: charge.id, amount: charge.amount &#125;);
+  &#125;
+&#125;);</code></pre>
+
+<p><strong>Pros of header versioning:</strong></p>
+<ul>
+  <li>Clean URLs that don't change between versions</li>
+  <li>Follows HTTP spec (Accept header content negotiation)</li>
+  <li>Per-request version negotiation possible</li>
+</ul>
+
+<p><strong>Cons:</strong></p>
+<ul>
+  <li>Invisible in browser address bar — harder to share/debug</li>
+  <li>Requires custom client configuration</li>
+  <li>Harder to test with simple curl</li>
+  <li>CDNs and caches may ignore custom headers</li>
+</ul>
+
+<h2>Strategy 3: Query Parameter Versioning</h2>
+
+<p>
+  The version is passed as a query parameter:
+</p>
+
+<pre><code>GET /api/users/123?version=2
+GET /api/users/123?api-version=2026-03-01</code></pre>
+
+<h3>Implementation</h3>
+
+<pre><code">// Simple query parameter version extraction
+function getApiVersion(req: Request): string &#123;
+  return (req.query.version as string)
+    || (req.query['api-version'] as string)
+    || 'v1'; // Default
+&#125;
+
+app.use((req, res, next) =&gt; &#123;
+  req.apiVersion = getApiVersion(req);
+  next();
+&#125;);</code></pre>
+
+<p><strong>Pros:</strong></p>
+<ul>
+  <li>Easy to test in a browser or with curl</li>
+  <li>Version is visible in URLs</li>
+  <li>Backward compatible default (no version = default version)</li>
+</ul>
+
+<p><strong>Cons:</strong></p>
+<ul>
+  <li>Query parameters are meant for filtering, not versioning</li>
+  <li>Can conflict with other query parameters</li>
+  <li>URLs look messier when combined with actual query params</li>
+  <li>Breaks semantic URI principles</li>
+</ul>
+
+<h2>Strategy 4: Content Negotiation (Accept Header)</h2>
+
+<p>
+  The most RESTful approach uses the HTTP <code>Accept</code> header with media type versioning:
+</p>
+
+<pre><code>GET /api/users/123
+Accept: application/vnd.myapi.v2+json
+
+# Or using parameters:
+Accept: application/json;version=2</code></pre>
+
+<pre><code">// Express content negotiation handler
+router.get('/:id', (req, res, next) =&gt; &#123;
+  const accept = req.headers['accept'] || '';
+
+  if (accept.includes('vnd.myapi.v2')) &#123;
+    return getUserV2(req, res, next);
+  &#125;
+  return getUserV1(req, res, next); // Default to v1
+&#125;);</code></pre>
+
+<p>
+  This approach is technically correct per HTTP spec but rarely used in practice because it's the most complex for clients to implement and the hardest to debug.
+</p>
+
+<h2>Versioning at the Field Level: Additive Changes</h2>
+
+<p>
+  Before creating a whole new API version, consider additive changes that don't require version bumps:
+</p>
+
+<pre><code">// Instead of breaking change: rename "name" → "full_name" in v2
+// Use additive approach: add "full_name" while keeping "name" (v1 compatible)
+&#123;
+  "id": "123",
+  "name": "John Doe",       // Keep for backward compatibility
+  "full_name": "John Doe",   // Add new field
+  "email": "john@example.com"
+&#125;
+
+// Deprecate the old field with a response header
+res.setHeader('Deprecation', 'true');
+res.setHeader('Sunset', 'Sat, 31 Dec 2026 23:59:59 GMT');
+res.setHeader('Link', '&lt;/api/v2/users&gt;; rel="successor-version"');</code></pre>
+
+<h2>Sunsetting Old Versions</h2>
+
+<p>
+  API versioning without a sunset plan leads to maintaining v1 indefinitely. Use IETF's Sunset header to communicate deprecation:
+</p>
+
+<pre><code">// Middleware: add deprecation warnings to v1 responses
+function v1DeprecationWarning(req: Request, res: Response, next: NextFunction) &#123;
+  res.setHeader('Deprecation', '"2026-01-01"');
+  res.setHeader('Sunset', '"2026-12-31T23:59:59Z"');
+  res.setHeader('Link', '&lt;/api/v2&gt;; rel="successor-version", &lt;https://docs.example.com/migration&gt;; rel="deprecation"');
+  next();
+&#125;
+
+// Usage tracking — log which versions are still being called
+app.use('/api/v1', (req, res, next) =&gt; &#123;
+  metrics.increment('api.v1.request', &#123;
+    path: req.path,
+    method: req.method,
+  &#125;);
+  next();
+&#125;, v1Router);
+
+// Alert when usage drops below threshold (safe to sunset)
+// Check metrics: if v1 traffic &lt; 1% for 30 days, proceed with sunset</code></pre>
+
+<h2>Making the Right Choice</h2>
+
+<p>Choose your strategy based on your context:</p>
+
+<ul>
+  <li><strong>Public API with many external consumers</strong> → URL path versioning (most discoverable and easiest for consumers)</li>
+  <li><strong>Internal API within a controlled ecosystem</strong> → Header versioning (clean URLs, controlled clients)</li>
+  <li><strong>API that evolves frequently (like Stripe)</strong> → Date-based header versioning (precise version control per customer)</li>
+  <li><strong>Simple API with occasional breaking changes</strong> → URL path versioning (pragmatic choice for most teams)</li>
+</ul>
+
+<p>
+  Whatever strategy you choose, the most important discipline is <strong>only versioning when you have to</strong>. Design your API response formats to be forward-compatible from the start: use objects not arrays for response envelopes (easier to add fields), use consistent field names, and document your deprecation policy before you write the first endpoint.
+</p>
+
+<p>
+  For more on API design, see our guides on <a href="/blog/rest-vs-graphql-complete-comparison">REST vs GraphQL</a> and <a href="/blog/rest-api-testing-guide">REST API testing</a>. Use our <a href="/tools/api-tester">API Tester</a> to test versioned endpoints with different headers.
+</p>
+
+</BlogLayout>

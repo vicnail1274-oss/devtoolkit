@@ -1,0 +1,523 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="WebAssembly for JavaScript Developers: A Practical Introduction"
+  description="Learn WebAssembly (WASM) from a JavaScript developer's perspective. Understand the compilation model, calling WASM from JS, using Emscripten and wasm-pack, and real use cases where WASM outperforms JavaScript."
+  slug="webassembly-for-javascript-developers"
+  publishDate="2026-03-20"
+  readTime="16 min read"
+>
+
+<p>
+  WebAssembly (WASM) is one of the most significant additions to the web platform in the past decade, yet many JavaScript developers haven't incorporated it into their workflow — either because it seems too low-level, or because it's unclear when it's actually useful versus when JavaScript is fine. This guide demystifies WebAssembly for JS developers: what it is, when you actually need it, how to use it from JavaScript today, and how tools like Emscripten and wasm-pack make it accessible without writing assembly code.
+</p>
+
+<h2>What Is WebAssembly?</h2>
+
+<p>
+  WebAssembly is a binary instruction format designed as a compilation target for high-level languages like C, C++, Rust, and Go. It runs in a stack-based virtual machine that's implemented in every major browser and Node.js. Despite the name, you almost never write WebAssembly by hand — you compile other languages to it.
+</p>
+
+<p>
+  The key properties of WebAssembly:
+</p>
+
+<ul>
+  <li><strong>Fast:</strong> WASM executes at near-native speed. It's designed for deterministic, efficient execution with a compact binary format that decodes faster than JavaScript parses.</li>
+  <li><strong>Safe:</strong> Runs in a sandboxed environment, isolated from the host system, with the same security model as JavaScript.</li>
+  <li><strong>Portable:</strong> The same WASM binary runs in Chrome, Firefox, Safari, Edge, Node.js, and server-side WASM runtimes (Wasmtime, Wasmer).</li>
+  <li><strong>Language-agnostic:</strong> Any language that can compile to WASM can run on the web. Today that includes C, C++, Rust, Go, C#, Python, and many others.</li>
+</ul>
+
+<h2>When to Use WebAssembly (and When Not To)</h2>
+
+<p>
+  WebAssembly is not a JavaScript replacement. JavaScript remains the right choice for most web application logic — DOM manipulation, API calls, UI state management. WASM excels in specific scenarios:
+</p>
+
+<p><strong>Good use cases for WASM:</strong></p>
+<ul>
+  <li>CPU-intensive computation: image/video processing, audio processing, compression, encryption</li>
+  <li>Porting existing C/C++ libraries (image codecs, physics engines, game engines)</li>
+  <li>Applications where predictable, consistent performance is critical (real-time audio, 3D graphics)</li>
+  <li>Running algorithms that JavaScript's dynamic typing makes too slow (matrix operations, FFT)</li>
+  <li>Scientific computing, simulations, ML inference</li>
+</ul>
+
+<p><strong>Don't use WASM for:</strong></p>
+<ul>
+  <li>DOM manipulation (WASM can't access the DOM directly — it must go through JavaScript)</li>
+  <li>Simple business logic where JS performance is adequate</li>
+  <li>Code that makes many small JS↔WASM calls (the boundary crossing has overhead)</li>
+  <li>Cases where bundle size is the constraint (WASM binaries can be large)</li>
+</ul>
+
+<h2>Your First WebAssembly Module</h2>
+
+<h3>The Simplest Possible WASM: WAT (WebAssembly Text Format)</h3>
+
+<p>
+  WASM has both a binary format (.wasm) and a human-readable text format (.wat). You'll rarely write WAT, but understanding it helps:
+</p>
+
+<pre><code>;; add.wat — a simple WASM module in text format
+(module
+  ;; Export a function named "add" that takes two i32s and returns an i32
+  (func $add (export "add") (param $a i32) (param $b i32) (result i32)
+    local.get $a
+    local.get $b
+    i32.add
+  )
+)
+
+;; Compile to binary:
+;; wat2wasm add.wat -o add.wasm</code></pre>
+
+<pre><code>// Loading WASM in JavaScript
+async function loadWasm() &#123;
+  const response = await fetch('/add.wasm');
+  const buffer = await response.arrayBuffer();
+  const module = await WebAssembly.instantiate(buffer);
+  const &#123; add &#125; = module.instance.exports;
+
+  console.log(add(5, 3)); // 8
+  console.log(add(100, 200)); // 300
+&#125;
+
+// Or using the streaming API (more efficient — compiles while downloading):
+const &#123; instance &#125; = await WebAssembly.instantiateStreaming(
+  fetch('/add.wasm')
+);
+const result = instance.exports.add(10, 20); // 30</code></pre>
+
+<h2>Compiling Rust to WebAssembly with wasm-pack</h2>
+
+<p>
+  Rust has the best WebAssembly tooling in the ecosystem. <code>wasm-pack</code> compiles Rust code to WASM and generates JavaScript bindings automatically.
+</p>
+
+<h3>Setup</h3>
+
+<pre><code># Install Rust (if not installed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install wasm-pack
+curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+# Add the WASM target to Rust
+rustup target add wasm32-unknown-unknown
+
+# Create a new Rust library
+cargo new --lib wasm-image-utils
+cd wasm-image-utils</code></pre>
+
+<h3>Cargo.toml Configuration</h3>
+
+<pre><code>[package]
+name = "wasm-image-utils"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2"  # Generates JS/TS bindings automatically
+js-sys = "0.3"        # Bindings to JavaScript standard library
+web-sys = &#123; version = "0.3", features = ["console"] &#125;  # Web API bindings
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"  # Smaller binary — no unwinding</code></pre>
+
+<h3>Rust Implementation with wasm-bindgen</h3>
+
+<pre><code>// src/lib.rs
+use wasm_bindgen::prelude::*;
+
+// #[wasm_bindgen] exports the function to JavaScript
+// The name becomes the JS function name
+
+#[wasm_bindgen]
+pub fn grayscale(pixels: &amp;[u8]) -&gt; Vec&lt;u8&gt; &#123;
+    let mut result = pixels.to_vec();
+
+    // Process RGBA pixels: stride = 4 bytes per pixel
+    for chunk in result.chunks_mut(4) &#123;
+        let r = chunk[0] as f32;
+        let g = chunk[1] as f32;
+        let b = chunk[2] as f32;
+
+        // Luminance formula (human perception-weighted)
+        let gray = (0.299 * r + 0.587 * g + 0.114 * b) as u8;
+
+        chunk[0] = gray;
+        chunk[1] = gray;
+        chunk[2] = gray;
+        // chunk[3] = alpha — unchanged
+    &#125;
+
+    result
+&#125;
+
+#[wasm_bindgen]
+pub fn blur(pixels: &amp;[u8], width: u32, height: u32, radius: u32) -&gt; Vec&lt;u8&gt; &#123;
+    // Box blur implementation — O(n) with summed area tables
+    let mut result = pixels.to_vec();
+    // ... blur implementation
+    result
+&#125;
+
+// Expose Rust structs to JavaScript
+#[wasm_bindgen]
+pub struct ImageProcessor &#123;
+    width: u32,
+    height: u32,
+    data: Vec&lt;u8&gt;,
+&#125;
+
+#[wasm_bindgen]
+impl ImageProcessor &#123;
+    #[wasm_bindgen(constructor)]
+    pub fn new(data: Vec&lt;u8&gt;, width: u32, height: u32) -&gt; ImageProcessor &#123;
+        ImageProcessor &#123; data, width, height &#125;
+    &#125;
+
+    pub fn apply_grayscale(&amp;mut self) &#123;
+        for chunk in self.data.chunks_mut(4) &#123;
+            let gray = (0.299 * chunk[0] as f32
+                       + 0.587 * chunk[1] as f32
+                       + 0.114 * chunk[2] as f32) as u8;
+            chunk[0] = gray;
+            chunk[1] = gray;
+            chunk[2] = gray;
+        &#125;
+    &#125;
+
+    pub fn get_data(&amp;self) -&gt; Vec&lt;u8&gt; &#123;
+        self.data.clone()
+    &#125;
+&#125;</code></pre>
+
+<h3>Build and Use</h3>
+
+<pre><code># Build for web (generates pkg/ directory with .wasm + JS bindings)
+wasm-pack build --target web --release
+
+# For Node.js:
+wasm-pack build --target nodejs --release
+
+# For bundlers (webpack, vite):
+wasm-pack build --target bundler --release</code></pre>
+
+<pre><code">// JavaScript: using the generated bindings
+import init, &#123; grayscale, ImageProcessor &#125; from './pkg/wasm_image_utils.js';
+
+async function processImage(canvas) &#123;
+  // Initialize the WASM module (only needed once)
+  await init();
+
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  // Call WASM function — pixels transferred to/from WASM memory
+  const grayPixels = grayscale(imageData.data);
+
+  // Put processed pixels back
+  const newImageData = new ImageData(
+    new Uint8ClampedArray(grayPixels),
+    canvas.width,
+    canvas.height
+  );
+  ctx.putImageData(newImageData, 0, 0);
+&#125;
+
+// Using the struct-based API
+async function useProcessor(canvas) &#123;
+  await init();
+
+  const ctx = canvas.getContext('2d');
+  const &#123; data, width, height &#125; = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  const processor = new ImageProcessor(data, width, height);
+  processor.apply_grayscale();
+
+  const result = processor.get_data();
+  ctx.putImageData(new ImageData(new Uint8ClampedArray(result), width, height), 0, 0);
+
+  // Important: free the WASM memory when done (Rust structs exposed via wasm-bindgen
+  // are NOT automatically garbage collected)
+  processor.free();
+&#125;</code></pre>
+
+<h2>Compiling C/C++ with Emscripten</h2>
+
+<p>
+  Emscripten is the primary tool for compiling C and C++ to WebAssembly, and it's how many existing libraries (SQLite, OpenCV, FFmpeg) have been ported to the web.
+</p>
+
+<pre><code># Install Emscripten
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk
+./emsdk install latest
+./emsdk activate latest
+source ./emsdk_env.sh  # Add to PATH</code></pre>
+
+<pre><code>// image_filter.c
+#include &lt;stdint.h&gt;
+#include &lt;emscripten/emscripten.h&gt;
+
+// EMSCRIPTEN_KEEPALIVE prevents the function from being dead-code eliminated
+EMSCRIPTEN_KEEPALIVE
+void apply_sepia(uint8_t *pixels, int length) &#123;
+    for (int i = 0; i &lt; length; i += 4) &#123;
+        uint8_t r = pixels[i];
+        uint8_t g = pixels[i + 1];
+        uint8_t b = pixels[i + 2];
+
+        pixels[i]     = (uint8_t)fmin(255, r * 0.393 + g * 0.769 + b * 0.189);
+        pixels[i + 1] = (uint8_t)fmin(255, r * 0.349 + g * 0.686 + b * 0.168);
+        pixels[i + 2] = (uint8_t)fmin(255, r * 0.272 + g * 0.534 + b * 0.131);
+        // pixels[i+3] = alpha, unchanged
+    &#125;
+&#125;</code></pre>
+
+<pre><code># Compile to WASM with Emscripten
+emcc image_filter.c \
+  -O3 \                           # Optimize
+  -o image_filter.js \             # Also generates image_filter.wasm
+  -s WASM=1 \
+  -s EXPORTED_FUNCTIONS='["_apply_sepia", "_malloc", "_free"]' \
+  -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' \
+  -s ALLOW_MEMORY_GROWTH=1</code></pre>
+
+<pre><code>// JavaScript: calling Emscripten-compiled code
+// Emscripten generates a Module object
+import Module from './image_filter.js';
+
+const module = await Module();
+
+// Use cwrap to create a typed wrapper
+const applySepiaFn = module.cwrap('apply_sepia', null, ['number', 'number']);
+
+function applySepia(canvas) &#123;
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imageData.data; // Uint8ClampedArray
+
+  // Allocate memory in WASM heap
+  const ptr = module._malloc(pixels.length);
+  module.HEAPU8.set(pixels, ptr);  // Copy pixels to WASM memory
+
+  // Call the C function
+  applySepiaFn(ptr, pixels.length);
+
+  // Copy result back from WASM memory
+  pixels.set(module.HEAPU8.subarray(ptr, ptr + pixels.length));
+  module._free(ptr);  // Free the allocated memory
+
+  ctx.putImageData(imageData, 0, 0);
+&#125;</code></pre>
+
+<h2>Sharing Memory Between JS and WASM</h2>
+
+<p>
+  The JS↔WASM boundary is the key performance consideration. Calling WASM from JS has overhead — the more frequently you cross the boundary, the more that overhead matters. The best approach is to pass large data as a buffer rather than calling WASM in a tight loop:
+</p>
+
+<pre><code">// Bad: calling WASM for each pixel (thousands of boundary crossings)
+for (let i = 0; i &lt; pixels.length; i += 4) &#123;
+  const gray = wasmModule.exports.to_gray(pixels[i], pixels[i+1], pixels[i+2]);
+  pixels[i] = pixels[i+1] = pixels[i+2] = gray;
+&#125;
+
+// Good: pass entire buffer to WASM (one boundary crossing)
+// WASM processes all pixels internally in a tight native loop
+const result = wasmModule.exports.grayscale_buffer(pixelBufferPointer, pixelCount);</code></pre>
+
+<h2>WebAssembly in Node.js</h2>
+
+<p>
+  WASM runs natively in Node.js — no browser required. This is useful for CPU-intensive server-side operations:
+</p>
+
+<pre><code>// Node.js: loading WASM synchronously
+const fs = require('fs');
+const wasmBuffer = fs.readFileSync('./add.wasm');
+const &#123; instance &#125; = await WebAssembly.instantiate(wasmBuffer);
+
+console.log(instance.exports.add(5, 3)); // 8
+
+// With wasm-pack (Node.js target):
+// wasm-pack build --target nodejs --release
+const &#123; grayscale &#125; = require('./pkg');
+// No async init needed for Node.js target
+const result = grayscale(pixelData);</code></pre>
+
+<h2>WASM Threads and SIMD</h2>
+
+<p>
+  Modern WebAssembly supports two features that dramatically improve performance for parallel workloads:
+</p>
+
+<h3>SIMD (Single Instruction, Multiple Data)</h3>
+
+<pre><code>// Rust: using WASM SIMD with packed_simd or wasm-bindgen
+// SIMD processes multiple values simultaneously — 4x float operations per instruction
+// Enable in Cargo.toml:
+// [profile.release]
+// rustflags = ["-C", "target-feature=+simd128"]
+
+// In Rust, SIMD operations are exposed via std::arch::wasm32
+use std::arch::wasm32::*;
+
+pub fn dot_product_simd(a: &amp;[f32], b: &amp;[f32]) -&gt; f32 &#123;
+    assert_eq!(a.len(), b.len());
+    let mut sum = f32x4_splat(0.0);
+    let chunks = a.len() / 4;
+
+    for i in 0..chunks &#123;
+        let va = v128_load(a[i*4..].as_ptr() as *const v128);
+        let vb = v128_load(b[i*4..].as_ptr() as *const v128);
+        sum = f32x4_add(sum, f32x4_mul(va, vb));
+    &#125;
+
+    // Horizontal sum of the 4 lanes
+    let s = f32x4_extract_lane::&lt;0&gt;(sum)
+          + f32x4_extract_lane::&lt;1&gt;(sum)
+          + f32x4_extract_lane::&lt;2&gt;(sum)
+          + f32x4_extract_lane::&lt;3&gt;(sum);
+
+    // Handle remaining elements
+    s + a[chunks*4..].iter().zip(&amp;b[chunks*4..]).map(|(x,y)| x*y).sum::&lt;f32&gt;()
+&#125;</code></pre>
+
+<h3>SharedArrayBuffer and Threads</h3>
+
+<pre><code">// Requires: Cross-Origin-Opener-Policy: same-origin
+//           Cross-Origin-Embedder-Policy: require-corp headers
+
+// Main thread: share memory with WASM workers
+const memory = new WebAssembly.Memory(&#123;
+  initial: 256,
+  maximum: 4096,
+  shared: true  // SharedArrayBuffer
+&#125;);
+
+// Worker: receive shared memory and process in parallel
+// Each worker runs a WASM instance with the same SharedArrayBuffer
+// Workers can read/write different regions without locks</code></pre>
+
+<h2>Real-World WASM Libraries You Can Use Today</h2>
+
+<p>
+  You don't have to compile your own WASM to benefit from it. Many popular libraries ship WASM builds:
+</p>
+
+<ul>
+  <li><strong>sql.js:</strong> SQLite compiled to WASM — run a full SQL database in the browser</li>
+  <li><strong>ffmpeg.wasm:</strong> FFmpeg for in-browser video transcoding</li>
+  <li><strong>@squoosh/lib:</strong> Image compression (WebP, AVIF, JPEG XL) in the browser</li>
+  <li><strong>Pyodide:</strong> CPython compiled to WASM — run Python in the browser</li>
+  <li><strong>sharp (WASM variant):</strong> Fast image processing in Node.js using libvips via WASM</li>
+  <li><strong>@duckdb/duckdb-wasm:</strong> DuckDB analytical SQL engine in the browser</li>
+</ul>
+
+<pre><code">// Example: sql.js in the browser
+import initSqlJs from 'sql.js';
+
+const SQL = await initSqlJs(&#123;
+  locateFile: file =&gt; `/wasm/$&#123;file&#125;` // Where to find the .wasm file
+&#125;);
+
+const db = new SQL.Database();
+db.run('CREATE TABLE users (id INTEGER, name TEXT)');
+db.run('INSERT INTO users VALUES (1, "Alice"), (2, "Bob")');
+
+const results = db.exec('SELECT * FROM users WHERE id &gt; 0');
+console.log(results[0].values); // [[1, "Alice"], [2, "Bob"]]
+
+db.close();</code></pre>
+
+<h2>Performance Benchmarks: When WASM Wins</h2>
+
+<p>
+  To illustrate when WASM is worth the overhead, here are typical speedup ranges for CPU-intensive operations:
+</p>
+
+<ul>
+  <li><strong>Image processing (grayscale, blur, sharpen):</strong> 2–5x faster in WASM vs JavaScript</li>
+  <li><strong>Cryptographic operations (hashing, encryption):</strong> 3–10x faster (before JS crypto APIs)</li>
+  <li><strong>Audio DSP (FFT, filters):</strong> 5–15x faster with SIMD</li>
+  <li><strong>3D mesh operations:</strong> 3–8x faster</li>
+  <li><strong>Data parsing (CSV, binary protocols):</strong> 2–4x faster</li>
+</ul>
+
+<p>
+  For comparison: operations that are already fast in JS (DOM manipulation, object creation, async I/O) see no benefit from WASM, and may actually be slower due to the JS↔WASM boundary overhead.
+</p>
+
+<h2>Bundle Size Considerations</h2>
+
+<p>
+  WASM files are typically larger than equivalent JavaScript, but they compress very well with gzip/Brotli:
+</p>
+
+<pre><code>// Vite: configure WASM support
+// vite.config.ts
+import &#123; defineConfig &#125; from 'vite';
+
+export default defineConfig(&#123;
+  // Vite 4+ has built-in WASM support
+  plugins: [],
+  build: &#123;
+    // Inline WASM below this size, otherwise emit as separate file
+    assetsInlineLimit: 4096,
+  &#125;
+&#125;);
+
+// Import WASM in Vite:
+import init from './pkg/my_module.js?init';
+// or for raw WASM bytes:
+import wasmUrl from './pkg/my_module.wasm?url';</code></pre>
+
+<h2>Debugging WebAssembly</h2>
+
+<p>
+  Chrome DevTools has WASM debugging support:
+</p>
+
+<ul>
+  <li>In the Sources panel, you can set breakpoints in WAT (text format) if source maps are generated</li>
+  <li>For Rust/wasm-pack: build with <code>--dev</code> flag to include DWARF debug info</li>
+  <li>The Memory panel shows WASM linear memory</li>
+  <li>Use <code>console.log</code> from Rust: <code>web_sys::console::log_1(&amp;"debug message".into());</code></li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>
+  WebAssembly doesn't replace JavaScript — it extends what's possible on the web platform. The mental model to carry: JavaScript is excellent for application logic, UI, and anything that interacts with the DOM or browser APIs. WebAssembly is excellent for the inner loops, number crunching, and computationally intensive work that JavaScript struggles with due to its dynamic nature.
+</p>
+
+<p>
+  The practical path for most JS developers:
+</p>
+
+<ol>
+  <li>Identify a performance bottleneck in your app that's CPU-bound</li>
+  <li>Check if a WASM library already exists (sql.js, squoosh, ffmpeg.wasm)</li>
+  <li>If writing your own, start with Rust + wasm-pack — it has the best tooling and error messages</li>
+  <li>Minimize JS↔WASM boundary crossings by batching operations</li>
+  <li>Profile before and after to confirm the speedup justifies the complexity</li>
+</ol>
+
+<p>
+  For more on JavaScript performance and tooling, see our guides on <a href="/blog/vite-vs-webpack-build-tool-comparison">Vite vs Webpack</a> and <a href="/blog/typescript-generics-explained-with-examples">TypeScript generics</a>.
+</p>
+
+</BlogLayout>

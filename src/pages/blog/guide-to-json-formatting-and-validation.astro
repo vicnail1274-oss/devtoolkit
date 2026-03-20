@@ -1,5 +1,60 @@
 ---
 import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeBlock = [
+  '// INVALID — trailing comma after "age"',
+  "{'{'}",
+  '  "name": "Alice",',
+  '  "age": 30,',
+  "{'}'}"
+].join('\n');
+
+const codeBlock2 = [
+  '// INVALID — single quotes',
+  "{'{'} 'name': 'Alice' {'}'}"
+].join('\n');
+
+const codeBlock3 = [
+  '// INVALID — unquoted key',
+  '{\'{\'} name: "Alice" {\'}\'}'
+].join('\n');
+
+const codeBlock4 = [
+  '// INVALID — comments not allowed',
+  "{'{'}",
+  '  "name": "Alice", // user\'s name',
+  '  "age": 30',
+  "{'}'}"
+].join('\n');
+
+const codeBlock5 = [
+  '// INVALID — unquoted string value',
+  '{\'{\'} "status": active {\'}\'}'
+].join('\n');
+
+const codeBlock6 = [
+  "{'{'}",
+  '  "type": "object",',
+  '  "required": ["name", "email"],',
+  '  "properties": {\'{\'}',
+  '    "name": {\'{\'} "type": "string", "minLength": 1 {\'}\'},',
+  '    "email": {\'{\'} "type": "string", "format": "email" {\'}\'},',
+  '    "age": {\'{\'} "type": "integer", "minimum": 0 {\'}\'}',
+  "  {'}'}",
+  "{'}'}"
+].join('\n');
+
+const codeBlock7 = [
+  "import {'{'} z {'}'} from 'zod';",
+  '',
+  "const UserSchema = z.object({'{'}",
+  '  name: z.string(),',
+  '  email: z.string().email(),',
+  '  age: z.number().int().positive().optional(),',
+  "{'}'});",
+  '',
+  'const user = UserSchema.parse(jsonData); // throws if invalid'
+].join('\n');
 ---
 
 <BlogLayout
@@ -40,11 +95,7 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
 
 <h3>1. Trailing Commas</h3>
 
-<pre><code>// INVALID — trailing comma after "age"
-{'{'}
-  "name": "Alice",
-  "age": 30,
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock&#125;></code></pre>
 
 <p>
   This is valid JavaScript but invalid JSON. Remove the comma after the last property. Every JSON parser will reject this.
@@ -52,8 +103,7 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
 
 <h3>2. Single Quotes</h3>
 
-<pre><code>// INVALID — single quotes
-{'{'} 'name': 'Alice' {'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock2&#125;></code></pre>
 
 <p>
   JSON requires double quotes for all strings and keys. No exceptions.
@@ -61,8 +111,7 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
 
 <h3>3. Unquoted Keys</h3>
 
-<pre><code>// INVALID — unquoted key
-{'{'} name: "Alice" {'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock3&#125;></code></pre>
 
 <p>
   Every key must be a double-quoted string, even if it's a simple identifier.
@@ -70,11 +119,7 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
 
 <h3>4. Comments</h3>
 
-<pre><code>// INVALID — comments not allowed
-{'{'}
-  "name": "Alice", // user's name
-  "age": 30
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock4&#125;></code></pre>
 
 <p>
   JSON does not support comments. If you need comments in config files, consider JSONC (JSON with Comments) or switch to YAML/TOML. Read our <a href="/blog/json-vs-yaml-vs-toml">JSON vs YAML vs TOML comparison</a> for guidance.
@@ -82,8 +127,7 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
 
 <h3>5. Missing Quotes Around String Values</h3>
 
-<pre><code>// INVALID — unquoted string value
-{'{'} "status": active {'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock5&#125;></code></pre>
 
 <p>
   String values must be quoted: <code>"status": "active"</code>. Without quotes, the parser interprets <code>active</code> as an undefined identifier.
@@ -140,15 +184,7 @@ JSON.stringify(data, Object.keys(data).sort(), 2) // sorted — stable diffs</co
   For API contracts and configuration validation, JSON Schema is the standard. It defines the expected structure, types, and constraints:
 </p>
 
-<pre><code>{'{'}
-  "type": "object",
-  "required": ["name", "email"],
-  "properties": {'{'}
-    "name": {'{'} "type": "string", "minLength": 1 {'}'},
-    "email": {'{'} "type": "string", "format": "email" {'}'},
-    "age": {'{'} "type": "integer", "minimum": 0 {'}'}
-  {'}'}
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock6&#125;></code></pre>
 
 <p>
   Libraries like Ajv (JavaScript), jsonschema (Python), and many others validate data against JSON Schema at runtime.
@@ -160,15 +196,7 @@ JSON.stringify(data, Object.keys(data).sort(), 2) // sorted — stable diffs</co
   In TypeScript projects, use type guards or libraries like Zod to validate JSON at runtime while maintaining type safety:
 </p>
 
-<pre><code>import {'{'} z {'}'} from 'zod';
-
-const UserSchema = z.object({'{'}
-  name: z.string(),
-  email: z.string().email(),
-  age: z.number().int().positive().optional(),
-{'}'});
-
-const user = UserSchema.parse(jsonData); // throws if invalid</code></pre>
+<pre><code set:html=&#123;codeBlock7&#125;></code></pre>
 
 <h2>Working with Large JSON</h2>
 

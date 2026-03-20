@@ -1,0 +1,753 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeBlock = [
+  '{',
+  '  "semi": true,',
+  '  "trailingComma": "es5",',
+  '  "singleQuote": true,',
+  '  "printWidth": 80,',
+  '  "tabWidth": 2,',
+  '  "useTabs": false,',
+  '  "bracketSpacing": true,',
+  '  "arrowParens": "always",',
+  '  "endOfLine": "lf"',
+  '}'
+].join('\n');
+
+const codeBlock2 = [
+  'module.exports = {',
+  '  semi: true,',
+  "  trailingComma: 'es5',",
+  '  singleQuote: true,',
+  '  printWidth: 80,',
+  '  tabWidth: 2,',
+  '  useTabs: false,',
+  '  bracketSpacing: true,',
+  "  arrowParens: 'always',",
+  "  endOfLine: 'lf',",
+  '};'
+].join('\n');
+
+const codeBlock3 = [
+  '{',
+  '  "env": {',
+  '    "browser": true,',
+  '    "es2024": true,',
+  '    "node": true',
+  '  },',
+  '  "extends": [',
+  '    "eslint:recommended"',
+  '  ],',
+  '  "parserOptions": {',
+  '    "ecmaVersion": "latest",',
+  '    "sourceType": "module"',
+  '  },',
+  '  "rules": {',
+  '    "no-unused-vars": "warn",',
+  '    "no-console": "warn",',
+  '    "eqeqeq": "error",',
+  '    "no-eval": "error",',
+  '    "prefer-const": "error",',
+  '    "no-var": "error",',
+  '    "no-implicit-globals": "error",',
+  '    "curly": "error"',
+  '  }',
+  '}'
+].join('\n');
+
+const codeBlock4 = [
+  '{',
+  '  "parser": "@typescript-eslint/parser",',
+  '  "plugins": ["@typescript-eslint"],',
+  '  "extends": [',
+  '    "eslint:recommended",',
+  '    "plugin:@typescript-eslint/recommended"',
+  '  ],',
+  '  "parserOptions": {',
+  '    "ecmaVersion": "latest",',
+  '    "sourceType": "module",',
+  '    "project": "./tsconfig.json"',
+  '  },',
+  '  "rules": {',
+  '    "@typescript-eslint/no-unused-vars": "warn",',
+  '    "@typescript-eslint/explicit-function-return-type": "warn",',
+  '    "@typescript-eslint/no-explicit-any": "warn",',
+  '    "@typescript-eslint/no-non-null-assertion": "warn"',
+  '  }',
+  '}'
+].join('\n');
+
+const codeBlock5 = [
+  '{',
+  '  "extends": [',
+  '    "eslint:recommended",',
+  '    "plugin:react/recommended",',
+  '    "plugin:react-hooks/recommended",',
+  '    "plugin:jsx-a11y/recommended"',
+  '  ],',
+  '  "plugins": ["react", "react-hooks", "jsx-a11y"],',
+  '  "settings": {',
+  '    "react": {',
+  '      "version": "detect"',
+  '    }',
+  '  },',
+  '  "rules": {',
+  '    "react/prop-types": "off",',
+  '    "react/react-in-jsx-scope": "off",',
+  '    "react-hooks/rules-of-hooks": "error",',
+  '    "react-hooks/exhaustive-deps": "warn"',
+  '  }',
+  '}'
+].join('\n');
+
+const codeBlock6 = [
+  '{',
+  '  "extends": [',
+  '    "eslint:recommended",',
+  '    "plugin:@typescript-eslint/recommended",',
+  '    "prettier"',
+  '  ],',
+  '  "rules": {',
+  '    "no-unused-vars": "warn",',
+  '    "eqeqeq": "error",',
+  '    "prefer-const": "error"',
+  '  }',
+  '}'
+].join('\n');
+
+const codeBlock7 = [
+  '{',
+  '  "semi": true,',
+  '  "singleQuote": true,',
+  '  "printWidth": 80,',
+  '  "tabWidth": 2,',
+  '  "trailingComma": "es5"',
+  '}'
+].join('\n');
+
+const codeBlock8 = [
+  '{',
+  '  "scripts": {',
+  '    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",',
+  '    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",',
+  '    "format": "prettier --write .",',
+  '    "format:check": "prettier --check .",',
+  '    "fix-all": "npm run lint:fix &amp;&amp; npm run format"',
+  '  }',
+  '}'
+].join('\n');
+
+const codeBlock9 = [
+  "import eslint from '@eslint/js';",
+  "import tseslint from 'typescript-eslint';",
+  "import prettier from 'eslint-config-prettier';",
+  '',
+  'export default [',
+  '  eslint.configs.recommended,',
+  '  ...tseslint.configs.recommended,',
+  '  prettier,',
+  '  {',
+  '    rules: {',
+  "      'no-unused-vars': 'warn',",
+  "      'eqeqeq': 'error',",
+  "      'prefer-const': 'error',",
+  '    },',
+  '  },',
+  '];'
+].join('\n');
+
+const codeBlock10 = [
+  '// WRONG - prettier is not last',
+  '{',
+  '  "extends": ["eslint:recommended", "prettier", "plugin:react/recommended"]',
+  '}',
+  '',
+  '// CORRECT - prettier is last',
+  '{',
+  '  "extends": ["eslint:recommended", "plugin:react/recommended", "prettier"]',
+  '}'
+].join('\n');
+
+const codeBlock11 = [
+  '{',
+  '  "rules": {',
+  '    "react/jsx-max-props-per-line": "off",',
+  '    "react/jsx-first-prop-new-line": "off",',
+  '    "react/jsx-closing-bracket-location": "off"',
+  '  }',
+  '}'
+].join('\n');
+
+const codeBlock12 = [
+  '{',
+  '  "editor.defaultFormatter": "esbenp.prettier-vscode",',
+  '  "editor.formatOnSave": true,',
+  '  "editor.codeActionsOnSave": {',
+  '    "source.fixAll.eslint": "explicit"',
+  '  },',
+  '  "eslint.validate": [',
+  '    "javascript",',
+  '    "javascriptreact",',
+  '    "typescript",',
+  '    "typescriptreact"',
+  '  ]',
+  '}'
+].join('\n');
+
+const codeBlock13 = [
+  '-- Using conform.nvim for formatting',
+  "require('conform').setup({",
+  '  formatters_by_ft = {',
+  "    javascript = { 'prettier' },",
+  "    typescript = { 'prettier' },",
+  "    typescriptreact = { 'prettier' },",
+  "    css = { 'prettier' },",
+  "    json = { 'prettier' },",
+  '  },',
+  '  format_on_save = {',
+  '    timeout_ms = 500,',
+  '    lsp_fallback = true,',
+  '  },',
+  '})'
+].join('\n');
+
+const codeBlock14 = [
+  '{',
+  '  "lint-staged": {',
+  '    "*.{js,jsx,ts,tsx}": [',
+  '      "eslint --fix",',
+  '      "prettier --write"',
+  '    ],',
+  '    "*.{json,md,css,html,yaml,yml}": [',
+  '      "prettier --write"',
+  '    ]',
+  '  }',
+  '}'
+].join('\n');
+
+const codeBlock15 = [
+  '{',
+  '  "overrides": [',
+  '    {',
+  '      "files": ["*.test.js", "*.spec.js"],',
+  '      "env": { "jest": true },',
+  '      "rules": {',
+  '        "no-console": "off"',
+  '      }',
+  '    },',
+  '    {',
+  '      "files": ["scripts/**/*.js"],',
+  '      "rules": {',
+  '        "no-process-exit": "off"',
+  '      }',
+  '    }',
+  '  ]',
+  '}'
+].join('\n');
+
+const codeBlock16 = [
+  '{',
+  '  "semi": true,',
+  '  "singleQuote": true,',
+  '  "overrides": [',
+  '    {',
+  '      "files": "*.json",',
+  '      "options": {',
+  '        "tabWidth": 4',
+  '      }',
+  '    },',
+  '    {',
+  '      "files": "*.md",',
+  '      "options": {',
+  '        "proseWrap": "always"',
+  '      }',
+  '    }',
+  '  ]',
+  '}'
+].join('\n');
+---
+
+<BlogLayout
+  title="Prettier vs ESLint: Formatting vs Linting Explained (Setup Guide)"
+  description="Understand the difference between Prettier and ESLint. Learn when to use each, how to configure them together, and avoid common conflicts in your JavaScript/TypeScript projects."
+  slug="prettier-vs-eslint-formatting-vs-linting"
+  publishDate="2026-03-20"
+  readTime="15 min read"
+>
+
+<h2>Introduction</h2>
+
+<p>If you've ever worked on a JavaScript or TypeScript project with more than one developer, you've probably encountered the eternal debate: tabs vs spaces, semicolons vs no semicolons, single quotes vs double quotes. These arguments can derail entire code reviews. That's where <strong>Prettier</strong> and <strong>ESLint</strong> come in — two tools that solve related but fundamentally different problems.</p>
+
+<p>Many developers confuse Prettier and ESLint or assume they do the same thing. In reality, they complement each other beautifully when configured correctly — but can cause frustrating conflicts when set up poorly. This guide will walk you through exactly what each tool does, how they differ, how to configure them individually and together, and how to avoid the most common pitfalls.</p>
+
+<p>Whether you're setting up a brand-new project or untangling a messy existing configuration, this article has everything you need. If you'd like to experiment with code formatting in your browser first, try our <a href="/tools/javascript-formatter">JavaScript Formatter</a> tool.</p>
+
+<h2>What is Prettier?</h2>
+
+<p>Prettier is an <strong>opinionated code formatter</strong>. Its sole job is to take your code and reprint it in a consistent style. It doesn't care whether your code is correct, efficient, or follows best practices — it only cares about how it <em>looks</em>.</p>
+
+<p>Prettier supports a wide range of languages including JavaScript, TypeScript, HTML, CSS, JSON, GraphQL, Markdown, and YAML. When you run Prettier, it parses your code into an abstract syntax tree (AST) and then reprints it from scratch according to its formatting rules.</p>
+
+<h3>Key Characteristics of Prettier</h3>
+
+<ul>
+  <li><strong>Opinionated by design</strong> — Prettier intentionally limits configuration options. This forces teams to stop arguing about style and accept a consistent default.</li>
+  <li><strong>Deterministic output</strong> — Given the same input and configuration, Prettier always produces the same output regardless of the original formatting.</li>
+  <li><strong>AST-based</strong> — Prettier parses your code into an AST and reprints it, meaning it understands the structure of your code rather than applying regex-based find-and-replace.</li>
+  <li><strong>Multi-language</strong> — One tool handles JavaScript, TypeScript, CSS, HTML, JSON, and more.</li>
+  <li><strong>Zero-config by default</strong> — Prettier works out of the box with sensible defaults. You can override a small set of options if needed.</li>
+</ul>
+
+<h3>What Prettier Handles</h3>
+
+<ul>
+  <li>Indentation (tabs or spaces, and how many)</li>
+  <li>Line length and wrapping</li>
+  <li>Semicolons (add or remove)</li>
+  <li>Quote style (single or double)</li>
+  <li>Trailing commas</li>
+  <li>Bracket spacing</li>
+  <li>JSX quote style</li>
+  <li>End-of-line characters</li>
+</ul>
+
+<h2>What is ESLint?</h2>
+
+<p>ESLint is a <strong>static analysis tool</strong> (linter) for JavaScript and TypeScript. Its primary job is to find and report patterns in your code that are likely bugs, violate best practices, or don't conform to your team's coding standards. While ESLint also has some formatting rules, its core strength is <strong>code quality analysis</strong>.</p>
+
+<p>ESLint works by parsing your code and running a set of configurable rules against the resulting AST. Each rule can be turned off, set to warn, or set to error. Many rules also come with auto-fix capabilities.</p>
+
+<h3>Key Characteristics of ESLint</h3>
+
+<ul>
+  <li><strong>Highly configurable</strong> — Hundreds of built-in rules, plus thousands of community plugins.</li>
+  <li><strong>Catches real bugs</strong> — Rules like <code>no-unused-vars</code>, <code>no-undef</code>, and <code>eqeqeq</code> catch actual programming errors.</li>
+  <li><strong>Enforces best practices</strong> — Rules like <code>no-eval</code>, <code>no-implicit-globals</code>, and <code>prefer-const</code> encourage better code.</li>
+  <li><strong>Extensible via plugins</strong> — Plugins for React, Vue, TypeScript, accessibility, testing libraries, and more.</li>
+  <li><strong>Auto-fixable</strong> — Many rules can automatically fix issues with <code>--fix</code>.</li>
+</ul>
+
+<h3>What ESLint Handles</h3>
+
+<ul>
+  <li>Unused variables and imports</li>
+  <li>Undefined variables</li>
+  <li>Unreachable code</li>
+  <li>Type coercion issues (<code>==</code> vs <code>===</code>)</li>
+  <li>Missing return statements</li>
+  <li>React hooks rules (with plugin)</li>
+  <li>Accessibility issues (with plugin)</li>
+  <li>Import ordering and resolution</li>
+  <li>Naming conventions</li>
+</ul>
+
+<h2>Key Differences: Formatting vs Linting</h2>
+
+<p>The fundamental difference comes down to this: <strong>Prettier handles how your code looks; ESLint handles how your code works.</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Aspect</th>
+      <th>Prettier</th>
+      <th>ESLint</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Primary purpose</strong></td>
+      <td>Code formatting</td>
+      <td>Code quality &amp; bug detection</td>
+    </tr>
+    <tr>
+      <td><strong>Configuration</strong></td>
+      <td>Minimal (intentionally)</td>
+      <td>Extensive (hundreds of rules)</td>
+    </tr>
+    <tr>
+      <td><strong>Auto-fix</strong></td>
+      <td>Always rewrites entire file</td>
+      <td>Fixes only specific rule violations</td>
+    </tr>
+    <tr>
+      <td><strong>Languages</strong></td>
+      <td>JS, TS, HTML, CSS, JSON, etc.</td>
+      <td>JS, TS (with parser)</td>
+    </tr>
+    <tr>
+      <td><strong>Catches bugs</strong></td>
+      <td>No</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Enforces style</strong></td>
+      <td>Yes (formatting only)</td>
+      <td>Yes (code patterns &amp; some formatting)</td>
+    </tr>
+    <tr>
+      <td><strong>Opinioned</strong></td>
+      <td>Very (by design)</td>
+      <td>Configurable</td>
+    </tr>
+    <tr>
+      <td><strong>Plugin ecosystem</strong></td>
+      <td>Small (language parsers)</td>
+      <td>Huge (React, Vue, a11y, etc.)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>An Analogy</h3>
+
+<p>Think of it like writing an essay. <strong>Prettier</strong> is like a typesetter — it ensures consistent margins, font sizes, and paragraph spacing. <strong>ESLint</strong> is like a grammar checker and editor — it catches spelling errors, run-on sentences, and logical inconsistencies. You need both for a polished final product.</p>
+
+<h2>Configuration Examples</h2>
+
+<h3>Prettier Configuration (.prettierrc)</h3>
+
+<p>Prettier's configuration is intentionally minimal. Create a <code>.prettierrc</code> file in your project root. You can format JSON config files easily with our <a href="/tools/json-formatter">JSON Formatter</a>.</p>
+
+<pre><code set:html=&#123;codeBlock&#125;></code></pre>
+
+<p>You can also use a <code>.prettierrc.js</code> file for JavaScript-based configuration:</p>
+
+<pre><code set:html=&#123;codeBlock2&#125;></code></pre>
+
+<h3>Prettier Ignore File (.prettierignore)</h3>
+
+<p>Create a <code>.prettierignore</code> to exclude files from formatting:</p>
+
+<pre><code>node_modules
+dist
+build
+coverage
+*.min.js
+package-lock.json</code></pre>
+
+<h3>ESLint Configuration (.eslintrc.json)</h3>
+
+<p>ESLint's configuration is far more extensive. Here's a solid starting point for a modern JavaScript/TypeScript project:</p>
+
+<pre><code set:html=&#123;codeBlock3&#125;></code></pre>
+
+<h3>ESLint for TypeScript</h3>
+
+<p>For TypeScript projects, you'll need the TypeScript parser and plugin:</p>
+
+<pre><code set:html=&#123;codeBlock4&#125;></code></pre>
+
+<h3>ESLint for React</h3>
+
+<p>React projects benefit from additional plugins:</p>
+
+<pre><code set:html=&#123;codeBlock5&#125;></code></pre>
+
+<h2>Using Prettier and ESLint Together</h2>
+
+<p>This is where most developers run into trouble. Both Prettier and ESLint have opinions about formatting, and when their opinions clash, you get an endless loop of conflicting fixes. The solution is <strong>eslint-config-prettier</strong>.</p>
+
+<h3>The Problem</h3>
+
+<p>ESLint has formatting rules like <code>indent</code>, <code>quotes</code>, and <code>semi</code>. Prettier also controls indentation, quotes, and semicolons. If ESLint says "use double quotes" but Prettier says "use single quotes," every save triggers a conflict. ESLint auto-fix changes them to double quotes, then Prettier changes them back to single quotes.</p>
+
+<h3>The Solution: eslint-config-prettier</h3>
+
+<p>The <code>eslint-config-prettier</code> package disables all ESLint rules that conflict with Prettier. This way, ESLint handles code quality while Prettier handles formatting with zero overlap.</p>
+
+<h3>Step-by-Step Setup</h3>
+
+<p><strong>Step 1: Install dependencies</strong></p>
+
+<pre><code>npm install --save-dev prettier eslint eslint-config-prettier</code></pre>
+
+<p><strong>Step 2: Configure ESLint to use eslint-config-prettier</strong></p>
+
+<p>Add <code>"prettier"</code> as the <strong>last item</strong> in your <code>extends</code> array. This is critical — it must be last so it overrides any conflicting rules from other configs:</p>
+
+<pre><code set:html=&#123;codeBlock6&#125;></code></pre>
+
+<p><strong>Step 3: Configure Prettier</strong></p>
+
+<p>Create your <code>.prettierrc</code>:</p>
+
+<pre><code set:html=&#123;codeBlock7&#125;></code></pre>
+
+<p><strong>Step 4: Add scripts to package.json</strong></p>
+
+<pre><code set:html=&#123;codeBlock8&#125;></code></pre>
+
+<h3>ESLint Flat Config (eslint.config.js)</h3>
+
+<p>If you're using the newer ESLint flat config format (ESLint v9+), here's the equivalent setup:</p>
+
+<pre><code set:html=&#123;codeBlock9&#125;></code></pre>
+
+<h2>Common Conflicts and Fixes</h2>
+
+<p>Even with <code>eslint-config-prettier</code>, teams still run into issues. Here are the most common problems and their solutions.</p>
+
+<h3>Conflict 1: "prettier" Not Last in Extends</h3>
+
+<p><strong>Symptom:</strong> ESLint and Prettier fight over formatting on every save.</p>
+
+<p><strong>Fix:</strong> Ensure <code>"prettier"</code> is the absolute last entry in your <code>extends</code> array. If you add a plugin after it, that plugin's formatting rules will override the disable.</p>
+
+<pre><code set:html=&#123;codeBlock10&#125;></code></pre>
+
+<h3>Conflict 2: ESLint Formatting Rules Still Active</h3>
+
+<p><strong>Symptom:</strong> ESLint reports errors on formatting issues that Prettier should handle.</p>
+
+<p><strong>Fix:</strong> Run the <code>eslint-config-prettier</code> CLI helper to check for conflicts:</p>
+
+<pre><code>npx eslint-config-prettier .eslintrc.json</code></pre>
+
+<p>This command lists any ESLint rules that conflict with Prettier so you can disable them manually.</p>
+
+<h3>Conflict 3: Different Line Endings (CRLF vs LF)</h3>
+
+<p><strong>Symptom:</strong> Prettier reformats every line in a file, or Git shows changes on lines that look identical.</p>
+
+<p><strong>Fix:</strong> Set <code>"endOfLine": "lf"</code> in your <code>.prettierrc</code> and configure Git:</p>
+
+<pre><code>git config --global core.autocrlf input</code></pre>
+
+<p>Also add an <code>.editorconfig</code> file:</p>
+
+<pre><code>[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+indent_style = space
+indent_size = 2</code></pre>
+
+<h3>Conflict 4: HTML/JSX Attribute Formatting</h3>
+
+<p><strong>Symptom:</strong> Prettier wraps JSX attributes differently than expected, and ESLint complains about the result.</p>
+
+<p><strong>Fix:</strong> This is usually caused by having <code>react/jsx-max-props-per-line</code> or similar ESLint rules still enabled. With <code>eslint-config-prettier</code>, these should be disabled automatically. If not, disable them manually:</p>
+
+<pre><code set:html=&#123;codeBlock11&#125;></code></pre>
+
+<h3>Conflict 5: Import Order</h3>
+
+<p><strong>Symptom:</strong> Prettier and an ESLint import sorting plugin fight over import order.</p>
+
+<p><strong>Fix:</strong> Prettier does not sort imports by default. If you want sorted imports, use <code>eslint-plugin-import</code> with the <code>import/order</code> rule, or use the <code>@trivago/prettier-plugin-sort-imports</code> Prettier plugin — but do not use both simultaneously.</p>
+
+<h2>Editor Integration</h2>
+
+<p>Proper editor integration is what makes these tools truly powerful. Instead of running commands manually, your editor formats and lints as you work.</p>
+
+<h3>VS Code Setup</h3>
+
+<p>Install the following extensions:</p>
+
+<ul>
+  <li><strong>Prettier - Code formatter</strong> (esbenp.prettier-vscode)</li>
+  <li><strong>ESLint</strong> (dbaeumer.vscode-eslint)</li>
+</ul>
+
+<p>Then configure your <code>.vscode/settings.json</code>:</p>
+
+<pre><code set:html=&#123;codeBlock12&#125;></code></pre>
+
+<p>This configuration means: on save, ESLint auto-fixes code quality issues first, then Prettier formats the file. The order matters — ESLint fixes should happen before Prettier formatting to avoid conflicts.</p>
+
+<h3>WebStorm / JetBrains IDEs</h3>
+
+<ul>
+  <li>Go to <strong>Settings &gt; Languages &amp; Frameworks &gt; JavaScript &gt; Prettier</strong></li>
+  <li>Check "On save" and "On Reformat Code action"</li>
+  <li>ESLint is automatically detected from your project's config</li>
+</ul>
+
+<h3>Neovim Setup</h3>
+
+<p>If you use Neovim with LSP, configure <code>null-ls</code> or <code>conform.nvim</code> for Prettier and use <code>nvim-lspconfig</code> for ESLint:</p>
+
+<pre><code set:html=&#123;codeBlock13&#125;></code></pre>
+
+<h2>CI/CD Setup</h2>
+
+<p>Running Prettier and ESLint in your CI/CD pipeline ensures that no unformatted or problematic code reaches your main branch.</p>
+
+<h3>GitHub Actions Example</h3>
+
+<pre><code>name: Lint and Format Check
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Check formatting
+        run: npx prettier --check .
+
+      - name: Run linter
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx</code></pre>
+
+<p>Note the use of <code>prettier --check</code> instead of <code>prettier --write</code> in CI. The <code>--check</code> flag exits with a non-zero code if any file isn't formatted, without actually modifying files.</p>
+
+<h3>Pre-commit Hooks with Husky and lint-staged</h3>
+
+<p>For catching issues before they even reach CI, set up pre-commit hooks:</p>
+
+<pre><code>npm install --save-dev husky lint-staged
+npx husky init</code></pre>
+
+<p>Add to your <code>package.json</code>:</p>
+
+<pre><code set:html=&#123;codeBlock14&#125;></code></pre>
+
+<p>Update the Husky pre-commit hook at <code>.husky/pre-commit</code>:</p>
+
+<pre><code>npx lint-staged</code></pre>
+
+<p>This runs ESLint and Prettier only on the files you've staged for commit, keeping your hook fast even in large repositories.</p>
+
+<h2>When to Use Each Tool</h2>
+
+<h3>Use Prettier When...</h3>
+
+<ul>
+  <li>You want consistent formatting across your entire codebase with zero debate</li>
+  <li>You're formatting non-JavaScript files like JSON, CSS, HTML, Markdown, or YAML</li>
+  <li>You want a zero-config or minimal-config solution</li>
+  <li>You're tired of formatting discussions in code reviews</li>
+  <li>You need deterministic output regardless of input formatting</li>
+</ul>
+
+<h3>Use ESLint When...</h3>
+
+<ul>
+  <li>You want to catch bugs and enforce coding best practices</li>
+  <li>You need framework-specific rules (React hooks, Vue composition API, etc.)</li>
+  <li>You want to enforce naming conventions or import ordering</li>
+  <li>You need custom rules specific to your project or organization</li>
+  <li>You want to gradually improve code quality with warnings before enforcing errors</li>
+</ul>
+
+<h3>Use Both Together When...</h3>
+
+<ul>
+  <li>You want the best of both worlds — which is most projects</li>
+  <li>You want Prettier to handle all formatting and ESLint to handle all code quality</li>
+  <li>You're working on a team and want to eliminate both style debates and common bugs</li>
+  <li>You're building a production application that needs to meet quality standards</li>
+</ul>
+
+<h3>Summary Decision Table</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Scenario</th>
+      <th>Recommendation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Solo hobby project</td>
+      <td>Prettier alone is often enough</td>
+    </tr>
+    <tr>
+      <td>Small team, JS/TS project</td>
+      <td>Both with eslint-config-prettier</td>
+    </tr>
+    <tr>
+      <td>Large enterprise codebase</td>
+      <td>Both, plus custom ESLint plugins</td>
+    </tr>
+    <tr>
+      <td>Non-JS files only (CSS, JSON, MD)</td>
+      <td>Prettier only</td>
+    </tr>
+    <tr>
+      <td>Legacy project with no formatting</td>
+      <td>Add Prettier first, then ESLint gradually</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Advanced Tips</h2>
+
+<h3>Per-file Overrides</h3>
+
+<p>Both tools support per-file configuration overrides. In ESLint:</p>
+
+<pre><code set:html=&#123;codeBlock15&#125;></code></pre>
+
+<p>In Prettier, use the <code>overrides</code> field in <code>.prettierrc</code>:</p>
+
+<pre><code set:html=&#123;codeBlock16&#125;></code></pre>
+
+<h3>Disabling Rules Inline</h3>
+
+<p>Sometimes you need to disable a rule for a specific line or block. ESLint supports inline comments:</p>
+
+<pre><code>// eslint-disable-next-line no-console
+console.log('Debug info');
+
+/* eslint-disable no-unused-vars */
+const reservedForLater = true;
+/* eslint-enable no-unused-vars */</code></pre>
+
+<p>For Prettier, use <code>prettier-ignore</code> comments:</p>
+
+<pre><code>// prettier-ignore
+const matrix = [
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+];</code></pre>
+
+<h3>Migrating a Large Codebase</h3>
+
+<p>If you're adding Prettier to an existing project, format everything at once in a single commit. This creates a clear boundary in your Git history. Use <code>git blame --ignore-rev</code> to tell Git to skip that formatting commit when assigning blame:</p>
+
+<pre><code># Format everything
+npx prettier --write .
+
+# Commit the formatting change
+git add -A
+git commit -m "chore: apply prettier formatting"
+
+# Add the commit hash to .git-blame-ignore-revs
+echo "abc123def456 # chore: apply prettier formatting" &gt;&gt; .git-blame-ignore-revs
+git config blame.ignoreRevsFile .git-blame-ignore-revs</code></pre>
+
+<p>For ESLint, a gradual approach works better. Start with <code>"warn"</code> severity for new rules, fix violations over time, then switch to <code>"error"</code> once the codebase is clean.</p>
+
+<h2>Conclusion</h2>
+
+<p>Prettier and ESLint are not competitors — they are complementary tools that solve different problems. <strong>Prettier</strong> eliminates all formatting debates by enforcing a consistent style automatically. <strong>ESLint</strong> catches bugs, enforces best practices, and helps you write more reliable code.</p>
+
+<p>The ideal setup for most projects is:</p>
+
+<ul>
+  <li>Install both Prettier and ESLint</li>
+  <li>Use <code>eslint-config-prettier</code> to disable conflicting rules</li>
+  <li>Configure your editor to format on save (Prettier) and auto-fix on save (ESLint)</li>
+  <li>Set up pre-commit hooks with Husky and lint-staged</li>
+  <li>Run both checks in CI/CD to catch anything that slips through</li>
+</ul>
+
+<p>This combination gives you a codebase that is both consistently formatted and free of common bugs and anti-patterns. Your code reviews can focus on architecture, logic, and design instead of arguing about semicolons.</p>
+
+<p>Ready to start formatting your code right now? Try our <a href="/tools/javascript-formatter">JavaScript Formatter</a> for quick browser-based formatting, or use our <a href="/tools/json-formatter">JSON Formatter</a> to clean up your configuration files before committing them to your project.</p>
+
+</BlogLayout>

@@ -63,7 +63,7 @@ a b c d e f g h i j k l m n o p q r s t u v w x y z
   Reserved characters have specific roles in URL syntax. If you want to use them as literal data (for example, an ampersand in a company name), you must percent-encode them:
 </p>
 
-<pre><code>:  /  ?  #  [  ]  @  !  $  &  '  (  )  *  +  ,  ;  =</code></pre>
+<pre><code>:  /  ?  #  [  ]  @  !  $  &amp;  '  (  )  *  +  ,  ;  =</code></pre>
 
 <p>
   For example, the <code>?</code> character separates the path from the query string. If your query value itself contains a question mark, that question mark must be encoded as <code>%3F</code> to avoid ambiguity.
@@ -100,7 +100,7 @@ a b c d e f g h i j k l m n o p q r s t u v w x y z
 #           %23         Hash / fragment delimiter
 $           %24         Dollar sign
 %           %25         Percent sign (literal)
-&           %26         Ampersand / query separator
+&amp;           %26         Ampersand / query separator
 '           %27         Single quote / apostrophe
 (           %28         Open parenthesis
 )           %29         Close parenthesis
@@ -136,7 +136,7 @@ $           %24         Dollar sign
 </p>
 
 <pre><code>// Encoding a query parameter value
-const searchTerm = "cats & dogs";
+const searchTerm = "cats &amp; dogs";
 const encoded = encodeURIComponent(searchTerm);
 console.log(encoded);
 // Output: "cats%20%26%20dogs"
@@ -147,7 +147,7 @@ console.log(url);
 // Output: "https://example.com/search?q=cats%20%26%20dogs"
 
 // Encoding special characters
-console.log(encodeURIComponent("price=100&currency=USD"));
+console.log(encodeURIComponent("price=100&amp;currency=USD"));
 // Output: "price%3D100%26currency%3DUSD"</code></pre>
 
 <p>
@@ -176,7 +176,7 @@ console.log(encodeURI(url));
 
 <pre><code>// decodeURIComponent — decodes a single component
 console.log(decodeURIComponent("cats%20%26%20dogs"));
-// Output: "cats & dogs"
+// Output: "cats &amp; dogs"
 
 // decodeURI — decodes a full URI, preserving structural characters
 console.log(decodeURI("https://example.com/r%C3%A9sum%C3%A9?q=hello%20world"));
@@ -184,18 +184,18 @@ console.log(decodeURI("https://example.com/r%C3%A9sum%C3%A9?q=hello%20world"));
 
 <h3>The Critical Mistake: Using encodeURI on a Parameter Value</h3>
 
-<pre><code>// WRONG — encodeURI does NOT encode & and =
-const userInput = "tom&jerry=best";
+<pre><code>// WRONG — encodeURI does NOT encode &amp; and =
+const userInput = "tom&amp;jerry=best";
 const bad = "https://api.com/search?q=" + encodeURI(userInput);
 console.log(bad);
-// "https://api.com/search?q=tom&jerry=best"
+// "https://api.com/search?q=tom&amp;jerry=best"
 // The server sees q=tom, jerry=best — completely wrong!
 
-// CORRECT — encodeURIComponent encodes & and =
+// CORRECT — encodeURIComponent encodes &amp; and =
 const good = "https://api.com/search?q=" + encodeURIComponent(userInput);
 console.log(good);
 // "https://api.com/search?q=tom%26jerry%3Dbest"
-// The server correctly sees q=tom&jerry=best</code></pre>
+// The server correctly sees q=tom&amp;jerry=best</code></pre>
 
 <h2>URL Encoding in Python: urllib.parse</h2>
 
@@ -208,12 +208,12 @@ console.log(good);
 <pre><code>from urllib.parse import quote, quote_plus, urlencode
 
 # quote() — similar to encodeURIComponent
-print(quote("hello world & goodbye"))
+print(quote("hello world &amp; goodbye"))
 # Output: "hello%20world%20%26%20goodbye"
 
 # quote_plus() — same but encodes spaces as + instead of %20
 # This is the application/x-www-form-urlencoded format
-print(quote_plus("hello world & goodbye"))
+print(quote_plus("hello world &amp; goodbye"))
 # Output: "hello+world+%26+goodbye"
 
 # Specifying safe characters (characters NOT to encode)
@@ -229,11 +229,11 @@ print(quote("path/to/file", safe=""))
 
 # unquote() — decodes %XX sequences
 print(unquote("hello%20world%20%26%20goodbye"))
-# Output: "hello world & goodbye"
+# Output: "hello world &amp; goodbye"
 
 # unquote_plus() — also converts + back to spaces
 print(unquote_plus("hello+world+%26+goodbye"))
-# Output: "hello world & goodbye"</code></pre>
+# Output: "hello world &amp; goodbye"</code></pre>
 
 <h3>urlencode() — Building Query Strings</h3>
 
@@ -241,37 +241,37 @@ print(unquote_plus("hello+world+%26+goodbye"))
 
 # Build a complete query string from a dictionary
 params = &#123;
-    "q": "cats & dogs",
+    "q": "cats &amp; dogs",
     "page": 1,
     "lang": "en",
-    "filter": "price>=100"
+    "filter": "price&gt;=100"
 &#123;
 
 query_string = urlencode(params)
 print(query_string)
-# Output: "q=cats+%26+dogs&page=1&lang=en&filter=price%3E%3D100"
+# Output: "q=cats+%26+dogs&amp;page=1&amp;lang=en&amp;filter=price%3E%3D100"
 
 # Use quote_via=quote to get %20 instead of + for spaces
 from urllib.parse import quote
 query_string = urlencode(params, quote_via=quote)
 print(query_string)
-# Output: "q=cats%20%26%20dogs&page=1&lang=en&filter=price%3E%3D100"</code></pre>
+# Output: "q=cats%20%26%20dogs&amp;page=1&amp;lang=en&amp;filter=price%3E%3D100"</code></pre>
 
 <h2>URL Encoding in Other Languages</h2>
 
 <h3>PHP</h3>
 
 <pre><code>// urlencode() — spaces become +
-echo urlencode("hello world & goodbye");
+echo urlencode("hello world &amp; goodbye");
 // Output: "hello+world+%26+goodbye"
 
 // rawurlencode() — spaces become %20 (RFC 3986 compliant)
-echo rawurlencode("hello world & goodbye");
+echo rawurlencode("hello world &amp; goodbye");
 // Output: "hello%20world%20%26%20goodbye"
 
 // Decoding
 echo urldecode("hello+world+%26+goodbye");
-// Output: "hello world & goodbye"</code></pre>
+// Output: "hello world &amp; goodbye"</code></pre>
 
 <h3>Java</h3>
 
@@ -280,14 +280,14 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 // Encoding
-String encoded = URLEncoder.encode("hello world & goodbye", StandardCharsets.UTF_8);
+String encoded = URLEncoder.encode("hello world &amp; goodbye", StandardCharsets.UTF_8);
 System.out.println(encoded);
 // Output: "hello+world+%26+goodbye"
 
 // Decoding
 String decoded = URLDecoder.decode("hello%20world%20%26%20goodbye", StandardCharsets.UTF_8);
 System.out.println(decoded);
-// Output: "hello world & goodbye"</code></pre>
+// Output: "hello world &amp; goodbye"</code></pre>
 
 <h3>C# / .NET</h3>
 
@@ -295,12 +295,12 @@ System.out.println(decoded);
 using System;
 
 // Uri.EscapeDataString — RFC 3986 compliant
-string encoded = Uri.EscapeDataString("hello world & goodbye");
+string encoded = Uri.EscapeDataString("hello world &amp; goodbye");
 Console.WriteLine(encoded);
 // Output: "hello%20world%20%26%20goodbye"
 
 // WebUtility.UrlEncode — form encoding (+ for spaces)
-string formEncoded = WebUtility.UrlEncode("hello world & goodbye");
+string formEncoded = WebUtility.UrlEncode("hello world &amp; goodbye");
 Console.WriteLine(formEncoded);
 // Output: "hello+world+%26+goodbye"</code></pre>
 
@@ -339,8 +339,8 @@ https://example.com/files/C%2B%2B/readme.txt // Same path, percent-encoded</code
   Always encode user-supplied values before inserting them into query strings. This is the single most common use case for URL encoding:
 </p>
 
-<pre><code>// User types: O'Brien & Sons (price > $100)
-const input = "O'Brien & Sons (price > $100)";
+<pre><code>// User types: O'Brien &amp; Sons (price &gt; $100)
+const input = "O'Brien &amp; Sons (price &gt; $100)";
 const url = `/search?company=$&#123;encodeURIComponent(input)&#123;`;
 // Result: /search?company=O'Brien%20%26%20Sons%20(price%20%3E%20%24100)</code></pre>
 
@@ -377,10 +377,10 @@ from urllib.parse import urlencode, quote
 
 # Using requests library (handles encoding automatically)
 response = requests.get("https://api.example.com/search", params=&#123;
-    "q": "café & restaurant",
+    "q": "café &amp; restaurant",
     "location": "Zürich"
 &#123;)
-# Requests builds: /search?q=caf%C3%A9+%26+restaurant&location=Z%C3%BCrich</code></pre>
+# Requests builds: /search?q=caf%C3%A9+%26+restaurant&amp;location=Z%C3%BCrich</code></pre>
 
 <h2>Common URL Encoding Mistakes (And How to Fix Them)</h2>
 
@@ -403,7 +403,7 @@ console.log(doubleEncoded);
 // The fix: only encode raw values, never encoded strings
 // If you're unsure whether a string is already encoded,
 // decode first, then re-encode:
-const safeEncode = (str) => &#123;
+const safeEncode = (str) =&gt; &#123;
   try &#123;
     return encodeURIComponent(decodeURIComponent(str));
   &#123; catch (e) &#123;
@@ -417,7 +417,7 @@ const safeEncode = (str) => &#123;
   String concatenation without encoding is dangerously common and can break functionality or create security vulnerabilities:
 </p>
 
-<pre><code>// WRONG — if userInput contains & or =, the URL breaks
+<pre><code>// WRONG — if userInput contains &amp; or =, the URL breaks
 const url = `https://api.com/data?name=$&#123;userInput&#123;`;
 
 // CORRECT — always encode
@@ -475,38 +475,38 @@ const url = "https://example.com/path?key=" + encodeURIComponent(userValue);</co
 <pre><code>// Building query strings correctly in JavaScript
 function buildQueryString(params) &#123;
   return Object.entries(params)
-    .map(([key, value]) =>
+    .map(([key, value]) =&gt;
       `$&#123;encodeURIComponent(key)&#123;=$&#123;encodeURIComponent(value)&#123;`
     )
-    .join('&');
+    .join('&amp;');
 &#123;
 
 const params = &#123;
-  search: "cats & dogs",
+  search: "cats &amp; dogs",
   page: "2",
-  filter: "price>=10",
+  filter: "price&gt;=10",
   tag: "cute/funny"
 &#123;;
 
 console.log(buildQueryString(params));
-// search=cats%20%26%20dogs&page=2&filter=price%3E%3D10&tag=cute%2Ffunny</code></pre>
+// search=cats%20%26%20dogs&amp;page=2&amp;filter=price%3E%3D10&amp;tag=cute%2Ffunny</code></pre>
 
 <p>
   Modern JavaScript also provides the <code>URLSearchParams</code> API, which handles encoding automatically:
 </p>
 
 <pre><code>const params = new URLSearchParams(&#123;
-  search: "cats & dogs",
-  filter: "price>=10"
+  search: "cats &amp; dogs",
+  filter: "price&gt;=10"
 &#123;);
 
 console.log(params.toString());
-// "search=cats+%26+dogs&filter=price%3E%3D10"
+// "search=cats+%26+dogs&amp;filter=price%3E%3D10"
 // Note: URLSearchParams uses + for spaces (form encoding convention)
 
 // Building a complete URL
 const url = new URL("https://example.com/search");
-url.searchParams.set("q", "hello world & goodbye");
+url.searchParams.set("q", "hello world &amp; goodbye");
 console.log(url.toString());
 // "https://example.com/search?q=hello+world+%26+goodbye"</code></pre>
 
@@ -589,7 +589,7 @@ https://xn--mnchen-3ya.de/stra%C3%9Fe?q=gr%C3%BC%C3%9Fe</code></pre>
 <pre><code>Scenario                        JavaScript                     Python
 ──────────────────────────────  ─────────────────────────────  ──────────────────────────
 Encode a query value            encodeURIComponent(val)        quote(val)
-Encode a full URL               encodeURI(url)                 quote(url, safe=':/?#[]@!$&\'()*+,;=')
+Encode a full URL               encodeURI(url)                 quote(url, safe=':/?#[]@!$&amp;\'()*+,;=')
 Encode spaces as +              N/A (use URLSearchParams)      quote_plus(val)
 Build query string from dict    new URLSearchParams(obj)       urlencode(dict)
 Decode a component              decodeURIComponent(val)        unquote(val)

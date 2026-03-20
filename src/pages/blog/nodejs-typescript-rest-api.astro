@@ -1,0 +1,608 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="How to Build a Production-Ready REST API with Node.js and TypeScript"
+  description="Step-by-step guide to building a REST API with Node.js, TypeScript, Express, Zod validation, JWT auth, and Prisma ORM. Covers testing, error handling, and deployment best practices."
+  slug="nodejs-typescript-rest-api"
+  publishDate="2026-03-20"
+  readTime="18 min read"
+>
+
+<p>
+  Building a REST API with Node.js is straightforward. Building one that's maintainable at scale — with proper typing, input validation, authentication, error handling, and testability — takes significantly more thought. TypeScript eliminates whole categories of bugs that plague JavaScript APIs. Combined with modern tooling like Zod for runtime validation, Prisma for database access, and structured error handling, you get an API codebase that a team can confidently work in for years.
+</p>
+
+<p>
+  This guide walks through building a production-ready REST API from scratch. You can test the endpoints we build with our <a href="/tools/api-tester">API Tester</a> and format response payloads with the <a href="/tools/json-formatter">JSON Formatter</a>.
+</p>
+
+<h2>Project Setup</h2>
+
+<pre><code>mkdir my-api &amp;&amp; cd my-api
+npm init -y
+
+# TypeScript + build tools
+npm install -D typescript ts-node nodemon @types/node
+npm install -D @types/express
+
+# Core dependencies
+npm install express
+npm install zod           # Runtime validation
+npm install prisma @prisma/client  # Database ORM
+npm install jsonwebtoken @types/jsonwebtoken  # JWT auth
+npm install bcryptjs @types/bcryptjs  # Password hashing
+npm install helmet cors   # Security middleware
+npm install express-rate-limit  # Rate limiting
+npm install winston       # Structured logging
+npm install -D jest @types/jest ts-jest supertest @types/supertest  # Testing</code></pre>
+
+<h3>TypeScript Configuration</h3>
+
+<pre><code>// tsconfig.json
+&#123;
+  "compilerOptions": &#123;
+    "target": "ES2022",
+    "module": "CommonJS",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  &#125;,
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+&#125;</code></pre>
+
+<h2>Project Structure</h2>
+
+<pre><code>src/
+├── app.ts              # Express app setup (no server.listen)
+├── server.ts           # Entry point (server.listen)
+├── config/
+│   └── env.ts          # Validated environment variables
+├── middleware/
+│   ├── auth.ts         # JWT verification middleware
+│   ├── errorHandler.ts # Central error handler
+│   └── validate.ts     # Zod validation middleware
+├── modules/
+│   └── users/
+│       ├── users.router.ts
+│       ├── users.controller.ts
+│       ├── users.service.ts
+│       └── users.schema.ts
+├── lib/
+│   ├── db.ts           # Prisma client singleton
+│   ├── logger.ts       # Winston logger
+│   └── errors.ts       # Custom error classes
+└── types/
+    └── express.d.ts    # Express type augmentation</code></pre>
+
+<h2>Environment Validation with Zod</h2>
+
+<p>
+  Never trust process.env — validate and type it at startup:
+</p>
+
+<pre><code>// src/config/env.ts
+import &#123; z &#125; from 'zod';
+
+const envSchema = z.object(&#123;
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.coerce.number().int().positive().default(3000),
+  DATABASE_URL: z.string().url(),
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+  BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(14).default(12),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000), // 15 min
+  RATE_LIMIT_MAX: z.coerce.number().default(100),
+  CORS_ORIGIN: z.string().default('*'),
+&#125;);
+
+// Parse and validate — throws at startup if invalid
+const parsed = envSchema.safeParse(process.env);
+
+if (!parsed.success) &#123;
+  console.error('❌ Invalid environment variables:');
+  console.error(parsed.error.flatten().fieldErrors);
+  process.exit(1);
+&#125;
+
+export const env = parsed.data;
+export type Env = z.infer&lt;typeof envSchema&gt;;</code></pre>
+
+<h2>Custom Error Classes</h2>
+
+<pre><code>// src/lib/errors.ts
+export class AppError extends Error &#123;
+  constructor(
+    public message: string,
+    public statusCode: number,
+    public code: string,
+    public details?: unknown
+  ) &#123;
+    super(message);
+    this.name = 'AppError';
+    Error.captureStackTrace(this, this.constructor);
+  &#125;
+&#125;
+
+export class NotFoundError extends AppError &#123;
+  constructor(resource: string, id?: string | number) &#123;
+    super(
+      id ? `$&#123;resource&#125; with id '$&#123;id&#125;' not found` : `$&#123;resource&#125; not found`,
+      404,
+      'NOT_FOUND'
+    );
+  &#125;
+&#125;
+
+export class UnauthorizedError extends AppError &#123;
+  constructor(message = 'Authentication required') &#123;
+    super(message, 401, 'UNAUTHORIZED');
+  &#125;
+&#125;
+
+export class ForbiddenError extends AppError &#123;
+  constructor(message = 'Insufficient permissions') &#123;
+    super(message, 403, 'FORBIDDEN');
+  &#125;
+&#125;
+
+export class ConflictError extends AppError &#123;
+  constructor(message: string) &#123;
+    super(message, 409, 'CONFLICT');
+  &#125;
+&#125;
+
+export class ValidationError extends AppError &#123;
+  constructor(details: unknown) &#123;
+    super('Validation failed', 422, 'VALIDATION_ERROR', details);
+  &#125;
+&#125;</code></pre>
+
+<h2>Zod Validation Middleware</h2>
+
+<pre><code>// src/middleware/validate.ts
+import &#123; Request, Response, NextFunction &#125; from 'express';
+import &#123; AnyZodObject, ZodError, z &#125; from 'zod';
+import &#123; ValidationError &#125; from '../lib/errors';
+
+type RequestSchema = &#123;
+  body?: AnyZodObject;
+  query?: AnyZodObject;
+  params?: AnyZodObject;
+&#125;;
+
+export function validate(schema: RequestSchema) &#123;
+  return async (req: Request, res: Response, next: NextFunction) =&gt; &#123;
+    try &#123;
+      if (schema.body) req.body = await schema.body.parseAsync(req.body);
+      if (schema.query) req.query = await schema.query.parseAsync(req.query);
+      if (schema.params) req.params = await schema.params.parseAsync(req.params);
+      next();
+    &#125; catch (err) &#123;
+      if (err instanceof ZodError) &#123;
+        next(new ValidationError(err.flatten().fieldErrors));
+      &#125; else &#123;
+        next(err);
+      &#125;
+    &#125;
+  &#125;;
+&#125;</code></pre>
+
+<h2>JWT Authentication Middleware</h2>
+
+<pre><code>// src/types/express.d.ts — augment Express Request
+import &#123; User &#125; from '@prisma/client';
+declare global &#123;
+  namespace Express &#123;
+    interface Request &#123;
+      user?: Omit&lt;User, 'password'&gt;;
+    &#125;
+  &#125;
+&#125;
+
+// src/middleware/auth.ts
+import &#123; Request, Response, NextFunction &#125; from 'express';
+import jwt from 'jsonwebtoken';
+import &#123; env &#125; from '../config/env';
+import &#123; UnauthorizedError &#125; from '../lib/errors';
+import &#123; db &#125; from '../lib/db';
+
+interface JwtPayload &#123;
+  sub: string; // user id
+  iat: number;
+  exp: number;
+&#125;
+
+export async function requireAuth(req: Request, res: Response, next: NextFunction) &#123;
+  try &#123;
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) &#123;
+      throw new UnauthorizedError('Missing or invalid authorization header');
+    &#125;
+
+    const token = authHeader.slice(7);
+
+    let payload: JwtPayload;
+    try &#123;
+      payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+    &#125; catch &#123;
+      throw new UnauthorizedError('Invalid or expired token');
+    &#125;
+
+    const user = await db.user.findUnique(&#123;
+      where: &#123; id: payload.sub &#125;,
+      omit: &#123; password: true &#125;,
+    &#125;);
+
+    if (!user) throw new UnauthorizedError('User not found');
+
+    req.user = user;
+    next();
+  &#125; catch (err) &#123;
+    next(err);
+  &#125;
+&#125;
+
+// Optional auth — attaches user if token present but doesn't require it
+export async function optionalAuth(req: Request, res: Response, next: NextFunction) &#123;
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) return next();
+
+  try &#123;
+    const token = authHeader.slice(7);
+    const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+    const user = await db.user.findUnique(&#123;
+      where: &#123; id: payload.sub &#125;,
+      omit: &#123; password: true &#125;,
+    &#125;);
+    if (user) req.user = user;
+  &#125; catch &#123;
+    // Ignore invalid tokens for optional auth
+  &#125;
+  next();
+&#125;</code></pre>
+
+<h2>Module Structure: Users Example</h2>
+
+<pre><code>// src/modules/users/users.schema.ts
+import &#123; z &#125; from 'zod';
+
+export const createUserSchema = &#123;
+  body: z.object(&#123;
+    email: z.string().email(),
+    password: z.string().min(8).max(100),
+    name: z.string().min(1).max(100).trim(),
+  &#125;),
+&#125;;
+
+export const loginSchema = &#123;
+  body: z.object(&#123;
+    email: z.string().email(),
+    password: z.string(),
+  &#125;),
+&#125;;
+
+export const updateUserSchema = &#123;
+  params: z.object(&#123; id: z.string().cuid() &#125;),
+  body: z.object(&#123;
+    name: z.string().min(1).max(100).trim().optional(),
+    email: z.string().email().optional(),
+  &#125;).strict(), // Reject unknown fields
+&#125;;
+
+export type CreateUserInput = z.infer&lt;typeof createUserSchema.body&gt;;
+export type LoginInput = z.infer&lt;typeof loginSchema.body&gt;;
+export type UpdateUserInput = z.infer&lt;typeof updateUserSchema.body&gt;;</code></pre>
+
+<pre><code>// src/modules/users/users.service.ts
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import &#123; db &#125; from '../../lib/db';
+import &#123; env &#125; from '../../config/env';
+import &#123; NotFoundError, ConflictError, UnauthorizedError &#125; from '../../lib/errors';
+import type &#123; CreateUserInput, LoginInput, UpdateUserInput &#125; from './users.schema';
+
+export async function createUser(input: CreateUserInput) &#123;
+  const existing = await db.user.findUnique(&#123; where: &#123; email: input.email &#125; &#125;);
+  if (existing) throw new ConflictError('Email already registered');
+
+  const hashedPassword = await bcrypt.hash(input.password, env.BCRYPT_ROUNDS);
+
+  const user = await db.user.create(&#123;
+    data: &#123; ...input, password: hashedPassword &#125;,
+    omit: &#123; password: true &#125;,
+  &#125;);
+
+  return user;
+&#125;
+
+export async function login(input: LoginInput) &#123;
+  const user = await db.user.findUnique(&#123; where: &#123; email: input.email &#125; &#125;);
+  if (!user) throw new UnauthorizedError('Invalid credentials');
+
+  const valid = await bcrypt.compare(input.password, user.password);
+  if (!valid) throw new UnauthorizedError('Invalid credentials');
+
+  const token = jwt.sign(&#123; sub: user.id &#125;, env.JWT_SECRET, &#123;
+    expiresIn: env.JWT_EXPIRES_IN,
+  &#125;);
+
+  const &#123; password: _, ...userWithoutPassword &#125; = user;
+  return &#123; user: userWithoutPassword, token &#125;;
+&#125;
+
+export async function getUserById(id: string) &#123;
+  const user = await db.user.findUnique(&#123;
+    where: &#123; id &#125;,
+    omit: &#123; password: true &#125;,
+  &#125;);
+  if (!user) throw new NotFoundError('User', id);
+  return user;
+&#125;
+
+export async function updateUser(id: string, input: UpdateUserInput) &#123;
+  await getUserById(id); // Ensures user exists, throws 404 if not
+  return db.user.update(&#123;
+    where: &#123; id &#125;,
+    data: input,
+    omit: &#123; password: true &#125;,
+  &#125;);
+&#125;
+
+export async function deleteUser(id: string) &#123;
+  await getUserById(id);
+  await db.user.delete(&#123; where: &#123; id &#125; &#125;);
+&#125;</code></pre>
+
+<pre><code>// src/modules/users/users.controller.ts
+import &#123; Request, Response &#125; from 'express';
+import * as usersService from './users.service';
+
+export async function createUser(req: Request, res: Response) &#123;
+  const user = await usersService.createUser(req.body);
+  res.status(201).json(&#123; data: user &#125;);
+&#125;
+
+export async function login(req: Request, res: Response) &#123;
+  const result = await usersService.login(req.body);
+  res.json(&#123; data: result &#125;);
+&#125;
+
+export async function getMe(req: Request, res: Response) &#123;
+  res.json(&#123; data: req.user &#125;);
+&#125;
+
+export async function getUserById(req: Request, res: Response) &#123;
+  const user = await usersService.getUserById(req.params.id!);
+  res.json(&#123; data: user &#125;);
+&#125;
+
+export async function updateUser(req: Request, res: Response) &#123;
+  const user = await usersService.updateUser(req.params.id!, req.body);
+  res.json(&#123; data: user &#125;);
+&#125;
+
+export async function deleteUser(req: Request, res: Response) &#123;
+  await usersService.deleteUser(req.params.id!);
+  res.status(204).send();
+&#125;</code></pre>
+
+<pre><code>// src/modules/users/users.router.ts
+import &#123; Router &#125; from 'express';
+import &#123; validate &#125; from '../../middleware/validate';
+import &#123; requireAuth &#125; from '../../middleware/auth';
+import * as usersController from './users.controller';
+import &#123; createUserSchema, loginSchema, updateUserSchema &#125; from './users.schema';
+
+const router = Router();
+
+// Public routes
+router.post('/register', validate(createUserSchema), usersController.createUser);
+router.post('/login', validate(loginSchema), usersController.login);
+
+// Protected routes
+router.get('/me', requireAuth, usersController.getMe);
+router.get('/:id', requireAuth, usersController.getUserById);
+router.patch('/:id', requireAuth, validate(updateUserSchema), usersController.updateUser);
+router.delete('/:id', requireAuth, usersController.deleteUser);
+
+export &#123; router as usersRouter &#125;;</code></pre>
+
+<h2>Central Error Handler</h2>
+
+<pre><code>// src/middleware/errorHandler.ts
+import &#123; Request, Response, NextFunction &#125; from 'express';
+import &#123; AppError &#125; from '../lib/errors';
+import &#123; logger &#125; from '../lib/logger';
+import &#123; env &#125; from '../config/env';
+
+export function errorHandler(
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) &#123;
+  if (err instanceof AppError) &#123;
+    // Known, intentional errors
+    if (err.statusCode &gt;= 500) &#123;
+      logger.error(&#123; err, req: &#123; method: req.method, url: req.url &#125; &#125;);
+    &#125;
+
+    res.status(err.statusCode).json(&#123;
+      error: &#123;
+        code: err.code,
+        message: err.message,
+        ...(err.details ? &#123; details: err.details &#125; : &#123;&#125;),
+        ...(env.NODE_ENV === 'development' ? &#123; stack: err.stack &#125; : &#123;&#125;),
+      &#125;,
+    &#125;);
+  &#125; else &#123;
+    // Unknown errors — log everything, expose little
+    logger.error(&#123; err, req: &#123; method: req.method, url: req.url &#125; &#125;);
+
+    res.status(500).json(&#123;
+      error: &#123;
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred',
+        ...(env.NODE_ENV === 'development' ? &#123; originalError: err.message &#125; : &#123;&#125;),
+      &#125;,
+    &#125;);
+  &#125;
+&#125;</code></pre>
+
+<h2>Async Handler Wrapper</h2>
+
+<p>
+  Express 4 doesn't catch async errors automatically. Wrap every async route handler:
+</p>
+
+<pre><code>// src/lib/asyncHandler.ts
+import &#123; Request, Response, NextFunction, RequestHandler &#125; from 'express';
+
+type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) =&gt; Promise&lt;void&gt;;
+
+export function asyncHandler(fn: AsyncRequestHandler): RequestHandler &#123;
+  return (req, res, next) =&gt; &#123;
+    fn(req, res, next).catch(next);
+  &#125;;
+&#125;
+
+// Usage in router:
+router.get('/:id', requireAuth, asyncHandler(usersController.getUserById));
+
+// Note: Express 5 (currently in beta) handles async errors natively,
+// making asyncHandler unnecessary. Consider using express@next.</code></pre>
+
+<h2>App Assembly</h2>
+
+<pre><code>// src/app.ts
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import &#123; env &#125; from './config/env';
+import &#123; errorHandler &#125; from './middleware/errorHandler';
+import &#123; usersRouter &#125; from './modules/users/users.router';
+import &#123; logger &#125; from './lib/logger';
+
+export const app = express();
+
+// Security middleware
+app.use(helmet());
+app.use(cors(&#123; origin: env.CORS_ORIGIN, credentials: true &#125;));
+app.use(rateLimit(&#123;
+  windowMs: env.RATE_LIMIT_WINDOW_MS,
+  max: env.RATE_LIMIT_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+&#125;));
+
+// Body parsing
+app.use(express.json(&#123; limit: '10mb' &#125;));
+app.use(express.urlencoded(&#123; extended: true &#125;));
+
+// Request logging
+app.use((req, res, next) =&gt; &#123;
+  const start = Date.now();
+  res.on('finish', () =&gt; &#123;
+    logger.info(&#123;
+      method: req.method,
+      url: req.url,
+      status: res.statusCode,
+      duration: Date.now() - start,
+    &#125;);
+  &#125;);
+  next();
+&#125;);
+
+// Routes
+app.get('/health', (req, res) =&gt; res.json(&#123; status: 'ok', uptime: process.uptime() &#125;));
+app.use('/api/v1/users', usersRouter);
+
+// 404 handler
+app.use((req, res) =&gt; &#123;
+  res.status(404).json(&#123; error: &#123; code: 'NOT_FOUND', message: 'Route not found' &#125; &#125;);
+&#125;);
+
+// Central error handler (must be last)
+app.use(errorHandler);</code></pre>
+
+<h2>Testing with Supertest</h2>
+
+<pre><code>// src/modules/users/__tests__/users.test.ts
+import request from 'supertest';
+import &#123; app &#125; from '../../../app';
+import &#123; db &#125; from '../../../lib/db';
+
+beforeEach(async () =&gt; &#123;
+  // Clean database before each test (use transactions for speed)
+  await db.user.deleteMany();
+&#125;);
+
+afterAll(async () =&gt; &#123;
+  await db.$disconnect();
+&#125;);
+
+describe('POST /api/v1/users/register', () =&gt; &#123;
+  it('creates a new user', async () =&gt; &#123;
+    const res = await request(app)
+      .post('/api/v1/users/register')
+      .send(&#123; email: 'test@example.com', password: 'Password123!', name: 'Test User' &#125;);
+
+    expect(res.status).toBe(201);
+    expect(res.body.data).toMatchObject(&#123;
+      email: 'test@example.com',
+      name: 'Test User',
+    &#125;);
+    expect(res.body.data.password).toBeUndefined(); // Never return password
+  &#125;);
+
+  it('returns 409 for duplicate email', async () =&gt; &#123;
+    const user = &#123; email: 'dup@example.com', password: 'Password123!', name: 'Test' &#125;;
+    await request(app).post('/api/v1/users/register').send(user);
+    const res = await request(app).post('/api/v1/users/register').send(user);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error.code).toBe('CONFLICT');
+  &#125;);
+
+  it('validates email format', async () =&gt; &#123;
+    const res = await request(app)
+      .post('/api/v1/users/register')
+      .send(&#123; email: 'notanemail', password: 'Password123!', name: 'Test' &#125;);
+
+    expect(res.status).toBe(422);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+  &#125;);
+&#125;);</code></pre>
+
+<h2>Key Takeaways</h2>
+
+<ul>
+  <li>Validate environment variables at startup with Zod — don't discover missing env vars in production</li>
+  <li>Use custom error classes with status codes and error codes for consistent API responses</li>
+  <li>Keep controllers thin: just call the service and send the response</li>
+  <li>Always wrap async route handlers to ensure errors propagate to the central error handler</li>
+  <li>Never return <code>password</code> fields — use Prisma's <code>omit</code> or explicit <code>select</code></li>
+  <li>Test the HTTP layer with Supertest, not just unit tests on services</li>
+</ul>
+
+<p>
+  For more on securing your API, see our guide on <a href="/blog/how-to-secure-nodejs-api-2026">securing Node.js APIs in 2026</a> and <a href="/blog/jwt-token-explained">how JWT tokens work</a>.
+</p>
+
+</BlogLayout>

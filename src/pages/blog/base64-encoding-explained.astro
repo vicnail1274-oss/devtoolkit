@@ -1,5 +1,39 @@
 ---
 import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeBlock = [
+  "@font-face {'{'}",
+  "  font-family: 'CustomFont';",
+  "  src: url(data:font/woff2;base64,d09GMgABAA...) format('woff2');",
+  "{'}'}"
+].join('\n');
+
+const codeBlock2 = [
+  'package main',
+  '',
+  'import (',
+  '    "encoding/base64"',
+  '    "fmt"',
+  ')',
+  '',
+  "func main() {'{'}",
+  '    // Standard encoding',
+  '    encoded := base64.StdEncoding.EncodeToString([]byte("Hello, World!"))',
+  '    fmt.Println(encoded) // SGVsbG8sIFdvcmxkIQ==',
+  '',
+  '    // Decode',
+  '    decoded, _ := base64.StdEncoding.DecodeString(encoded)',
+  '    fmt.Println(string(decoded)) // Hello, World!',
+  '',
+  '    // URL-safe encoding',
+  '    urlSafe := base64.URLEncoding.EncodeToString([]byte("data+/special"))',
+  '    fmt.Println(urlSafe)',
+  '',
+  '    // No-padding',
+  '    noPad := base64.RawURLEncoding.EncodeToString([]byte("data"))',
+  '    fmt.Println(noPad) // ZGF0YQ',
+  "{'}'}"
+].join('\n');
 ---
 
 <BlogLayout
@@ -101,10 +135,7 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
   You can also embed fonts in CSS:
 </p>
 
-<pre><code>@font-face {'{'}
-  font-family: 'CustomFont';
-  src: url(data:font/woff2;base64,d09GMgABAA...) format('woff2');
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock&#125;></code></pre>
 
 <h3>2. HTTP Authentication</h3>
 
@@ -219,7 +250,7 @@ const encoded = btoa(String.fromCodePoint(
 ));
 
 // Unicode-safe decode
-const bytes = Uint8Array.from(atob(encoded), c => c.codePointAt(0));
+const bytes = Uint8Array.from(atob(encoded), c =&gt; c.codePointAt(0));
 const decoded = new TextDecoder().decode(bytes);</code></pre>
 
 <p>
@@ -257,30 +288,7 @@ no_pad = base64.urlsafe_b64encode(b'data').decode('ascii').rstrip('=')
 
 <h2>Base64 in Go</h2>
 
-<pre><code>package main
-
-import (
-    "encoding/base64"
-    "fmt"
-)
-
-func main() {'{'}
-    // Standard encoding
-    encoded := base64.StdEncoding.EncodeToString([]byte("Hello, World!"))
-    fmt.Println(encoded) // SGVsbG8sIFdvcmxkIQ==
-
-    // Decode
-    decoded, _ := base64.StdEncoding.DecodeString(encoded)
-    fmt.Println(string(decoded)) // Hello, World!
-
-    // URL-safe encoding
-    urlSafe := base64.URLEncoding.EncodeToString([]byte("data+/special"))
-    fmt.Println(urlSafe)
-
-    // No-padding
-    noPad := base64.RawURLEncoding.EncodeToString([]byte("data"))
-    fmt.Println(noPad) // ZGF0YQ
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock2&#125;></code></pre>
 
 <h2>Base64 in the Command Line</h2>
 
@@ -297,10 +305,10 @@ echo "SGVsbG8sIFdvcmxkIQ==" | base64 --decode
 # Hello, World!
 
 # Encode a file
-base64 image.png > image.b64
+base64 image.png &gt; image.b64
 
 # Decode a file
-base64 --decode image.b64 > image.png
+base64 --decode image.b64 &gt; image.png
 
 # macOS uses -D instead of --decode
 echo "SGVsbG8=" | base64 -D</code></pre>

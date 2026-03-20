@@ -1,5 +1,160 @@
 ---
 import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeBlock = [
+  'GET /api/users/42 HTTP/1.1',
+  '',
+  'HTTP/1.1 200 OK',
+  'Content-Type: application/json',
+  '',
+  "{'{'}",
+  '  "id": 42,',
+  '  "name": "Jane Doe",',
+  '  "email": "jane@example.com"',
+  "{'}'}"
+].join('\n');
+
+const codeBlock2 = [
+  'POST /api/users HTTP/1.1',
+  'Content-Type: application/json',
+  '',
+  '{\'{\'} "name": "John Smith", "email": "john@example.com" {\'}\'}',
+  '',
+  'HTTP/1.1 201 Created',
+  'Location: /api/users/43',
+  'Content-Type: application/json',
+  '',
+  "{'{'}",
+  '  "id": 43,',
+  '  "name": "John Smith",',
+  '  "email": "john@example.com"',
+  "{'}'}"
+].join('\n');
+
+const codeBlock3 = [
+  'POST /api/users HTTP/1.1',
+  'Content-Type: application/json',
+  '',
+  '{\'{\'} "email": "not-an-email", "name": "" {\'}\'}',
+  '',
+  'HTTP/1.1 400 Bad Request',
+  'Content-Type: application/json',
+  '',
+  "{'{'}",
+  '  "error": "Validation failed",',
+  '  "details": [',
+  '    {\'{\'} "field": "email", "message": "Must be a valid email address" {\'}\'},',
+  '    {\'{\'} "field": "name", "message": "Name cannot be empty" {\'}\'}',
+  '  ]',
+  "{'}'}"
+].join('\n');
+
+const codeBlock4 = [
+  'GET /api/profile HTTP/1.1',
+  '',
+  'HTTP/1.1 401 Unauthorized',
+  'WWW-Authenticate: Bearer realm="api"',
+  'Content-Type: application/json',
+  '',
+  '{\'{\'} "error": "Authentication required" {\'}\'}'
+].join('\n');
+
+const codeBlock5 = [
+  'GET /api/admin/users HTTP/1.1',
+  'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...',
+  '',
+  'HTTP/1.1 403 Forbidden',
+  'Content-Type: application/json',
+  '',
+  '{\'{\'} "error": "Insufficient permissions" {\'}\'}'
+].join('\n');
+
+const codeBlock6 = [
+  'POST /api/users HTTP/1.1',
+  'Content-Type: application/json',
+  '',
+  '{\'{\'} "email": "existing@example.com", "name": "Jane" {\'}\'}',
+  '',
+  'HTTP/1.1 409 Conflict',
+  'Content-Type: application/json',
+  '',
+  '{\'{\'} "error": "A user with this email already exists" {\'}\'}'
+].join('\n');
+
+const codeBlock7 = [
+  'POST /api/orders HTTP/1.1',
+  'Content-Type: application/json',
+  '',
+  '{\'{\'} "quantity": -5, "product_id": 99 {\'}\'}',
+  '',
+  'HTTP/1.1 422 Unprocessable Entity',
+  'Content-Type: application/json',
+  '',
+  "{'{'}",
+  '  "error": "Unprocessable entity",',
+  '  "details": [',
+  '    {\'{\'} "field": "quantity", "message": "Must be greater than 0" {\'}\'}',
+  '  ]',
+  "{'}'}"
+].join('\n');
+
+const codeBlock8 = [
+  'GET /api/search?q=shoes HTTP/1.1',
+  '',
+  'HTTP/1.1 429 Too Many Requests',
+  'Retry-After: 30',
+  'X-RateLimit-Limit: 100',
+  'X-RateLimit-Remaining: 0',
+  'X-RateLimit-Reset: 1711000000',
+  '',
+  '{\'{\'} "error": "Rate limit exceeded. Try again in 30 seconds." {\'}\'}'
+].join('\n');
+
+const codeBlock9 = [
+  'GET /api/report?month=13 HTTP/1.1',
+  '',
+  'HTTP/1.1 500 Internal Server Error',
+  'Content-Type: application/json',
+  '',
+  "{'{'}",
+  '  "error": "Internal server error",',
+  '  "request_id": "req_abc123"',
+  "{'}'}"
+].join('\n');
+
+const codeBlock10 = [
+  'POST /api/checkout HTTP/1.1',
+  '',
+  'HTTP/1.1 503 Service Unavailable',
+  'Retry-After: 120',
+  'Content-Type: application/json',
+  '',
+  '{\'{\'} "error": "Service temporarily unavailable. Maintenance in progress." {\'}\'}'
+].join('\n');
+
+const codeBlock11 = [
+  'GET /api/analytics/report?range=1year HTTP/1.1',
+  '',
+  'HTTP/1.1 504 Gateway Timeout',
+  'Content-Type: application/json',
+  '',
+  '{\'{\'} "error": "Upstream service timed out" {\'}\'}'
+].join('\n');
+
+const codeBlock12 = [
+  "{'{'}",
+  '  "error": "Validation failed",',
+  '  "code": "VALIDATION_ERROR",',
+  '  "request_id": "req_7f3a9c2b",',
+  '  "details": [',
+  "    {'{'}",
+  '      "field": "email",',
+  '      "code": "INVALID_FORMAT",',
+  '      "message": "Must be a valid email address"',
+  "    {'}'}",
+  '  ]',
+  "{'}'}"
+].join('\n');
 ---
 
 <BlogLayout
@@ -94,16 +249,7 @@ Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=</code></pre>
   The all-purpose success response. The request succeeded and the response body contains the requested data (for GET), the result of an action (for POST), or confirmation of an update (for PUT/PATCH). When in doubt, 200 is the safe choice — but more specific codes are almost always better.
 </p>
 
-<pre><code>GET /api/users/42 HTTP/1.1
-
-HTTP/1.1 200 OK
-Content-Type: application/json
-
-{'{'}
-  "id": 42,
-  "name": "Jane Doe",
-  "email": "jane@example.com"
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock&#125;></code></pre>
 
 <h3>201 Created</h3>
 
@@ -111,20 +257,7 @@ Content-Type: application/json
   The request succeeded and a new resource was created as a result. Always use 201 instead of 200 for successful POST requests that create resources. Best practice is to include a <code>Location</code> header pointing to the newly created resource, and optionally return the created object in the body.
 </p>
 
-<pre><code>POST /api/users HTTP/1.1
-Content-Type: application/json
-
-{'{'} "name": "John Smith", "email": "john@example.com" {'}'}
-
-HTTP/1.1 201 Created
-Location: /api/users/43
-Content-Type: application/json
-
-{'{'}
-  "id": 43,
-  "name": "John Smith",
-  "email": "john@example.com"
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock2&#125;></code></pre>
 
 <h3>204 No Content</h3>
 
@@ -203,21 +336,7 @@ ETag: "abc123"</code></pre>
   The server could not understand the request due to invalid syntax, missing required fields, or malformed data. This is the generic catch-all for client-side input problems.
 </p>
 
-<pre><code>POST /api/users HTTP/1.1
-Content-Type: application/json
-
-{'{'} "email": "not-an-email", "name": "" {'}'}
-
-HTTP/1.1 400 Bad Request
-Content-Type: application/json
-
-{'{'}
-  "error": "Validation failed",
-  "details": [
-    {'{'} "field": "email", "message": "Must be a valid email address" {'}'},
-    {'{'} "field": "name", "message": "Name cannot be empty" {'}'}
-  ]
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock3&#125;></code></pre>
 
 <h3>401 Unauthorized</h3>
 
@@ -225,13 +344,7 @@ Content-Type: application/json
   Despite the name, 401 means <em>unauthenticated</em> — the client has not proved their identity. The server should include a <code>WWW-Authenticate</code> header indicating how to authenticate. Common causes: missing Authorization header, expired JWT token, or invalid API key.
 </p>
 
-<pre><code>GET /api/profile HTTP/1.1
-
-HTTP/1.1 401 Unauthorized
-WWW-Authenticate: Bearer realm="api"
-Content-Type: application/json
-
-{'{'} "error": "Authentication required" {'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock4&#125;></code></pre>
 
 <h3>403 Forbidden</h3>
 
@@ -239,13 +352,7 @@ Content-Type: application/json
   The client is authenticated but does not have permission to access the resource. Unlike 401, re-authenticating will not help — the identity is known but the action is not allowed. Use 403 when a logged-in user tries to access another user's data, or a regular user tries to access an admin endpoint.
 </p>
 
-<pre><code>GET /api/admin/users HTTP/1.1
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
-
-HTTP/1.1 403 Forbidden
-Content-Type: application/json
-
-{'{'} "error": "Insufficient permissions" {'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock5&#125;></code></pre>
 
 <h3>404 Not Found</h3>
 
@@ -270,15 +377,7 @@ Allow: GET, PUT</code></pre>
   The request conflicts with the current state of the server. Common scenarios: trying to create a resource that already exists (duplicate email, duplicate username), or a version conflict in optimistic locking (you tried to update version 5 of a record but it's now version 6).
 </p>
 
-<pre><code>POST /api/users HTTP/1.1
-Content-Type: application/json
-
-{'{'} "email": "existing@example.com", "name": "Jane" {'}'}
-
-HTTP/1.1 409 Conflict
-Content-Type: application/json
-
-{'{'} "error": "A user with this email already exists" {'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock6&#125;></code></pre>
 
 <h3>422 Unprocessable Entity</h3>
 
@@ -286,20 +385,7 @@ Content-Type: application/json
   The server understands the content type and the syntax is correct, but it was unable to process the contained instructions due to semantic errors. While 400 covers syntax errors, 422 is for semantic validation failures — the JSON is valid, but the data doesn't make business sense. Heavily used in Rails APIs and increasingly in REST APIs generally.
 </p>
 
-<pre><code>POST /api/orders HTTP/1.1
-Content-Type: application/json
-
-{'{'} "quantity": -5, "product_id": 99 {'}'}
-
-HTTP/1.1 422 Unprocessable Entity
-Content-Type: application/json
-
-{'{'}
-  "error": "Unprocessable entity",
-  "details": [
-    {'{'} "field": "quantity", "message": "Must be greater than 0" {'}'}
-  ]
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock7&#125;></code></pre>
 
 <h3>429 Too Many Requests</h3>
 
@@ -307,15 +393,7 @@ Content-Type: application/json
   The client has sent too many requests in a given time period (rate limiting). The server should include a <code>Retry-After</code> header indicating when the client can try again. If you're hitting 429s in production, you need to implement backoff and retry logic, or request a higher rate limit from the API provider.
 </p>
 
-<pre><code>GET /api/search?q=shoes HTTP/1.1
-
-HTTP/1.1 429 Too Many Requests
-Retry-After: 30
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 0
-X-RateLimit-Reset: 1711000000
-
-{'{'} "error": "Rate limit exceeded. Try again in 30 seconds." {'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock8&#125;></code></pre>
 
 <p>
   <strong>Debugging tip for 4xx:</strong> Always read the response body — well-designed APIs include a machine-readable error code and a human-readable message explaining what went wrong. A 400 without a body is frustrating to debug. For auth issues, double-check whether the issue is 401 (who are you?) versus 403 (I know who you are, but no). Use <a href="/tools/api-tester">DevToolkit's API Tester</a> to inspect headers and bodies in detail.
@@ -333,15 +411,7 @@ X-RateLimit-Reset: 1711000000
   The generic server error — something went wrong and the server doesn't have a more specific code to describe it. This could be an unhandled exception, a null pointer, a database query that threw an error, or any unexpected condition. Check your server logs immediately when you see 500s.
 </p>
 
-<pre><code>GET /api/report?month=13 HTTP/1.1
-
-HTTP/1.1 500 Internal Server Error
-Content-Type: application/json
-
-{'{'}
-  "error": "Internal server error",
-  "request_id": "req_abc123"
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock9&#125;></code></pre>
 
 <p>
   Good APIs return a <code>request_id</code> or <code>trace_id</code> in 500 responses so you can correlate the client-facing error with a specific log line on the server. Always log the full stack trace server-side, but never expose it to clients.
@@ -366,13 +436,7 @@ Content-Type: text/html
   The server is temporarily unable to handle the request — usually because it's overloaded or down for maintenance. A <code>Retry-After</code> header should indicate when the service will be available again. Unlike 500 (something broke unexpectedly), 503 is often intentional — returned during rolling deployments or maintenance windows.
 </p>
 
-<pre><code>POST /api/checkout HTTP/1.1
-
-HTTP/1.1 503 Service Unavailable
-Retry-After: 120
-Content-Type: application/json
-
-{'{'} "error": "Service temporarily unavailable. Maintenance in progress." {'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock10&#125;></code></pre>
 
 <h3>504 Gateway Timeout</h3>
 
@@ -380,12 +444,7 @@ Content-Type: application/json
   The gateway or proxy did not receive a timely response from the upstream server. Similar to 502, but specifically about a timeout rather than an invalid response. Common causes: a slow database query holding up a request, a microservice taking too long to respond, or network issues between services. Your upstream service is alive but too slow.
 </p>
 
-<pre><code>GET /api/analytics/report?range=1year HTTP/1.1
-
-HTTP/1.1 504 Gateway Timeout
-Content-Type: application/json
-
-{'{'} "error": "Upstream service timed out" {'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock11&#125;></code></pre>
 
 <p>
   <strong>Debugging tip for 5xx:</strong> 500 means check your app logs. 502 means check if the app server is running. 503 means check load and capacity. 504 means profile your slowest operations and check inter-service timeouts. In all cases, set up alerting so you know about 5xx spikes before users report them. The <code>request_id</code> pattern (return an ID in the 5xx response, log the full context server-side) is the fastest way to trace the root cause.
@@ -463,18 +522,7 @@ Content-Type: application/json
   <li>For 500s: a <code>request_id</code> for server-side log correlation.</li>
 </ul>
 
-<pre><code>{'{'}
-  "error": "Validation failed",
-  "code": "VALIDATION_ERROR",
-  "request_id": "req_7f3a9c2b",
-  "details": [
-    {'{'}
-      "field": "email",
-      "code": "INVALID_FORMAT",
-      "message": "Must be a valid email address"
-    {'}'}
-  ]
-{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock12&#125;></code></pre>
 
 <h2>Related Guides and Tools</h2>
 

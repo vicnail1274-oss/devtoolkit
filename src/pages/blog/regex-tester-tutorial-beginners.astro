@@ -363,7 +363,7 @@ abcdefghij</code></pre>
 
 <h3>Strong Password Validation</h3>
 
-<pre><code>^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]&#123;8,&#123;$</code></pre>
+<pre><code>^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&amp;])[A-Za-z\d@$!%*?&amp;]&#123;8,&#123;$</code></pre>
 
 <p>
   This uses <strong>lookaheads</strong> (<code>(?=...)</code>) — a slightly advanced feature that checks conditions without consuming characters. This pattern requires at least one lowercase letter, one uppercase letter, one digit, one special character, and a minimum length of 8. Each <code>(?=.*X)</code> block independently verifies that X exists somewhere in the string.

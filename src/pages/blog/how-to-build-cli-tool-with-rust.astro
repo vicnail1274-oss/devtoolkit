@@ -1,0 +1,1246 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeBlock = [
+  '[package]',
+  'name = "fxr"',
+  'version = "0.1.0"',
+  'edition = "2021"',
+  'description = "A fast file search and transform utility"',
+  'license = "MIT"',
+  'repository = "https://github.com/yourusername/fxr"',
+  'keywords = ["cli", "search", "transform", "files"]',
+  'categories = ["command-line-utilities"]',
+  '',
+  '[dependencies]',
+  'clap = { version = "4.5", features = ["derive"] }',
+  'serde = { version = "1.0", features = ["derive"] }',
+  'serde_json = "1.0"',
+  'serde_yaml = "0.9"',
+  'colored = "2.1"',
+  'anyhow = "1.0"',
+  'thiserror = "1.0"',
+  'indicatif = "0.17"',
+  'walkdir = "2.5"',
+  'regex = "1.10"',
+  '',
+  '[profile.release]',
+  'opt-level = 3',
+  'lto = true',
+  'codegen-units = 1',
+  'strip = true'
+].join('\n');
+
+const codeBlock2 = [
+  'use clap::{Parser, Subcommand};',
+  '',
+  '/// fxr — A fast file search and transform utility',
+  '#[derive(Parser, Debug)]',
+  '#[command(name = "fxr")]',
+  '#[command(version, about, long_about = None)]',
+  'struct Cli {',
+  '    /// Enable verbose output',
+  '    #[arg(short, long, global = true)]',
+  '    verbose: bool,',
+  '',
+  '    /// Output format (text, json, yaml)',
+  '    #[arg(short, long, default_value = "text", global = true)]',
+  '    format: OutputFormat,',
+  '',
+  '    #[command(subcommand)]',
+  '    command: Commands,',
+  '}',
+  '',
+  '#[derive(Debug, Clone, clap::ValueEnum)]',
+  'enum OutputFormat {',
+  '    Text,',
+  '    Json,',
+  '    Yaml,',
+  '}',
+  '',
+  '#[derive(Subcommand, Debug)]',
+  'enum Commands {',
+  '    /// Search for files matching a pattern',
+  '    Find {',
+  '        /// The search pattern (supports regex)',
+  '        pattern: String,',
+  '',
+  '        /// Directory to search in',
+  '        #[arg(short, long, default_value = ".")]',
+  '        dir: String,',
+  '',
+  '        /// Maximum search depth',
+  "        #[arg(short = 'D', long)]",
+  '        max_depth: Option&lt;usize&gt;,',
+  '',
+  '        /// Only show files with this extension',
+  '        #[arg(short, long)]',
+  '        ext: Option&lt;String&gt;,',
+  '    },',
+  '',
+  '    /// Search file contents for a pattern',
+  '    Grep {',
+  '        /// The regex pattern to search for',
+  '        pattern: String,',
+  '',
+  '        /// Directory to search in',
+  '        #[arg(short, long, default_value = ".")]',
+  '        dir: String,',
+  '',
+  '        /// File extensions to include (comma-separated)',
+  '        #[arg(short, long)]',
+  '        include: Option&lt;String&gt;,',
+  '',
+  '        /// Show N lines of context around matches',
+  '        #[arg(short = \'C\', long, default_value = "0")]',
+  '        context: usize,',
+  '    },',
+  '',
+  '    /// Convert files between formats (JSON &lt;-&gt; YAML)',
+  '    Convert {',
+  '        /// Input file path',
+  '        input: String,',
+  '',
+  '        /// Output file path (inferred from extension if omitted)',
+  '        #[arg(short, long)]',
+  '        output: Option&lt;String&gt;,',
+  '',
+  '        /// Pretty-print the output',
+  '        #[arg(short, long)]',
+  '        pretty: bool,',
+  '    },',
+  '',
+  '    /// Show file statistics',
+  '    Stats {',
+  '        /// Directory to analyze',
+  '        #[arg(default_value = ".")]',
+  '        dir: String,',
+  '    },',
+  '}'
+].join('\n');
+
+const codeBlock3 = [
+  'use anyhow::Result;',
+  '',
+  'fn main() -&gt; Result&lt;()&gt; {',
+  '    let cli = Cli::parse();',
+  '',
+  '    match cli.command {',
+  '        Commands::Find { pattern, dir, max_depth, ext } =&gt; {',
+  '            cmd_find(&amp;pattern, &amp;dir, max_depth, ext.as_deref(), cli.verbose, &amp;cli.format)',
+  '        }',
+  '        Commands::Grep { pattern, dir, include, context } =&gt; {',
+  '            cmd_grep(&amp;pattern, &amp;dir, include.as_deref(), context, cli.verbose, &amp;cli.format)',
+  '        }',
+  '        Commands::Convert { input, output, pretty } =&gt; {',
+  '            cmd_convert(&amp;input, output.as_deref(), pretty, cli.verbose)',
+  '        }',
+  '        Commands::Stats { dir } =&gt; {',
+  '            cmd_stats(&amp;dir, &amp;cli.format)',
+  '        }',
+  '    }',
+  '}'
+].join('\n');
+
+const codeBlock4 = [
+  'use std::fs;',
+  'use std::path::Path;',
+  'use anyhow::{Context, Result};',
+  '',
+  'fn read_file_contents(path: &amp;str) -&gt; Result&lt;String&gt; {',
+  '    fs::read_to_string(path)',
+  '        .with_context(|| format!("Failed to read file: {}", path))',
+  '}',
+  '',
+  'fn write_file_contents(path: &amp;str, contents: &amp;str) -&gt; Result&lt;()&gt; {',
+  '    // Ensure parent directory exists',
+  '    if let Some(parent) = Path::new(path).parent() {',
+  '        fs::create_dir_all(parent)',
+  '            .with_context(|| format!("Failed to create directory: {}", parent.display()))?;',
+  '    }',
+  '',
+  '    fs::write(path, contents)',
+  '        .with_context(|| format!("Failed to write file: {}", path))',
+  '}'
+].join('\n');
+
+const codeBlock5 = [
+  'use walkdir::WalkDir;',
+  'use regex::Regex;',
+  'use colored::*;',
+  '',
+  'fn cmd_find(',
+  '    pattern: &amp;str,',
+  '    dir: &amp;str,',
+  '    max_depth: Option&lt;usize&gt;,',
+  '    ext: Option&lt;&amp;str&gt;,',
+  '    verbose: bool,',
+  '    format: &amp;OutputFormat,',
+  ') -&gt; Result&lt;()&gt; {',
+  '    let re = Regex::new(pattern)',
+  '        .with_context(|| format!("Invalid regex pattern: {}", pattern))?;',
+  '',
+  '    let mut walker = WalkDir::new(dir);',
+  '    if let Some(depth) = max_depth {',
+  '        walker = walker.max_depth(depth);',
+  '    }',
+  '',
+  '    let mut matches: Vec&lt;String&gt; = Vec::new();',
+  '',
+  '    for entry in walker.into_iter().filter_map(|e| e.ok()) {',
+  '        let path = entry.path();',
+  '        let file_name = path.file_name()',
+  '            .and_then(|n| n.to_str())',
+  '            .unwrap_or("");',
+  '',
+  '        // Filter by extension if specified',
+  '        if let Some(extension) = ext {',
+  '            match path.extension().and_then(|e| e.to_str()) {',
+  '                Some(e) if e == extension =&gt; {}',
+  '                _ =&gt; continue,',
+  '            }',
+  '        }',
+  '',
+  '        if re.is_match(file_name) {',
+  '            matches.push(path.display().to_string());',
+  '        }',
+  '    }',
+  '',
+  '    match format {',
+  '        OutputFormat::Json =&gt; {',
+  '            println!("{}", serde_json::to_string_pretty(&amp;matches)?);',
+  '        }',
+  '        OutputFormat::Yaml =&gt; {',
+  '            println!("{}", serde_yaml::to_string(&amp;matches)?);',
+  '        }',
+  '        OutputFormat::Text =&gt; {',
+  '            for m in &amp;matches {',
+  '                println!("{}", m.green());',
+  '            }',
+  '            if verbose {',
+  '                eprintln!("{} files found", matches.len().to_string().cyan());',
+  '            }',
+  '        }',
+  '    }',
+  '',
+  '    Ok(())',
+  '}'
+].join('\n');
+
+const codeBlock6 = [
+  'use serde_json::Value as JsonValue;',
+  'use std::path::Path;',
+  '',
+  'fn cmd_convert(',
+  '    input: &amp;str,',
+  '    output: Option&lt;&amp;str&gt;,',
+  '    pretty: bool,',
+  '    verbose: bool,',
+  ') -&gt; Result&lt;()&gt; {',
+  '    let contents = read_file_contents(input)?;',
+  '    let input_ext = Path::new(input)',
+  '        .extension()',
+  '        .and_then(|e| e.to_str())',
+  '        .unwrap_or("");',
+  '',
+  '    // Parse input based on extension',
+  '    let value: JsonValue = match input_ext {',
+  '        "json" =&gt; serde_json::from_str(&amp;contents)',
+  '            .with_context(|| "Failed to parse JSON input")?,',
+  '        "yaml" | "yml" =&gt; serde_yaml::from_str(&amp;contents)',
+  '            .with_context(|| "Failed to parse YAML input")?,',
+  '        _ =&gt; anyhow::bail!("Unsupported input format: .{}", input_ext),',
+  '    };',
+  '',
+  '    // Determine output format',
+  '    let output_path = output.unwrap_or_else(|| {',
+  '        // Leaked string for simplicity; in production, use a proper buffer',
+  '        match input_ext {',
+  '            "json" =&gt; "output.yaml",',
+  '            _ =&gt; "output.json",',
+  '        }',
+  '    });',
+  '',
+  '    let output_ext = Path::new(output_path)',
+  '        .extension()',
+  '        .and_then(|e| e.to_str())',
+  '        .unwrap_or("json");',
+  '',
+  '    let result = match output_ext {',
+  '        "yaml" | "yml" =&gt; serde_yaml::to_string(&amp;value)?,',
+  '        "json" if pretty =&gt; serde_json::to_string_pretty(&amp;value)?,',
+  '        "json" =&gt; serde_json::to_string(&amp;value)?,',
+  '        _ =&gt; anyhow::bail!("Unsupported output format: .{}", output_ext),',
+  '    };',
+  '',
+  '    write_file_contents(output_path, &amp;result)?;',
+  '',
+  '    if verbose {',
+  '        eprintln!(',
+  '            "{} {} -> {} ({})",',
+  '            "Converted:".green().bold(),',
+  '            input,',
+  '            output_path,',
+  '            format!("{} bytes", result.len()).dimmed()',
+  '        );',
+  '    }',
+  '',
+  '    Ok(())',
+  '}'
+].join('\n');
+
+const codeBlock7 = [
+  'use colored::*;',
+  '',
+  'fn print_match(path: &amp;str, line_num: usize, line: &amp;str, pattern: &amp;Regex) {',
+  '    let path_display = path.blue().bold();',
+  '    let line_display = line_num.to_string().yellow();',
+  '',
+  '    // Highlight the matched portion',
+  '    let highlighted = pattern.replace_all(line, |caps: &amp;regex::Captures| {',
+  '        caps[0].red().bold().to_string()',
+  '    });',
+  '',
+  '    println!("{}:{}: {}", path_display, line_display, highlighted);',
+  '}',
+  '',
+  'fn print_header(text: &amp;str) {',
+  '    println!("\\n{}", text.white().bold().underline());',
+  '}',
+  '',
+  'fn print_success(text: &amp;str) {',
+  '    println!("{} {}", "✓".green().bold(), text);',
+  '}',
+  '',
+  'fn print_error(text: &amp;str) {',
+  '    eprintln!("{} {}", "✗".red().bold(), text);',
+  '}',
+  '',
+  'fn print_warning(text: &amp;str) {',
+  '    eprintln!("{} {}", "⚠".yellow().bold(), text);',
+  '}'
+].join('\n');
+
+const codeBlock8 = [
+  'use indicatif::{ProgressBar, ProgressStyle};',
+  '',
+  'fn cmd_stats(dir: &amp;str, format: &amp;OutputFormat) -&gt; Result&lt;()&gt; {',
+  '    // First pass: count total entries for the progress bar',
+  '    let total: u64 = WalkDir::new(dir)',
+  '        .into_iter()',
+  '        .filter_map(|e| e.ok())',
+  '        .count() as u64;',
+  '',
+  '    let pb = ProgressBar::new(total);',
+  '    pb.set_style(',
+  '        ProgressStyle::default_bar()',
+  '            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} ({eta})")?',
+  '            .progress_chars("█▉▊▋▌▍▎▏  ")',
+  '    );',
+  '',
+  '    let mut stats = FileStats::default();',
+  '',
+  '    for entry in WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {',
+  '        pb.inc(1);',
+  '',
+  '        let path = entry.path();',
+  '        if path.is_file() {',
+  '            stats.total_files += 1;',
+  '',
+  '            if let Ok(metadata) = path.metadata() {',
+  '                stats.total_bytes += metadata.len();',
+  '            }',
+  '',
+  '            if let Some(ext) = path.extension().and_then(|e| e.to_str()) {',
+  '                *stats.by_extension',
+  '                    .entry(ext.to_string())',
+  '                    .or_insert(0) += 1;',
+  '            }',
+  '        } else if path.is_dir() {',
+  '            stats.total_dirs += 1;',
+  '        }',
+  '    }',
+  '',
+  '    pb.finish_with_message("Done!");',
+  '',
+  '    // Output stats',
+  '    match format {',
+  '        OutputFormat::Json =&gt; {',
+  '            println!("{}", serde_json::to_string_pretty(&amp;stats)?);',
+  '        }',
+  '        OutputFormat::Text =&gt; {',
+  '            print_header("Directory Statistics");',
+  '            println!("  Files:       {}", stats.total_files.to_string().cyan());',
+  '            println!("  Directories: {}", stats.total_dirs.to_string().cyan());',
+  '            println!("  Total size:  {}", format_bytes(stats.total_bytes).cyan());',
+  '            println!();',
+  '            print_header("Files by Extension");',
+  '            let mut sorted: Vec&lt;_&gt; = stats.by_extension.iter().collect();',
+  '            sorted.sort_by(|a, b| b.1.cmp(a.1));',
+  '            for (ext, count) in sorted.iter().take(15) {',
+  '                println!("  .{:&lt;12} {}", ext.yellow(), count);',
+  '            }',
+  '        }',
+  '        OutputFormat::Yaml =&gt; {',
+  '            println!("{}", serde_yaml::to_string(&amp;stats)?);',
+  '        }',
+  '    }',
+  '',
+  '    Ok(())',
+  '}',
+  '',
+  '#[derive(Default, serde::Serialize)]',
+  'struct FileStats {',
+  '    total_files: usize,',
+  '    total_dirs: usize,',
+  '    total_bytes: u64,',
+  '    by_extension: std::collections::HashMap&lt;String, usize&gt;,',
+  '}',
+  '',
+  'fn format_bytes(bytes: u64) -&gt; String {',
+  '    const UNITS: &amp;[&amp;str] = &amp;["B", "KB", "MB", "GB", "TB"];',
+  '    let mut size = bytes as f64;',
+  '    let mut unit_idx = 0;',
+  '    while size &gt;= 1024.0 &amp;&amp; unit_idx &lt; UNITS.len() - 1 {',
+  '        size /= 1024.0;',
+  '        unit_idx += 1;',
+  '    }',
+  '    format!("{:.1} {}", size, UNITS[unit_idx])',
+  '}'
+].join('\n');
+
+const codeBlock9 = [
+  'use thiserror::Error;',
+  '',
+  '#[derive(Error, Debug)]',
+  'enum FxrError {',
+  '    #[error("Unsupported file format: {0}")]',
+  '    UnsupportedFormat(String),',
+  '',
+  '    #[error("Pattern compilation failed: {0}")]',
+  '    InvalidPattern(#[from] regex::Error),',
+  '',
+  '    #[error("File not found: {path}")]',
+  '    FileNotFound {',
+  '        path: String,',
+  '        #[source]',
+  '        source: std::io::Error,',
+  '    },',
+  '',
+  '    #[error("Conversion failed: {from_format} -> {to_format}")]',
+  '    ConversionFailed {',
+  '        from_format: String,',
+  '        to_format: String,',
+  '        #[source]',
+  '        source: anyhow::Error,',
+  '    },',
+  '}'
+].join('\n');
+
+const codeBlock10 = [
+  'use anyhow::{Context, Result, bail, ensure};',
+  '',
+  'fn process_config(path: &amp;str) -&gt; Result&lt;Config&gt; {',
+  '    // bail! returns an error immediately',
+  '    ensure!(',
+  '        Path::new(path).exists(),',
+  '        "Config file does not exist: {}",',
+  '        path',
+  '    );',
+  '',
+  '    let contents = fs::read_to_string(path)',
+  '        .with_context(|| format!("Could not read config file: {}", path))?;',
+  '',
+  '    let config: Config = serde_json::from_str(&amp;contents)',
+  '        .with_context(|| format!("Config file contains invalid JSON: {}", path))?;',
+  '',
+  '    // Validate config',
+  '    if config.max_depth == 0 {',
+  '        bail!("max_depth must be greater than 0");',
+  '    }',
+  '',
+  '    Ok(config)',
+  '}'
+].join('\n');
+
+const codeBlock11 = [
+  'fn cmd_grep(',
+  '    pattern: &amp;str,',
+  '    dir: &amp;str,',
+  '    include: Option&lt;&amp;str&gt;,',
+  '    context: usize,',
+  '    verbose: bool,',
+  '    format: &amp;OutputFormat,',
+  ') -&gt; Result&lt;()&gt; {',
+  '    let re = Regex::new(pattern)',
+  '        .with_context(|| format!("Invalid regex: {}", pattern))?;',
+  '',
+  "    let extensions: Option&lt;Vec&lt;&amp;str&gt;&gt; = include.map(|s| s.split(',').collect());",
+  '',
+  '    let mut results: Vec&lt;GrepMatch&gt; = Vec::new();',
+  '    let mut files_searched = 0u64;',
+  '',
+  '    let spinner = ProgressBar::new_spinner();',
+  '    spinner.set_style(',
+  '        ProgressStyle::default_spinner()',
+  '            .template("{spinner:.green} Searching... {msg}")?',
+  '    );',
+  '',
+  '    for entry in WalkDir::new(dir)',
+  '        .into_iter()',
+  '        .filter_map(|e| e.ok())',
+  '        .filter(|e| e.path().is_file())',
+  '    {',
+  '        let path = entry.path();',
+  '',
+  '        // Filter by extension',
+  '        if let Some(ref exts) = extensions {',
+  '            match path.extension().and_then(|e| e.to_str()) {',
+  '                Some(ext) if exts.contains(&amp;ext) =&gt; {}',
+  '                _ =&gt; continue,',
+  '            }',
+  '        }',
+  '',
+  '        // Skip binary files',
+  '        let contents = match fs::read_to_string(path) {',
+  '            Ok(c) =&gt; c,',
+  "            Err(_) =&gt; continue, // Silently skip files we can't read as UTF-8",
+  '        };',
+  '',
+  '        files_searched += 1;',
+  '        spinner.set_message(format!("{} files", files_searched));',
+  '',
+  '        for (line_idx, line) in contents.lines().enumerate() {',
+  '            if re.is_match(line) {',
+  '                results.push(GrepMatch {',
+  '                    path: path.display().to_string(),',
+  '                    line_number: line_idx + 1,',
+  '                    line: line.to_string(),',
+  '                });',
+  '            }',
+  '        }',
+  '    }',
+  '',
+  '    spinner.finish_and_clear();',
+  '',
+  '    match format {',
+  '        OutputFormat::Json =&gt; {',
+  '            println!("{}", serde_json::to_string_pretty(&amp;results)?);',
+  '        }',
+  '        OutputFormat::Text =&gt; {',
+  '            for m in &amp;results {',
+  '                print_match(&amp;m.path, m.line_number, &amp;m.line, &amp;re);',
+  '            }',
+  '            if verbose {',
+  '                eprintln!(',
+  '                    "\\n{} matches in {} files ({} files searched)",',
+  '                    results.len().to_string().green().bold(),',
+  '                    results.iter()',
+  '                        .map(|m| &amp;m.path)',
+  '                        .collect::&lt;std::collections::HashSet&lt;_&gt;&gt;()',
+  '                        .len(),',
+  '                    files_searched,',
+  '                );',
+  '            }',
+  '        }',
+  '        OutputFormat::Yaml =&gt; {',
+  '            println!("{}", serde_yaml::to_string(&amp;results)?);',
+  '        }',
+  '    }',
+  '',
+  '    Ok(())',
+  '}',
+  '',
+  '#[derive(serde::Serialize)]',
+  'struct GrepMatch {',
+  '    path: String,',
+  '    line_number: usize,',
+  '    line: String,',
+  '}'
+].join('\n');
+
+const codeBlock12 = [
+  '#[cfg(test)]',
+  'mod tests {',
+  '    use super::*;',
+  '',
+  '    #[test]',
+  '    fn test_format_bytes() {',
+  '        assert_eq!(format_bytes(0), "0.0 B");',
+  '        assert_eq!(format_bytes(1023), "1023.0 B");',
+  '        assert_eq!(format_bytes(1024), "1.0 KB");',
+  '        assert_eq!(format_bytes(1_048_576), "1.0 MB");',
+  '        assert_eq!(format_bytes(1_073_741_824), "1.0 GB");',
+  '    }',
+  '',
+  '    #[test]',
+  '    fn test_file_stats_default() {',
+  '        let stats = FileStats::default();',
+  '        assert_eq!(stats.total_files, 0);',
+  '        assert_eq!(stats.total_dirs, 0);',
+  '        assert_eq!(stats.total_bytes, 0);',
+  '        assert!(stats.by_extension.is_empty());',
+  '    }',
+  '}'
+].join('\n');
+
+const codeBlock13 = [
+  '// tests/integration_test.rs',
+  'use assert_cmd::Command;',
+  'use predicates::prelude::*;',
+  'use tempfile::TempDir;',
+  'use std::fs;',
+  '',
+  '#[test]',
+  'fn test_find_command() {',
+  '    let dir = TempDir::new().unwrap();',
+  '    fs::write(dir.path().join("hello.rs"), "fn main() {}").unwrap();',
+  '    fs::write(dir.path().join("hello.txt"), "hello world").unwrap();',
+  '',
+  '    Command::cargo_bin("fxr")',
+  '        .unwrap()',
+  '        .args(&amp;["find", r"\\.rs$", "-d", dir.path().to_str().unwrap()])',
+  '        .assert()',
+  '        .success()',
+  '        .stdout(predicate::str::contains("hello.rs"));',
+  '}',
+  '',
+  '#[test]',
+  'fn test_convert_json_to_yaml() {',
+  '    let dir = TempDir::new().unwrap();',
+  '    let input = dir.path().join("data.json");',
+  '    let output = dir.path().join("data.yaml");',
+  '',
+  '    fs::write(&amp;input, r#"{"name": "fxr", "version": 1}"#).unwrap();',
+  '',
+  '    Command::cargo_bin("fxr")',
+  '        .unwrap()',
+  '        .args(&amp;[',
+  '            "convert",',
+  '            input.to_str().unwrap(),',
+  '            "-o", output.to_str().unwrap(),',
+  '        ])',
+  '        .assert()',
+  '        .success();',
+  '',
+  '    let yaml_content = fs::read_to_string(&amp;output).unwrap();',
+  '    assert!(yaml_content.contains("name: fxr"));',
+  '    assert!(yaml_content.contains("version: 1"));',
+  '}',
+  '',
+  '#[test]',
+  'fn test_invalid_regex_shows_error() {',
+  '    Command::cargo_bin("fxr")',
+  '        .unwrap()',
+  '        .args(&amp;["find", "[invalid"])',
+  '        .assert()',
+  '        .failure()',
+  '        .stderr(predicate::str::contains("Invalid regex"));',
+  '}',
+  '',
+  '#[test]',
+  'fn test_json_output_format() {',
+  '    let dir = TempDir::new().unwrap();',
+  '    fs::write(dir.path().join("test.rs"), "content").unwrap();',
+  '',
+  '    Command::cargo_bin("fxr")',
+  '        .unwrap()',
+  '        .args(&amp;[',
+  '            "--format", "json",',
+  '            "find", "test",',
+  '            "-d", dir.path().to_str().unwrap(),',
+  '        ])',
+  '        .assert()',
+  '        .success()',
+  '        .stdout(predicate::str::starts_with("["));',
+  '}'
+].join('\n');
+
+const codeBlock14 = [
+  '# .github/workflows/release.yml',
+  'name: Release',
+  'on:',
+  '  push:',
+  "    tags: ['v*']",
+  '',
+  'jobs:',
+  '  build:',
+  '    strategy:',
+  '      matrix:',
+  '        include:',
+  '          - os: ubuntu-latest',
+  '            target: x86_64-unknown-linux-musl',
+  '            artifact: fxr-linux-amd64',
+  '          - os: ubuntu-latest',
+  '            target: aarch64-unknown-linux-musl',
+  '            artifact: fxr-linux-arm64',
+  '          - os: macos-latest',
+  '            target: x86_64-apple-darwin',
+  '            artifact: fxr-macos-amd64',
+  '          - os: macos-latest',
+  '            target: aarch64-apple-darwin',
+  '            artifact: fxr-macos-arm64',
+  '          - os: windows-latest',
+  '            target: x86_64-pc-windows-msvc',
+  '            artifact: fxr-windows-amd64.exe',
+  '    runs-on: ${{ matrix.os }}',
+  '    steps:',
+  '      - uses: actions/checkout@v4',
+  '      - uses: dtolnay/rust-toolchain@stable',
+  '        with:',
+  '          targets: ${{ matrix.target }}',
+  '      - run: cargo build --release --target ${{ matrix.target }}',
+  '      - uses: actions/upload-artifact@v4',
+  '        with:',
+  '          name: ${{ matrix.artifact }}',
+  '          path: target/${{ matrix.target }}/release/fxr*'
+].join('\n');
+
+const codeBlock15 = [
+  'use anyhow::{Context, Result};',
+  'use clap::{Parser, Subcommand};',
+  'use colored::*;',
+  'use indicatif::{ProgressBar, ProgressStyle};',
+  'use regex::Regex;',
+  'use std::collections::HashMap;',
+  'use std::fs;',
+  'use std::path::Path;',
+  'use walkdir::WalkDir;',
+  '',
+  '#[derive(Parser, Debug)]',
+  '#[command(name = "fxr", version, about = "A fast file search and transform utility")]',
+  'struct Cli {',
+  '    #[arg(short, long, global = true)]',
+  '    verbose: bool,',
+  '',
+  '    #[arg(short, long, default_value = "text", global = true)]',
+  '    format: OutputFormat,',
+  '',
+  '    #[command(subcommand)]',
+  '    command: Commands,',
+  '}',
+  '',
+  '#[derive(Debug, Clone, clap::ValueEnum)]',
+  'enum OutputFormat { Text, Json, Yaml }',
+  '',
+  '#[derive(Subcommand, Debug)]',
+  'enum Commands {',
+  '    Find { pattern: String, #[arg(short, long, default_value = ".")] dir: String, #[arg(short = \'D\', long)] max_depth: Option&lt;usize&gt;, #[arg(short, long)] ext: Option&lt;String&gt; },',
+  '    Grep { pattern: String, #[arg(short, long, default_value = ".")] dir: String, #[arg(short, long)] include: Option&lt;String&gt;, #[arg(short = \'C\', long, default_value = "0")] context: usize },',
+  '    Convert { input: String, #[arg(short, long)] output: Option&lt;String&gt;, #[arg(short, long)] pretty: bool },',
+  '    Stats { #[arg(default_value = ".")] dir: String },',
+  '}',
+  '',
+  'fn main() -&gt; Result&lt;()&gt; {',
+  '    let cli = Cli::parse();',
+  '    match cli.command {',
+  '        Commands::Find { pattern, dir, max_depth, ext } =&gt;',
+  '            cmd_find(&amp;pattern, &amp;dir, max_depth, ext.as_deref(), cli.verbose, &amp;cli.format),',
+  '        Commands::Grep { pattern, dir, include, context } =&gt;',
+  '            cmd_grep(&amp;pattern, &amp;dir, include.as_deref(), context, cli.verbose, &amp;cli.format),',
+  '        Commands::Convert { input, output, pretty } =&gt;',
+  '            cmd_convert(&amp;input, output.as_deref(), pretty, cli.verbose),',
+  '        Commands::Stats { dir } =&gt;',
+  '            cmd_stats(&amp;dir, &amp;cli.format),',
+  '    }',
+  '}',
+  '',
+  '// ... (all functions defined earlier in this tutorial)'
+].join('\n');
+
+const codeBlock16 = [
+  'use std::io::{self, Write, BufWriter};',
+  '',
+  'fn fast_output(lines: &amp;[String]) {',
+  '    let stdout = io::stdout();',
+  '    let mut writer = BufWriter::new(stdout.lock());',
+  '    for line in lines {',
+  '        writeln!(writer, "{}", line).ok();',
+  '    }',
+  '}'
+].join('\n');
+
+const codeBlock17 = [
+  'use clap_complete::{generate, shells::Bash};',
+  '',
+  'fn print_completions(shell: clap_complete::Shell) {',
+  '    let mut cmd = Cli::command();',
+  '    generate(shell, &amp;mut cmd, "fxr", &amp;mut std::io::stdout());',
+  '}'
+].join('\n');
+---
+
+<BlogLayout
+  title="How to Build a CLI Tool with Rust: Step-by-Step Tutorial"
+  description="Learn to build professional command-line tools with Rust. Cover project setup, argument parsing with clap, error handling, file I/O, colored output, testing, and distribution."
+  slug="how-to-build-cli-tool-with-rust"
+  publishDate="2026-03-20"
+  readTime="22 min read"
+>
+
+<p>
+  Rust has quietly become the go-to language for building command-line tools. From <code>ripgrep</code> to <code>bat</code> to <code>fd</code>, the most beloved CLI utilities of the past few years are written in Rust — and for good reason. Rust gives you C-level performance, memory safety without a garbage collector, and an ecosystem of crates specifically designed for CLI development. If you've ever wanted to build a fast, reliable command-line tool that works everywhere, Rust is the right choice.
+</p>
+
+<p>
+  In this tutorial, we'll build a complete CLI tool from scratch — a file search and transform utility called <code>fxr</code> that can find files, search content, convert between formats, and produce beautifully colored output. Along the way, you'll learn argument parsing with clap, error handling with anyhow, JSON and YAML processing, progress bars, testing strategies, cross-compilation, and distribution. By the end, you'll have a production-ready CLI tool and the knowledge to build your own.
+</p>
+
+<p>
+  If you're working with JSON or YAML data alongside your CLI tool, our <a href="/tools/json-formatter">JSON Formatter</a> is great for quickly inspecting output, and the <a href="/blog/json-vs-yaml-vs-toml">JSON vs YAML vs TOML comparison</a> can help you decide which format your tool should support.
+</p>
+
+<h2>Why Rust for CLI Tools?</h2>
+
+<p>
+  Before we start coding, let's understand why Rust dominates the CLI space. There are languages that are easier to learn (Python), languages with larger standard libraries (Go), and languages with faster compile times (C). But Rust hits a sweet spot that matters specifically for CLI tools:
+</p>
+
+<ul>
+  <li><strong>Instant startup time:</strong> Rust binaries start in milliseconds, not seconds. There's no runtime to initialize, no JIT to warm up. When a user types your command, it executes immediately. This matters enormously for CLI tools that get called thousands of times per day in scripts and pipelines.</li>
+  <li><strong>Single binary distribution:</strong> <code>cargo build --release</code> produces one statically-linked binary. No Python virtualenvs, no Node.js installations, no DLL hell. Copy the binary to a machine and it works.</li>
+  <li><strong>Memory safety without GC:</strong> Rust's ownership system prevents segfaults, buffer overflows, and data races at compile time. Your CLI tool won't randomly crash on edge-case inputs.</li>
+  <li><strong>Incredible ecosystem:</strong> Crates like <code>clap</code>, <code>serde</code>, <code>colored</code>, <code>indicatif</code>, and <code>anyhow</code> are mature, well-maintained, and purpose-built for CLI development.</li>
+  <li><strong>Cross-compilation:</strong> Build for Linux, macOS, and Windows from a single machine. Ship your tool everywhere without maintaining separate codebases.</li>
+  <li><strong>Fearless refactoring:</strong> Rust's type system catches entire categories of bugs at compile time. When your tool grows from 200 lines to 20,000, the compiler keeps you safe.</li>
+</ul>
+
+<p>
+  Tools like <code>ripgrep</code> (a grep replacement) are 5-10x faster than their C counterparts while being memory-safe. That's the Rust advantage — you don't have to choose between speed and safety.
+</p>
+
+<h2>Project Setup with Cargo</h2>
+
+<p>
+  Every Rust project starts with Cargo, Rust's build system and package manager. Let's create our project:
+</p>
+
+<pre><code>cargo init fxr
+cd fxr</code></pre>
+
+<p>
+  This creates the following structure:
+</p>
+
+<pre><code>fxr/
+├── Cargo.toml
+├── src/
+│   └── main.rs
+└── .gitignore</code></pre>
+
+<p>
+  The <code>Cargo.toml</code> file is your project manifest. Let's set it up with all the dependencies we'll need:
+</p>
+
+<pre><code set:html=&#123;codeBlock&#125;></code></pre>
+
+<p>
+  Let's break down each dependency:
+</p>
+
+<ul>
+  <li><strong>clap</strong> — argument parsing with derive macros for declarative CLI definitions</li>
+  <li><strong>serde / serde_json / serde_yaml</strong> — serialization and deserialization for JSON and YAML</li>
+  <li><strong>colored</strong> — ANSI color codes for terminal output</li>
+  <li><strong>anyhow</strong> — ergonomic error handling for application code</li>
+  <li><strong>thiserror</strong> — derive macro for defining custom error types</li>
+  <li><strong>indicatif</strong> — progress bars and spinners</li>
+  <li><strong>walkdir</strong> — recursive directory traversal</li>
+  <li><strong>regex</strong> — regular expression matching</li>
+</ul>
+
+<p>
+  The <code>[profile.release]</code> section enables Link-Time Optimization (LTO), reduces codegen units for better optimization, and strips debug symbols — shrinking the final binary significantly.
+</p>
+
+<h2>Argument Parsing with Clap (Derive API)</h2>
+
+<p>
+  Clap's derive API lets you define your entire CLI interface as Rust structs and enums. The library generates the parser, help text, shell completions, and validation from your type definitions. Here's the foundation of our tool:
+</p>
+
+<pre><code set:html=&#123;codeBlock2&#125;></code></pre>
+
+<p>
+  This definition gives us a CLI with four subcommands: <code>find</code>, <code>grep</code>, <code>convert</code>, and <code>stats</code>. Clap automatically generates help text, validates arguments, and parses everything into strongly-typed Rust values. Running <code>fxr --help</code> produces professional documentation with no extra effort.
+</p>
+
+<p>
+  Notice how each subcommand's arguments are self-contained in their enum variant. The <code>#[arg]</code> attributes control short flags, long flags, default values, and help text. The <code>global = true</code> on <code>verbose</code> and <code>format</code> means they can appear before or after the subcommand.
+</p>
+
+<h2>Building Subcommands</h2>
+
+<p>
+  Now let's wire up the main function and implement each subcommand. We'll start with the entry point:
+</p>
+
+<pre><code set:html=&#123;codeBlock3&#125;></code></pre>
+
+<p>
+  The <code>main</code> function returns <code>anyhow::Result&lt;()&gt;</code>, which means any error in our subcommands will be printed to stderr with a nice error message and a non-zero exit code. No manual error printing needed.
+</p>
+
+<h2>Reading and Writing Files</h2>
+
+<p>
+  File I/O is the bread and butter of CLI tools. Rust's standard library makes this straightforward, and <code>anyhow</code> adds context to errors:
+</p>
+
+<pre><code set:html=&#123;codeBlock4&#125;></code></pre>
+
+<p>
+  The <code>.with_context()</code> method from anyhow wraps errors with human-readable context. Instead of a cryptic "No such file or directory" error, the user sees "Failed to read file: config.yaml: No such file or directory". This small detail makes a huge difference in CLI usability.
+</p>
+
+<h3>Implementing the Find Command</h3>
+
+<p>
+  The <code>find</code> subcommand uses <code>walkdir</code> for recursive directory traversal and <code>regex</code> for pattern matching:
+</p>
+
+<pre><code set:html=&#123;codeBlock5&#125;></code></pre>
+
+<h2>JSON and YAML Parsing with Serde</h2>
+
+<p>
+  One of our tool's key features is converting between JSON and YAML. Serde makes this remarkably clean — you deserialize from one format and serialize to another:
+</p>
+
+<pre><code set:html=&#123;codeBlock6&#125;></code></pre>
+
+<p>
+  The beauty of this approach is that <code>serde_json::Value</code> acts as a universal intermediate representation. You can deserialize any JSON or YAML into it, manipulate it if needed, and serialize it back to any format. For more complex tools, you'd define typed structs with <code>#[derive(Serialize, Deserialize)]</code> for compile-time validation.
+</p>
+
+<p>
+  If you're debugging the JSON or YAML output of your tool during development, our <a href="/tools/json-formatter">online JSON Formatter</a> can help you spot structural issues instantly.
+</p>
+
+<h2>Colored Terminal Output</h2>
+
+<p>
+  Color transforms a wall of text into scannable, informative output. The <code>colored</code> crate adds ANSI color codes via method chaining on strings:
+</p>
+
+<pre><code set:html=&#123;codeBlock7&#125;></code></pre>
+
+<p>
+  The <code>colored</code> crate automatically detects whether stdout is a terminal and disables colors when output is piped to another command or a file. This means <code>fxr find "*.rs" | wc -l</code> works correctly without ANSI escape codes polluting the output. You can also force behavior with the <code>NO_COLOR</code> environment variable (respecting the <a href="https://no-color.org/" rel="noopener noreferrer" target="_blank">no-color.org</a> standard).
+</p>
+
+<h2>Progress Bars with Indicatif</h2>
+
+<p>
+  For long-running operations, progress bars give users confidence that the tool is working. Indicatif provides rich, customizable progress indicators:
+</p>
+
+<pre><code set:html=&#123;codeBlock8&#125;></code></pre>
+
+<p>
+  The progress bar shows elapsed time, a visual bar, current position, total count, and estimated time remaining. For operations where you don't know the total count upfront, use <code>ProgressBar::new_spinner()</code> instead for an indeterminate spinner.
+</p>
+
+<h2>Error Handling with Anyhow and Thiserror</h2>
+
+<p>
+  Rust's error handling is one of its greatest strengths, but it can be verbose without the right tools. The community has settled on a two-crate pattern:
+</p>
+
+<ul>
+  <li><strong>anyhow</strong> — for application-level error handling where you want to propagate errors with context</li>
+  <li><strong>thiserror</strong> — for library-level error handling where you want to define structured error types</li>
+</ul>
+
+<p>
+  Here's how to define custom errors with thiserror for the parts of your tool that might be used as a library:
+</p>
+
+<pre><code set:html=&#123;codeBlock9&#125;></code></pre>
+
+<p>
+  In your application code, use anyhow's <code>Result</code> type and the <code>?</code> operator to propagate errors up the call stack. Add context at boundaries where the error message alone wouldn't be helpful:
+</p>
+
+<pre><code set:html=&#123;codeBlock10&#125;></code></pre>
+
+<p>
+  The <code>ensure!</code> macro is like <code>assert!</code> but returns an error instead of panicking. The <code>bail!</code> macro is a shorthand for returning an error immediately. Both produce clean error messages that help users fix the problem.
+</p>
+
+<h2>Implementing the Grep Command</h2>
+
+<p>
+  Let's build the content search subcommand, which ties together file traversal, regex matching, colored output, and a progress bar:
+</p>
+
+<pre><code set:html=&#123;codeBlock11&#125;></code></pre>
+
+<h2>Unit and Integration Testing</h2>
+
+<p>
+  Rust has a built-in test framework that makes testing CLI tools straightforward. You'll typically write three types of tests: unit tests for individual functions, integration tests for subcommands, and snapshot tests for output formatting.
+</p>
+
+<h3>Unit Tests</h3>
+
+<p>
+  Place unit tests in the same file as the code they test, inside a <code>#[cfg(test)]</code> module:
+</p>
+
+<pre><code set:html=&#123;codeBlock12&#125;></code></pre>
+
+<h3>Integration Tests</h3>
+
+<p>
+  Integration tests live in a <code>tests/</code> directory and test your binary as a whole. Use the <code>assert_cmd</code> crate for ergonomic binary testing:
+</p>
+
+<pre><code set:html=&#123;codeBlock13&#125;></code></pre>
+
+<p>
+  Add the test dependencies to your <code>Cargo.toml</code>:
+</p>
+
+<pre><code>[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.1"
+tempfile = "3.10"</code></pre>
+
+<p>
+  Run all tests with <code>cargo test</code>. Rust compiles and runs unit tests and integration tests separately, and reports results clearly.
+</p>
+
+<h2>Cross-Compilation</h2>
+
+<p>
+  One of Rust's greatest strengths for CLI tools is cross-compilation. You can build binaries for Linux, macOS, and Windows from a single machine:
+</p>
+
+<pre><code># Install cross-compilation targets
+rustup target add x86_64-unknown-linux-musl
+rustup target add x86_64-apple-darwin
+rustup target add x86_64-pc-windows-msvc
+rustup target add aarch64-unknown-linux-musl
+rustup target add aarch64-apple-darwin
+
+# Build for Linux (static, works on any distro)
+cargo build --release --target x86_64-unknown-linux-musl
+
+# Build for macOS (Intel)
+cargo build --release --target x86_64-apple-darwin
+
+# Build for macOS (Apple Silicon)
+cargo build --release --target aarch64-apple-darwin
+
+# Build for Windows
+cargo build --release --target x86_64-pc-windows-msvc</code></pre>
+
+<p>
+  For a smoother cross-compilation experience, consider using the <code>cross</code> tool, which uses Docker containers with pre-configured toolchains:
+</p>
+
+<pre><code>cargo install cross
+cross build --release --target x86_64-unknown-linux-musl
+cross build --release --target aarch64-unknown-linux-musl</code></pre>
+
+<p>
+  The <code>musl</code> target produces fully static binaries on Linux that work on any distribution without shared library dependencies — ideal for CLI tools that need to "just work" everywhere.
+</p>
+
+<h2>Distribution: Getting Your Tool to Users</h2>
+
+<p>
+  A great CLI tool is worthless if nobody can install it. Here are the three main distribution channels:
+</p>
+
+<h3>1. Cargo Install (Rust users)</h3>
+
+<p>
+  Publish your crate to <a href="https://crates.io" rel="noopener noreferrer" target="_blank">crates.io</a> and anyone with Rust installed can run:
+</p>
+
+<pre><code>cargo install fxr</code></pre>
+
+<p>
+  To publish, run <code>cargo publish</code> after setting up your crates.io API token. Make sure your <code>Cargo.toml</code> has all required fields: <code>name</code>, <code>version</code>, <code>description</code>, <code>license</code>, and <code>repository</code>.
+</p>
+
+<h3>2. GitHub Releases (Everyone)</h3>
+
+<p>
+  Use GitHub Actions to automatically build and publish binaries for every tagged release. Here's a workflow that builds for all major platforms:
+</p>
+
+<pre><code set:html=&#123;codeBlock14&#125;></code></pre>
+
+<h3>3. Homebrew (macOS/Linux)</h3>
+
+<p>
+  Create a Homebrew formula so users can install with <code>brew install fxr</code>. Create a tap repository and add a formula:
+</p>
+
+<pre><code># Formula/fxr.rb
+class Fxr &lt; Formula
+  desc "A fast file search and transform utility"
+  homepage "https://github.com/yourusername/fxr"
+  version "0.1.0"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/yourusername/fxr/releases/download/v0.1.0/fxr-macos-arm64.tar.gz"
+      sha256 "YOUR_SHA256_HERE"
+    end
+    on_intel do
+      url "https://github.com/yourusername/fxr/releases/download/v0.1.0/fxr-macos-amd64.tar.gz"
+      sha256 "YOUR_SHA256_HERE"
+    end
+  end
+
+  on_linux do
+    url "https://github.com/yourusername/fxr/releases/download/v0.1.0/fxr-linux-amd64.tar.gz"
+    sha256 "YOUR_SHA256_HERE"
+  end
+
+  def install
+    bin.install "fxr"
+  end
+end</code></pre>
+
+<h2>Real-World Example: Putting It All Together</h2>
+
+<p>
+  Let's see our complete tool in action. Here's the full <code>main.rs</code> wired together, showing how all the pieces fit:
+</p>
+
+<pre><code set:html=&#123;codeBlock15&#125;></code></pre>
+
+<p>
+  With the tool built, here are example invocations:
+</p>
+
+<pre><code># Find all Rust files in the current directory
+fxr find "\.rs$"
+
+# Search for TODO comments in Python files
+fxr grep "TODO|FIXME" --include py --verbose
+
+# Convert a JSON config to YAML
+fxr convert config.json -o config.yaml --pretty
+
+# Get directory statistics as JSON
+fxr --format json stats ./src
+
+# Find large files with depth limit
+fxr find ".*" -D 3 --ext log --verbose</code></pre>
+
+<h2>Performance Tips</h2>
+
+<p>
+  CLI tools are expected to be fast. Here are strategies to maximize performance in your Rust CLI:
+</p>
+
+<ul>
+  <li><strong>Use <code>BufReader</code> and <code>BufWriter</code>:</strong> Wrapping file handles in <code>std::io::BufReader</code> reduces syscalls dramatically. For a grep-like tool, this alone can provide 5-10x speedup.</li>
+  <li><strong>Lock stdout:</strong> Each <code>println!</code> call locks and unlocks stdout. For tight loops, lock once and write repeatedly:</li>
+</ul>
+
+<pre><code set:html=&#123;codeBlock16&#125;></code></pre>
+
+<ul>
+  <li><strong>Use <code>rayon</code> for parallelism:</strong> For CPU-bound operations like searching across many files, add <code>rayon</code> and replace <code>.iter()</code> with <code>.par_iter()</code>:</li>
+</ul>
+
+<pre><code>use rayon::prelude::*;
+
+let results: Vec&lt;_&gt; = files
+    .par_iter()
+    .filter_map(|path| search_file(path, &amp;pattern).ok())
+    .flatten()
+    .collect();</code></pre>
+
+<ul>
+  <li><strong>Memory-map large files:</strong> For very large files, use the <code>memmap2</code> crate to avoid loading entire files into memory.</li>
+  <li><strong>Compile with LTO:</strong> The <code>[profile.release]</code> settings we defined earlier enable Link-Time Optimization, which lets the compiler optimize across crate boundaries. This typically provides 10-20% performance improvement.</li>
+  <li><strong>Avoid unnecessary allocations:</strong> Use <code>&amp;str</code> instead of <code>String</code> where possible. Use <code>Cow&lt;str&gt;</code> when a function sometimes needs to allocate and sometimes doesn't. Pre-allocate vectors with <code>Vec::with_capacity()</code> when you know the approximate size.</li>
+</ul>
+
+<h2>Best Practices for CLI Tools</h2>
+
+<p>
+  Great CLI tools follow conventions that users expect. Here are the practices that separate professional tools from toy projects:
+</p>
+
+<h3>Respect Standard Conventions</h3>
+
+<ul>
+  <li>Exit with code 0 on success, non-zero on failure</li>
+  <li>Write normal output to stdout and errors/diagnostics to stderr</li>
+  <li>Support <code>--help</code> and <code>--version</code> flags (clap handles this automatically)</li>
+  <li>Respect the <code>NO_COLOR</code> environment variable</li>
+  <li>Support piping — detect when stdout isn't a terminal and adjust output accordingly</li>
+</ul>
+
+<h3>Provide Multiple Output Formats</h3>
+
+<p>
+  Human-readable output is great for interactive use, but scripts need machine-readable formats. Supporting <code>--format json</code> and <code>--format yaml</code> makes your tool composable with other tools in the Unix pipeline tradition. We built this into our tool from the beginning.
+</p>
+
+<h3>Write Helpful Error Messages</h3>
+
+<p>
+  An error message should tell the user what went wrong and ideally how to fix it. Compare these two errors:
+</p>
+
+<pre><code>// Bad
+Error: No such file or directory
+
+// Good
+Error: Could not read config file: ./config.yaml
+  Cause: No such file or directory
+  Hint: Create a config file with 'fxr init' or specify a path with --config</code></pre>
+
+<h3>Add Shell Completions</h3>
+
+<p>
+  Clap can generate shell completions for bash, zsh, fish, and PowerShell. Add a hidden <code>completions</code> subcommand:
+</p>
+
+<pre><code set:html=&#123;codeBlock17&#125;></code></pre>
+
+<h3>Include a Config File</h3>
+
+<p>
+  For tools with many options, support a config file (usually <code>~/.config/fxr/config.toml</code>) so users don't have to repeat flags. Use the <code>directories</code> crate to find the right config location on each platform.
+</p>
+
+<h3>Version Your Output Format</h3>
+
+<p>
+  If other tools depend on your JSON output, include a schema version field. This lets you evolve the output format without breaking downstream consumers.
+</p>
+
+<h2>Next Steps</h2>
+
+<p>
+  You now have the knowledge to build professional CLI tools with Rust. Here's where to go from here:
+</p>
+
+<ul>
+  <li>Add <code>rayon</code> for parallel file processing to make your grep 4-8x faster on multi-core machines</li>
+  <li>Implement a <code>.fxrignore</code> file (similar to <code>.gitignore</code>) using the <code>ignore</code> crate from the ripgrep project</li>
+  <li>Add a <code>watch</code> mode using the <code>notify</code> crate that re-runs searches when files change</li>
+  <li>Build a TUI (terminal user interface) with <code>ratatui</code> for interactive file browsing</li>
+  <li>Publish to crates.io and set up the GitHub Actions release pipeline</li>
+</ul>
+
+<p>
+  The Rust CLI ecosystem is mature and well-documented. Crates like clap, serde, and anyhow have been battle-tested by thousands of projects. You're building on a solid foundation.
+</p>
+
+<p>
+  For testing the JSON output of your CLI tool, check out our <a href="/tools/json-formatter">JSON Formatter</a>. And if you're building REST API integrations into your CLI, our <a href="/blog/rest-api-testing-guide">REST API Testing Guide</a> covers the patterns you'll need.
+</p>
+
+</BlogLayout>

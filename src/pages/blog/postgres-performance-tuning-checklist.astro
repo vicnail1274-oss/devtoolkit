@@ -1,0 +1,790 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="PostgreSQL Performance Tuning Checklist: 2026 Complete Guide"
+  description="Optimize your PostgreSQL database with this comprehensive tuning checklist. Cover indexing, query optimization, configuration, connection pooling, vacuum, and monitoring strategies."
+  slug="postgres-performance-tuning-checklist"
+  publishDate="2026-03-20"
+  readTime="20 min read"
+>
+
+<p>
+  PostgreSQL is one of the most powerful open-source relational databases available today. It handles everything from small application backends to multi-terabyte analytical warehouses. But raw capability means nothing if the database is not tuned for your workload. A default PostgreSQL installation is configured conservatively — designed to run on modest hardware without consuming too many resources. That is sensible for a fresh install, but it leaves enormous performance on the table for production systems.
+</p>
+
+<p>
+  This checklist is a comprehensive, DBA-focused guide to PostgreSQL performance tuning in 2026. It covers hardware, OS-level settings, core configuration parameters, indexing strategies, query optimization, connection pooling, vacuum management, partitioning, monitoring, caching, replication, and performance testing. Whether you are tuning a new deployment or troubleshooting a slow production database, work through each section systematically.
+</p>
+
+<h2>Why Performance Tuning Matters</h2>
+
+<p>
+  Performance tuning is not optional for production PostgreSQL. Here is why it deserves dedicated engineering time:
+</p>
+
+<ul>
+  <li><strong>Cost reduction</strong> — a well-tuned database on a smaller instance often outperforms an untuned database on hardware twice the size. Cloud compute bills drop dramatically when you eliminate wasteful queries and configure memory correctly.</li>
+  <li><strong>User experience</strong> — slow queries translate directly to slow page loads, timeouts, and frustrated users. A 200ms query that becomes 20ms after indexing changes the entire feel of an application.</li>
+  <li><strong>Scalability headroom</strong> — tuning buys you time. Instead of sharding or migrating to a new architecture at 10,000 users, proper tuning can carry you to 100,000 users on the same hardware.</li>
+  <li><strong>Reliability</strong> — untuned databases are more prone to lock contention, connection exhaustion, and disk I/O saturation. These issues cause cascading failures that are expensive to recover from.</li>
+  <li><strong>Developer productivity</strong> — when the database is fast, developers spend less time waiting for queries and more time shipping features. Slow databases create a drag on the entire engineering organization.</li>
+</ul>
+
+<p>
+  The checklist below is ordered roughly by impact. Start at the top and work your way down. Each section includes concrete settings, SQL examples, and explanations of why each change matters.
+</p>
+
+<h2>Hardware and OS Tuning</h2>
+
+<p>
+  Before touching <code>postgresql.conf</code>, make sure your hardware and operating system are not the bottleneck. No amount of configuration tuning can compensate for insufficient RAM or a misconfigured filesystem.
+</p>
+
+<h3>Memory</h3>
+
+<p>
+  PostgreSQL is a memory-hungry system. The general rule is: give it as much RAM as your budget allows. For a dedicated database server, at least 25% of total RAM should be available for PostgreSQL's shared buffers, with additional memory for the OS page cache, sort operations, and connection overhead.
+</p>
+
+<h3>Storage</h3>
+
+<p>
+  Use SSDs (NVMe preferred) for all production PostgreSQL deployments. Spinning disks are acceptable only for archival or cold storage. The random I/O pattern of database workloads makes SSD performance transformative — not incremental but orders-of-magnitude faster for index lookups and random page reads.
+</p>
+
+<ul>
+  <li>Use <code>ext4</code> or <code>XFS</code> on Linux. XFS generally performs better for large databases due to its extent-based allocation.</li>
+  <li>Mount the data directory with <code>noatime</code> to eliminate unnecessary filesystem metadata writes.</li>
+  <li>Set the I/O scheduler to <code>none</code> or <code>noop</code> for NVMe devices, or <code>deadline</code>/<code>mq-deadline</code> for SATA SSDs.</li>
+  <li>Separate WAL (write-ahead log) onto a different physical disk if possible. WAL writes are sequential and benefit from dedicated I/O bandwidth.</li>
+</ul>
+
+<h3>Kernel Parameters</h3>
+
+<p>
+  On Linux, adjust these sysctl parameters for database workloads:
+</p>
+
+<pre><code># Increase shared memory limits
+kernel.shmmax = 17179869184    # 16 GB — must be &gt;= shared_buffers
+kernel.shmall = 4194304        # shmmax / PAGE_SIZE
+
+# Reduce swappiness — PostgreSQL manages its own memory
+vm.swappiness = 1
+
+# Increase dirty page limits for write-heavy workloads
+vm.dirty_ratio = 40
+vm.dirty_background_ratio = 10
+
+# Increase open file limits
+fs.file-max = 1000000
+
+# Network tuning for high connection counts
+net.core.somaxconn = 4096
+net.ipv4.tcp_max_syn_backlog = 4096</code></pre>
+
+<p>
+  Also set <code>transparent_hugepages</code> to <code>madvise</code> rather than <code>always</code>. PostgreSQL uses <code>huge_pages</code> natively in its configuration, and letting the kernel aggressively use transparent huge pages can cause latency spikes from compaction.
+</p>
+
+<h2>PostgreSQL Configuration Parameters</h2>
+
+<p>
+  The following parameters in <code>postgresql.conf</code> have the most impact on performance. The values below assume a dedicated database server with 64 GB of RAM. Scale proportionally for your environment.
+</p>
+
+<h3>shared_buffers</h3>
+
+<p>
+  This is PostgreSQL's main in-memory cache for table and index data pages. The default of 128 MB is far too low for any production system.
+</p>
+
+<pre><code># Recommended: 25% of total system RAM
+# For 64 GB server:
+shared_buffers = 16GB</code></pre>
+
+<p>
+  Setting this higher than 25% rarely helps because the OS page cache also caches PostgreSQL data files. Going above 40% can actually hurt performance by reducing the memory available for the page cache and sort operations.
+</p>
+
+<h3>effective_cache_size</h3>
+
+<p>
+  This does not allocate memory — it tells the query planner how much memory is available for disk caching (shared_buffers + OS page cache). A correct value helps the planner choose index scans over sequential scans when data is likely cached.
+</p>
+
+<pre><code># Recommended: 50-75% of total system RAM
+effective_cache_size = 48GB</code></pre>
+
+<h3>work_mem</h3>
+
+<p>
+  Memory allocated per sort or hash operation, per query. This is not a global pool — a complex query with five sort nodes and two hash joins could allocate 7x <code>work_mem</code>. Set it carefully.
+</p>
+
+<pre><code># Start conservative, increase for analytical workloads
+# For OLTP: 16-64 MB
+# For analytics: 256 MB - 1 GB
+work_mem = 64MB</code></pre>
+
+<p>
+  If you see <code>Sort Method: external merge Disk</code> in your <code>EXPLAIN ANALYZE</code> output, <code>work_mem</code> is too low for that query. You can also set it per-session for heavy analytical queries:
+</p>
+
+<pre><code>SET work_mem = '512MB';
+-- Run your analytical query
+RESET work_mem;</code></pre>
+
+<h3>maintenance_work_mem</h3>
+
+<p>
+  Memory for maintenance operations: <code>VACUUM</code>, <code>CREATE INDEX</code>, <code>ALTER TABLE ADD FOREIGN KEY</code>. These run less frequently but benefit greatly from more memory.
+</p>
+
+<pre><code># Recommended: 1-2 GB for large databases
+maintenance_work_mem = 2GB</code></pre>
+
+<h3>wal_buffers</h3>
+
+<p>
+  Buffer for write-ahead log entries before they are flushed to disk. The default auto-tuning (1/32 of shared_buffers, capped at 64 MB) is usually fine, but explicitly setting it avoids surprises.
+</p>
+
+<pre><code># -1 means auto-tune from shared_buffers
+# Explicit setting for predictability:
+wal_buffers = 64MB</code></pre>
+
+<h3>Additional Important Parameters</h3>
+
+<pre><code># Checkpoint tuning — spread I/O over longer intervals
+checkpoint_completion_target = 0.9
+max_wal_size = 4GB
+min_wal_size = 1GB
+
+# Planner cost settings for SSD storage
+random_page_cost = 1.1        # Default 4.0 assumes spinning disk
+effective_io_concurrency = 200 # Default 1 — raise for SSDs
+
+# Parallelism — use multiple CPU cores for queries
+max_parallel_workers_per_gather = 4
+max_parallel_workers = 8
+max_parallel_maintenance_workers = 4
+
+# Connection limits
+max_connections = 200          # Lower than you think — use pooling</code></pre>
+
+<p>
+  After changing parameters, reload the configuration. Most settings take effect with <code>SELECT pg_reload_conf();</code> — but <code>shared_buffers</code>, <code>max_connections</code>, and <code>huge_pages</code> require a full restart.
+</p>
+
+<h2>Indexing Strategies</h2>
+
+<p>
+  Correct indexing is the single highest-impact optimization you can make. A missing index can make the difference between a 5ms query and a 50-second full table scan. PostgreSQL supports several index types, each suited for different access patterns.
+</p>
+
+<h3>B-tree Indexes</h3>
+
+<p>
+  B-tree is the default and most commonly used index type. It supports equality and range queries on sortable data types. Every primary key and unique constraint automatically creates a B-tree index.
+</p>
+
+<pre><code>-- Standard B-tree index on a frequently filtered column
+CREATE INDEX idx_orders_customer_id ON orders (customer_id);
+
+-- Composite index for queries that filter on both columns
+CREATE INDEX idx_orders_customer_date ON orders (customer_id, created_at DESC);
+
+-- The column order matters! Put the most selective column first
+-- for equality filters, and range columns last.</code></pre>
+
+<h3>Covering Indexes (INCLUDE)</h3>
+
+<p>
+  Covering indexes add non-key columns to the index leaf pages. This enables index-only scans — PostgreSQL can answer the query entirely from the index without touching the heap table.
+</p>
+
+<pre><code>-- Covering index: the query can be satisfied without reading the table
+CREATE INDEX idx_orders_covering ON orders (customer_id)
+  INCLUDE (order_total, status);
+
+-- This query becomes an index-only scan:
+SELECT order_total, status
+FROM orders
+WHERE customer_id = 42;</code></pre>
+
+<h3>Partial Indexes</h3>
+
+<p>
+  Partial indexes only include rows matching a <code>WHERE</code> clause. They are smaller, faster, and perfect for columns with skewed distributions.
+</p>
+
+<pre><code>-- Only index active orders — skip the 95% that are completed
+CREATE INDEX idx_orders_active ON orders (created_at)
+  WHERE status = 'active';
+
+-- Only index non-null values
+CREATE INDEX idx_users_email_verified ON users (email)
+  WHERE email_verified_at IS NOT NULL;</code></pre>
+
+<h3>GIN Indexes</h3>
+
+<p>
+  Generalized Inverted Indexes are essential for full-text search, JSONB queries, and array operations.
+</p>
+
+<pre><code>-- Full-text search index
+CREATE INDEX idx_articles_search ON articles
+  USING gin(to_tsvector('english', title || ' ' || body));
+
+-- JSONB containment queries
+CREATE INDEX idx_events_data ON events USING gin(metadata jsonb_path_ops);
+
+-- Array overlap/containment
+CREATE INDEX idx_products_tags ON products USING gin(tags);</code></pre>
+
+<h3>GiST Indexes</h3>
+
+<p>
+  Generalized Search Tree indexes support geometric data, range types, and nearest-neighbor queries. They are commonly used with PostGIS for geospatial data.
+</p>
+
+<pre><code>-- Range type index for scheduling/booking systems
+CREATE INDEX idx_reservations_period ON reservations
+  USING gist(tstzrange(start_time, end_time));
+
+-- PostGIS spatial index
+CREATE INDEX idx_locations_geom ON locations
+  USING gist(geom);</code></pre>
+
+<h3>Finding Missing Indexes</h3>
+
+<p>
+  Use <code>pg_stat_user_tables</code> to identify tables with excessive sequential scans:
+</p>
+
+<pre><code>SELECT
+    schemaname,
+    relname AS table_name,
+    seq_scan,
+    seq_tup_read,
+    idx_scan,
+    n_live_tup,
+    ROUND(seq_scan::numeric / GREATEST(seq_scan + idx_scan, 1) * 100, 1) AS seq_scan_pct
+FROM pg_stat_user_tables
+WHERE n_live_tup &gt; 10000
+ORDER BY seq_tup_read DESC
+LIMIT 20;</code></pre>
+
+<p>
+  Tables with a high <code>seq_scan_pct</code> and large row counts are prime candidates for new indexes. Also review <a href="/blog/sql-formatting-best-practices">SQL formatting best practices</a> to ensure your queries are readable before optimizing them.
+</p>
+
+<h2>Query Optimization with EXPLAIN ANALYZE</h2>
+
+<p>
+  <code>EXPLAIN ANALYZE</code> is your primary tool for understanding query performance. It runs the query, measures actual execution times, and shows the planner's chosen strategy.
+</p>
+
+<pre><code>EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT o.id, o.order_total, c.name
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+WHERE o.created_at &gt;= '2026-01-01'
+  AND o.status = 'shipped'
+ORDER BY o.created_at DESC
+LIMIT 50;</code></pre>
+
+<p>
+  Key things to look for in the output:
+</p>
+
+<ul>
+  <li><strong>Seq Scan on large tables</strong> — usually means a missing index. If the table has more than a few thousand rows, a sequential scan is almost always suboptimal for filtered queries.</li>
+  <li><strong>Nested Loop with high row counts</strong> — nested loops are efficient when the inner side is indexed and returns few rows. If the inner loop processes thousands of rows per outer row, consider a hash or merge join (the planner may need better statistics or more <code>work_mem</code>).</li>
+  <li><strong>Sort Method: external merge Disk</strong> — the sort spilled to disk because <code>work_mem</code> was too small. Increase it or add an index that provides the required sort order.</li>
+  <li><strong>Rows Removed by Filter</strong> — a high number means the index is not selective enough. A more specific index or a composite index could eliminate these rows earlier.</li>
+  <li><strong>Buffers: shared read</strong> — high shared read counts mean data is not cached. This is expected for first executions but should decrease on repeated runs if <code>shared_buffers</code> is sized correctly.</li>
+</ul>
+
+<h3>Common Query Anti-Patterns</h3>
+
+<p>
+  These patterns frequently cause performance problems:
+</p>
+
+<pre><code>-- Anti-pattern 1: Functions on indexed columns prevent index use
+-- BAD:
+SELECT * FROM orders WHERE EXTRACT(YEAR FROM created_at) = 2026;
+-- GOOD:
+SELECT * FROM orders
+WHERE created_at &gt;= '2026-01-01' AND created_at &lt; '2027-01-01';
+
+-- Anti-pattern 2: Implicit type casting
+-- BAD (if user_id is integer):
+SELECT * FROM orders WHERE user_id = '42';
+-- GOOD:
+SELECT * FROM orders WHERE user_id = 42;
+
+-- Anti-pattern 3: SELECT * when you only need specific columns
+-- BAD:
+SELECT * FROM orders WHERE customer_id = 42;
+-- GOOD:
+SELECT id, order_total, status FROM orders WHERE customer_id = 42;
+
+-- Anti-pattern 4: NOT IN with subqueries (use NOT EXISTS instead)
+-- BAD:
+SELECT * FROM customers WHERE id NOT IN (SELECT customer_id FROM orders);
+-- GOOD:
+SELECT c.* FROM customers c
+WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);
+
+-- Anti-pattern 5: OFFSET for pagination on large result sets
+-- BAD:
+SELECT * FROM orders ORDER BY id LIMIT 20 OFFSET 100000;
+-- GOOD (keyset pagination):
+SELECT * FROM orders WHERE id &gt; 100000 ORDER BY id LIMIT 20;</code></pre>
+
+<h2>Connection Pooling with PgBouncer</h2>
+
+<p>
+  Every PostgreSQL connection consumes approximately 5-10 MB of RAM and carries kernel-level overhead for process management. If your application opens hundreds of connections (common in microservice architectures), the database spends more time managing connections than executing queries.
+</p>
+
+<p>
+  <strong>PgBouncer</strong> is the standard solution. It sits between your application and PostgreSQL, multiplexing many client connections onto a small pool of database connections.
+</p>
+
+<pre><code># pgbouncer.ini
+
+[databases]
+myapp = host=127.0.0.1 port=5432 dbname=myapp
+
+[pgbouncer]
+listen_addr = 0.0.0.0
+listen_port = 6432
+
+# Pool mode:
+# session    — connection assigned for entire client session (safest)
+# transaction — connection returned after each transaction (best performance)
+# statement  — connection returned after each statement (most restrictive)
+pool_mode = transaction
+
+# Pool sizing
+default_pool_size = 25
+max_client_conn = 1000
+min_pool_size = 5
+reserve_pool_size = 5
+reserve_pool_timeout = 3
+
+# Timeouts
+server_idle_timeout = 300
+client_idle_timeout = 600
+query_timeout = 60</code></pre>
+
+<p>
+  In <code>transaction</code> mode, a pool of 25 server connections can handle 1,000+ client connections efficiently. The tradeoff is that session-level features (<code>SET</code> statements, prepared statements, <code>LISTEN</code>/<code>NOTIFY</code>) do not persist across transactions. Most ORMs and application frameworks work correctly in transaction mode with minimal configuration.
+</p>
+
+<p>
+  With connection pooling in place, you can often lower PostgreSQL's <code>max_connections</code> to 100 or less, which reduces memory overhead and lock contention.
+</p>
+
+<h2>VACUUM and Autovacuum Tuning</h2>
+
+<p>
+  PostgreSQL uses Multi-Version Concurrency Control (MVCC). When a row is updated or deleted, the old version is not immediately removed — it becomes a "dead tuple" that must be cleaned up by <code>VACUUM</code>. If dead tuples accumulate, tables bloat, indexes grow larger, and queries slow down.
+</p>
+
+<h3>How Autovacuum Works</h3>
+
+<p>
+  Autovacuum runs automatically in the background. It triggers when the number of dead tuples exceeds a threshold:
+</p>
+
+<pre><code>threshold = autovacuum_vacuum_threshold + autovacuum_vacuum_scale_factor * n_live_tup</code></pre>
+
+<p>
+  With defaults (threshold = 50, scale_factor = 0.2), a table with 1 million rows will not vacuum until 200,050 dead tuples accumulate. For write-heavy tables, this is too late.
+</p>
+
+<h3>Recommended Autovacuum Settings</h3>
+
+<pre><code># Make autovacuum more aggressive globally
+autovacuum_vacuum_threshold = 50
+autovacuum_vacuum_scale_factor = 0.05    # Default 0.2 — trigger at 5% dead tuples
+autovacuum_analyze_threshold = 50
+autovacuum_analyze_scale_factor = 0.02   # Update statistics more frequently
+
+# Allow autovacuum to do more work per cycle
+autovacuum_vacuum_cost_delay = 2ms       # Default 20ms
+autovacuum_vacuum_cost_limit = 1000      # Default 200
+
+# Allow more autovacuum workers for databases with many tables
+autovacuum_max_workers = 5               # Default 3
+
+# Prevent transaction ID wraparound — critical for uptime
+autovacuum_freeze_max_age = 200000000</code></pre>
+
+<h3>Per-Table Autovacuum Overrides</h3>
+
+<p>
+  High-churn tables (session stores, job queues, event logs) should have more aggressive autovacuum settings:
+</p>
+
+<pre><code>ALTER TABLE sessions SET (
+    autovacuum_vacuum_scale_factor = 0.01,
+    autovacuum_vacuum_threshold = 100,
+    autovacuum_vacuum_cost_delay = 0
+);
+
+ALTER TABLE job_queue SET (
+    autovacuum_vacuum_scale_factor = 0.02,
+    autovacuum_analyze_scale_factor = 0.01
+);</code></pre>
+
+<h3>Monitoring Vacuum Activity</h3>
+
+<pre><code>-- Check dead tuple counts and last vacuum times
+SELECT
+    schemaname,
+    relname,
+    n_live_tup,
+    n_dead_tup,
+    ROUND(n_dead_tup::numeric / GREATEST(n_live_tup, 1) * 100, 1) AS dead_pct,
+    last_vacuum,
+    last_autovacuum,
+    last_analyze,
+    last_autoanalyze
+FROM pg_stat_user_tables
+ORDER BY n_dead_tup DESC
+LIMIT 20;</code></pre>
+
+<h2>Table Partitioning</h2>
+
+<p>
+  Partitioning splits a large table into smaller physical pieces while presenting a single logical table to queries. It improves performance for time-series data, multi-tenant systems, and any table that grows indefinitely.
+</p>
+
+<h3>Range Partitioning (Most Common)</h3>
+
+<pre><code>-- Create a partitioned table
+CREATE TABLE events (
+    id          bigserial,
+    event_type  text NOT NULL,
+    payload     jsonb,
+    created_at  timestamptz NOT NULL DEFAULT now()
+) PARTITION BY RANGE (created_at);
+
+-- Create monthly partitions
+CREATE TABLE events_2026_01 PARTITION OF events
+    FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
+
+CREATE TABLE events_2026_02 PARTITION OF events
+    FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+
+CREATE TABLE events_2026_03 PARTITION OF events
+    FOR VALUES FROM ('2026-03-01') TO ('2026-04-01');
+
+-- Indexes on partitioned tables are created on each partition
+CREATE INDEX ON events (created_at);
+CREATE INDEX ON events (event_type, created_at);</code></pre>
+
+<p>
+  Benefits of partitioning:
+</p>
+
+<ul>
+  <li><strong>Partition pruning</strong> — queries that filter on the partition key skip irrelevant partitions entirely. A query for March 2026 data reads only <code>events_2026_03</code>.</li>
+  <li><strong>Efficient bulk deletes</strong> — instead of <code>DELETE FROM events WHERE created_at < '2025-01-01'</code> (which generates massive WAL and dead tuples), you simply <code>DROP TABLE events_2025_01</code>.</li>
+  <li><strong>Parallel maintenance</strong> — <code>VACUUM</code>, <code>REINDEX</code>, and <code>ANALYZE</code> can run on individual partitions without locking the entire table.</li>
+  <li><strong>Smaller indexes</strong> — each partition has its own indexes, which are smaller and fit in memory more easily.</li>
+</ul>
+
+<p>
+  Automate partition creation with tools like <code>pg_partman</code> to avoid missing partitions and causing insert failures.
+</p>
+
+<h2>Monitoring Tools</h2>
+
+<p>
+  You cannot tune what you do not measure. PostgreSQL provides powerful built-in statistics, and several external tools make them actionable.
+</p>
+
+<h3>pg_stat_statements</h3>
+
+<p>
+  This extension tracks execution statistics for all SQL statements. It is the single most important monitoring tool for PostgreSQL performance.
+</p>
+
+<pre><code>-- Enable in postgresql.conf
+shared_preload_libraries = 'pg_stat_statements'
+pg_stat_statements.track = all
+pg_stat_statements.max = 10000
+
+-- After restart, create the extension
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+
+-- Find the slowest queries by total time
+SELECT
+    queryid,
+    calls,
+    ROUND(total_exec_time::numeric, 1) AS total_ms,
+    ROUND(mean_exec_time::numeric, 1) AS mean_ms,
+    ROUND(stddev_exec_time::numeric, 1) AS stddev_ms,
+    rows,
+    LEFT(query, 100) AS query_preview
+FROM pg_stat_statements
+ORDER BY total_exec_time DESC
+LIMIT 20;
+
+-- Find queries with the worst average time
+SELECT
+    queryid,
+    calls,
+    ROUND(mean_exec_time::numeric, 1) AS mean_ms,
+    ROUND((shared_blks_read * 8.0 / 1024)::numeric, 1) AS avg_read_mb,
+    LEFT(query, 100) AS query_preview
+FROM pg_stat_statements
+WHERE calls &gt; 100
+ORDER BY mean_exec_time DESC
+LIMIT 20;</code></pre>
+
+<h3>pgBadger</h3>
+
+<p>
+  pgBadger is a log analyzer that generates detailed HTML reports from PostgreSQL log files. It identifies slow queries, lock waits, temporary file usage, checkpoint spikes, and connection patterns over time. Configure PostgreSQL logging first:
+</p>
+
+<pre><code># postgresql.conf logging for pgBadger
+log_min_duration_statement = 100   # Log queries taking &gt; 100ms
+log_checkpoints = on
+log_connections = on
+log_disconnections = on
+log_lock_waits = on
+log_temp_files = 0                 # Log all temp file usage
+log_line_prefix = '%t [%p]: user=%u,db=%d,app=%a,client=%h '
+log_statement = 'none'            # Avoid double-logging with min_duration</code></pre>
+
+<h3>Real-Time Monitoring Queries</h3>
+
+<pre><code>-- Active queries right now
+SELECT
+    pid,
+    age(clock_timestamp(), query_start) AS duration,
+    state,
+    wait_event_type,
+    wait_event,
+    LEFT(query, 80) AS query_preview
+FROM pg_stat_activity
+WHERE state != 'idle'
+  AND pid != pg_backend_pid()
+ORDER BY query_start;
+
+-- Table and index bloat estimates
+SELECT
+    schemaname || '.' || tablename AS table_name,
+    pg_size_pretty(pg_total_relation_size(schemaname || '.' || tablename)) AS total_size,
+    pg_size_pretty(pg_relation_size(schemaname || '.' || tablename)) AS table_size,
+    pg_size_pretty(pg_indexes_size(schemaname || '.' || tablename)) AS index_size
+FROM pg_tables
+WHERE schemaname = 'public'
+ORDER BY pg_total_relation_size(schemaname || '.' || tablename) DESC
+LIMIT 20;</code></pre>
+
+<h2>Caching Strategies</h2>
+
+<p>
+  PostgreSQL has excellent built-in caching through <code>shared_buffers</code> and the OS page cache, but application-level caching can further reduce database load.
+</p>
+
+<h3>Application-Level Caching</h3>
+
+<ul>
+  <li><strong>Redis or Memcached</strong> — cache frequently read, rarely changed data (user profiles, configuration, product catalogs). Set appropriate TTLs and invalidate on writes.</li>
+  <li><strong>Materialized views</strong> — precompute expensive aggregations and refresh them periodically.</li>
+</ul>
+
+<pre><code>-- Materialized view for a dashboard
+CREATE MATERIALIZED VIEW daily_order_stats AS
+SELECT
+    date_trunc('day', created_at) AS day,
+    COUNT(*) AS order_count,
+    SUM(order_total) AS revenue,
+    AVG(order_total) AS avg_order_value
+FROM orders
+WHERE created_at &gt;= now() - interval '90 days'
+GROUP BY 1;
+
+-- Create an index on the materialized view
+CREATE UNIQUE INDEX ON daily_order_stats (day);
+
+-- Refresh without locking reads
+REFRESH MATERIALIZED VIEW CONCURRENTLY daily_order_stats;</code></pre>
+
+<h3>Query Result Caching</h3>
+
+<p>
+  For read-heavy APIs, implement a cache-aside pattern: check the cache first, query the database on cache miss, and write the result to cache. This is especially effective for endpoints that serve the same data to many users (product pages, search results, leaderboards).
+</p>
+
+<p>
+  Consider using PostgreSQL's <code>UNLOGGED</code> tables for ephemeral cache-like data that does not need crash recovery. Unlogged tables are significantly faster for writes because they skip WAL.
+</p>
+
+<h2>Replication for Read Scaling</h2>
+
+<p>
+  When a single PostgreSQL instance cannot handle your read throughput, streaming replication distributes reads across replicas.
+</p>
+
+<h3>Streaming Replication Setup</h3>
+
+<pre><code># Primary server postgresql.conf
+wal_level = replica
+max_wal_senders = 5
+wal_keep_size = 2GB
+hot_standby = on
+
+# Primary server pg_hba.conf — allow replication connections
+host replication replicator 10.0.0.0/24 scram-sha-256</code></pre>
+
+<pre><code># On the replica:
+pg_basebackup -h primary-host -D /var/lib/postgresql/16/main \
+  -U replicator -Fp -Xs -P -R</code></pre>
+
+<p>
+  The <code>-R</code> flag creates a <code>standby.signal</code> file and configures the replica to connect to the primary automatically. Once running, the replica receives WAL records in near real-time and can serve read queries.
+</p>
+
+<h3>Read Routing</h3>
+
+<p>
+  Direct write queries to the primary and read queries to replicas. Most connection poolers and ORMs support read/write splitting. Be aware of replication lag — a query sent to a replica immediately after a write may not see the new data. For consistency-critical reads, always query the primary.
+</p>
+
+<p>
+  Synchronous replication guarantees zero data loss but adds latency to every write. Use it for critical financial data; use asynchronous replication for everything else.
+</p>
+
+<h2>Performance Testing</h2>
+
+<p>
+  Never deploy configuration changes to production without testing. PostgreSQL includes <code>pgbench</code> for synthetic benchmarks, and you should supplement it with realistic workload tests.
+</p>
+
+<h3>pgbench Basics</h3>
+
+<pre><code># Initialize test data (scale factor 100 = ~1.6 GB)
+pgbench -i -s 100 mydb
+
+# Run a 60-second benchmark with 20 clients
+pgbench -c 20 -j 4 -T 60 mydb
+
+# Run with custom queries
+pgbench -c 20 -j 4 -T 60 -f custom_workload.sql mydb</code></pre>
+
+<h3>Testing Methodology</h3>
+
+<ol>
+  <li><strong>Baseline first</strong> — run <code>pgbench</code> with default settings and record TPS (transactions per second), latency, and I/O metrics.</li>
+  <li><strong>Change one parameter at a time</strong> — if you change <code>shared_buffers</code> and <code>work_mem</code> simultaneously, you cannot attribute improvements to either change.</li>
+  <li><strong>Test with realistic data</strong> — synthetic benchmarks with uniform distributions do not reflect real workloads. Restore a production backup to your test environment.</li>
+  <li><strong>Test under sustained load</strong> — a 10-second test cannot reveal autovacuum contention, checkpoint stalls, or memory pressure. Run tests for at least 10 minutes.</li>
+  <li><strong>Monitor during tests</strong> — watch CPU, memory, disk I/O, and <code>pg_stat_activity</code> during the benchmark. Bottlenecks reveal themselves under load.</li>
+</ol>
+
+<p>
+  For <a href="/tools/">more developer tools</a> that complement your database workflow, including SQL formatters and JSON validators, explore our tools collection.
+</p>
+
+<h2>Checklist Summary</h2>
+
+<p>
+  Use this checklist as a quick reference. Work through each item for any new PostgreSQL deployment or when troubleshooting performance issues.
+</p>
+
+<h3>Hardware and OS</h3>
+<ul>
+  <li>Use NVMe SSDs for data and WAL storage</li>
+  <li>Mount with <code>noatime</code>; use XFS or ext4</li>
+  <li>Set <code>vm.swappiness = 1</code></li>
+  <li>Configure appropriate I/O scheduler</li>
+  <li>Separate WAL onto a dedicated disk if possible</li>
+</ul>
+
+<h3>Configuration</h3>
+<ul>
+  <li>Set <code>shared_buffers</code> to 25% of RAM</li>
+  <li>Set <code>effective_cache_size</code> to 50-75% of RAM</li>
+  <li>Tune <code>work_mem</code> based on workload type (OLTP vs. analytics)</li>
+  <li>Set <code>maintenance_work_mem</code> to 1-2 GB</li>
+  <li>Lower <code>random_page_cost</code> to 1.1 for SSDs</li>
+  <li>Raise <code>effective_io_concurrency</code> for SSDs</li>
+  <li>Enable parallel query workers</li>
+  <li>Tune checkpoint settings to reduce I/O spikes</li>
+</ul>
+
+<h3>Indexing</h3>
+<ul>
+  <li>Audit for missing indexes using <code>pg_stat_user_tables</code></li>
+  <li>Use covering indexes (<code>INCLUDE</code>) for index-only scans</li>
+  <li>Use partial indexes for skewed data distributions</li>
+  <li>Use GIN indexes for JSONB and full-text search</li>
+  <li>Remove unused indexes (they slow down writes)</li>
+</ul>
+
+<h3>Queries</h3>
+<ul>
+  <li>Use <code>EXPLAIN (ANALYZE, BUFFERS)</code> on slow queries</li>
+  <li>Eliminate functions on indexed columns in WHERE clauses</li>
+  <li>Replace <code>NOT IN</code> with <code>NOT EXISTS</code></li>
+  <li>Use keyset pagination instead of <code>OFFSET</code></li>
+  <li>Avoid <code>SELECT *</code></li>
+</ul>
+
+<h3>Connection Management</h3>
+<ul>
+  <li>Deploy PgBouncer in transaction mode</li>
+  <li>Keep PostgreSQL <code>max_connections</code> low (100-200)</li>
+  <li>Monitor connection counts and pool utilization</li>
+</ul>
+
+<h3>Vacuum</h3>
+<ul>
+  <li>Lower <code>autovacuum_vacuum_scale_factor</code> to 0.05</li>
+  <li>Set per-table overrides for high-churn tables</li>
+  <li>Monitor dead tuple counts and vacuum frequency</li>
+  <li>Watch for transaction ID wraparound warnings</li>
+</ul>
+
+<h3>Partitioning</h3>
+<ul>
+  <li>Partition time-series and append-only tables by range</li>
+  <li>Automate partition creation with <code>pg_partman</code></li>
+  <li>Use <code>DROP TABLE</code> instead of <code>DELETE</code> for partition expiry</li>
+</ul>
+
+<h3>Monitoring</h3>
+<ul>
+  <li>Enable <code>pg_stat_statements</code> and review top queries weekly</li>
+  <li>Configure PostgreSQL logging for pgBadger analysis</li>
+  <li>Set up alerts for replication lag, connection exhaustion, and disk usage</li>
+  <li>Track table and index bloat over time</li>
+</ul>
+
+<h3>Caching and Replication</h3>
+<ul>
+  <li>Implement application-level caching for hot read paths</li>
+  <li>Use materialized views for expensive aggregations</li>
+  <li>Set up streaming replication for read scaling</li>
+  <li>Test with <code>pgbench</code> and realistic workloads before deploying changes</li>
+</ul>
+
+<p>
+  PostgreSQL performance tuning is an ongoing discipline, not a one-time task. Workloads change, data grows, and new queries appear. Schedule quarterly reviews of your <code>pg_stat_statements</code> data, vacuum health, and index usage. The teams that treat performance tuning as a continuous practice consistently outperform those that wait for emergencies. For related database content, check out our <a href="/blog/sql-formatting-best-practices">SQL formatting best practices guide</a>.
+</p>
+
+</BlogLayout>

@@ -297,8 +297,8 @@ MAILTO=admin@example.com
 
 # Schedule entries
 # min hour dom month dow command
-0 3 * * * /home/user/scripts/backup.sh >> /var/log/backup.log 2>&1
-*/5 * * * * /usr/bin/curl -s https://example.com/health > /dev/null
+0 3 * * * /home/user/scripts/backup.sh &gt;&gt; /var/log/backup.log 2&gt;&amp;1
+*/5 * * * * /usr/bin/curl -s https://example.com/health &gt; /dev/null
 0 9 * * 1 /home/user/scripts/weekly-report.py</code></pre>
 
 <p>
@@ -346,7 +346,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm run build && npm test</code></pre>
+      - run: npm run build &amp;&amp; npm test</code></pre>
 
 <p>
   <strong>Important:</strong> GitHub Actions scheduled workflows can be delayed during periods of high load. Do not rely on them for time-critical operations. Also note that scheduled workflows only run on the default branch.
@@ -471,7 +471,7 @@ log show --predicate 'process == "cron"' --last 1h</code></pre>
   Always redirect both stdout and stderr to a log file:
 </p>
 
-<pre><code>0 3 * * * /home/user/backup.sh >> /home/user/logs/backup.log 2>&1</code></pre>
+<pre><code>0 3 * * * /home/user/backup.sh &gt;&gt; /home/user/logs/backup.log 2&gt;&amp;1</code></pre>
 
 <p>
   Without this redirection, errors vanish into the void (or an unread local mailbox). This is the single most important debugging practice for cron jobs.

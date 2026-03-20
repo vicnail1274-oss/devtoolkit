@@ -1,0 +1,479 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="GitHub Actions Custom Actions: Build, Test, and Publish Reusable Workflows"
+  description="Learn to build GitHub Actions custom actions using JavaScript, TypeScript, and Docker. Covers action types, toolkit usage, testing, versioning, and publishing to the Marketplace."
+  slug="github-actions-custom-actions"
+  publishDate="2026-03-20"
+  readTime="14 min read"
+>
+
+<p>
+  GitHub Actions workflows are powerful, but as your CI/CD pipelines grow, you find yourself repeating the same logic across dozens of repositories. Custom actions solve this: they let you encapsulate reusable workflow logic into a single, versioned, shareable unit — either within your organization or published publicly to the GitHub Marketplace.
+</p>
+
+<p>
+  This guide covers all three types of custom actions (JavaScript, Docker, and composite), when to use each, best practices for building them with the Actions Toolkit, and how to test, version, and publish them.
+</p>
+
+<h2>The Three Types of Custom Actions</h2>
+
+<p>
+  GitHub Actions supports three action types, each with different trade-offs:
+</p>
+
+<ul>
+  <li><strong>JavaScript actions:</strong> Run directly on the runner VM using Node.js. Fast startup, no container overhead. Best for most custom actions.</li>
+  <li><strong>Docker container actions:</strong> Run in a Docker container. Full control over the execution environment, but slower startup. Best when you need a specific OS or toolchain.</li>
+  <li><strong>Composite actions:</strong> Combine multiple workflow steps into a single action. No code required — just YAML. Best for grouping existing actions and shell scripts.</li>
+</ul>
+
+<h2>Composite Actions: The Easiest Starting Point</h2>
+
+<p>
+  Composite actions let you group workflow steps without writing any JavaScript. If you find yourself copying the same 5-step setup sequence across every repository, a composite action eliminates the duplication:
+</p>
+
+<pre><code># .github/actions/setup-node-project/action.yml
+name: 'Setup Node Project'
+description: 'Install Node, cache dependencies, and run build'
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '20'
+  package-manager:
+    description: 'Package manager (npm, pnpm, yarn)'
+    required: false
+    default: 'npm'
+outputs:
+  cache-hit:
+    description: 'Whether the dependency cache was hit'
+    value: $&#123;&#123; steps.cache.outputs.cache-hit &#125;&#125;
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: $&#123;&#123; inputs.node-version &#125;&#125;
+
+    - name: Setup pnpm
+      if: inputs.package-manager == 'pnpm'
+      uses: pnpm/action-setup@v3
+
+    - name: Get cache directory
+      id: cache-dir
+      shell: bash
+      run: |
+        if [ "$&#123;&#123; inputs.package-manager &#125;&#125;" = "pnpm" ]; then
+          echo "dir=$(pnpm store path)" &gt;&gt; $GITHUB_OUTPUT
+        elif [ "$&#123;&#123; inputs.package-manager &#125;&#125;" = "yarn" ]; then
+          echo "dir=$(yarn cache dir)" &gt;&gt; $GITHUB_OUTPUT
+        else
+          echo "dir=$(npm config get cache)" &gt;&gt; $GITHUB_OUTPUT
+        fi
+
+    - name: Cache dependencies
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: $&#123;&#123; steps.cache-dir.outputs.dir &#125;&#125;
+        key: $&#123;&#123; runner.os &#125;&#125;-$&#123;&#123; inputs.package-manager &#125;&#125;-$&#123;&#123; hashFiles('**/package-lock.json', '**/pnpm-lock.yaml', '**/yarn.lock') &#125;&#125;
+        restore-keys: |
+          $&#123;&#123; runner.os &#125;&#125;-$&#123;&#123; inputs.package-manager &#125;&#125;-
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        if [ "$&#123;&#123; inputs.package-manager &#125;&#125;" = "pnpm" ]; then
+          pnpm install --frozen-lockfile
+        elif [ "$&#123;&#123; inputs.package-manager &#125;&#125;" = "yarn" ]; then
+          yarn install --frozen-lockfile
+        else
+          npm ci
+        fi</code></pre>
+
+<pre><code># Usage in any workflow
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-project
+        with:
+          node-version: '20'
+          package-manager: 'pnpm'</code></pre>
+
+<h2>JavaScript Actions: Full Control with TypeScript</h2>
+
+<h3>Project Setup</h3>
+
+<pre><code>mkdir my-action &amp;&amp; cd my-action
+npm init -y
+
+npm install @actions/core @actions/github @actions/exec @actions/io
+npm install -D typescript @types/node @vercel/ncc
+
+# ncc bundles your action into a single file — no node_modules needed in the repo</code></pre>
+
+<pre><code>// tsconfig.json
+&#123;
+  "compilerOptions": &#123;
+    "target": "ES2022",
+    "module": "CommonJS",
+    "lib": ["ES2022"],
+    "strict": true,
+    "outDir": "./lib",
+    "rootDir": "./src",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  &#125;,
+  "include": ["src"]
+&#125;</code></pre>
+
+<pre><code>// package.json scripts
+&#123;
+  "scripts": &#123;
+    "build": "ncc build src/index.ts -o dist --source-map --minify",
+    "package": "npm run build",
+    "test": "jest"
+  &#125;
+&#125;</code></pre>
+
+<h3>Action Metadata (action.yml)</h3>
+
+<pre><code># action.yml — defines inputs, outputs, and runtime
+name: 'Semantic PR Checker'
+description: 'Validates PR titles follow Conventional Commits specification'
+author: 'Your Name'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  types:
+    description: 'Comma-separated list of allowed commit types'
+    required: false
+    default: 'feat,fix,docs,style,refactor,test,chore,perf,ci,build,revert'
+  require-scope:
+    description: 'Whether a scope is required (e.g., feat(ui): ...)'
+    required: false
+    default: 'false'
+
+outputs:
+  valid:
+    description: 'Whether the PR title is valid'
+  type:
+    description: 'The commit type extracted from the PR title'
+  scope:
+    description: 'The commit scope (if present)'
+
+runs:
+  using: node20
+  main: dist/index.js</code></pre>
+
+<h3>Action Implementation</h3>
+
+<pre><code>// src/index.ts
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+
+interface ParsedTitle &#123;
+  type: string;
+  scope?: string;
+  breaking: boolean;
+  description: string;
+&#125;
+
+function parsePRTitle(title: string): ParsedTitle | null &#123;
+  // Conventional Commits: type(scope)!: description
+  const regex = /^(\w+)(?:\(([^)]+)\))?(!)?: (.+)$/;
+  const match = title.match(regex);
+  if (!match) return null;
+
+  return &#123;
+    type: match[1]!,
+    scope: match[2],
+    breaking: match[3] === '!',
+    description: match[4]!,
+  &#125;;
+&#125;
+
+async function run(): Promise&lt;void&gt; &#123;
+  try &#123;
+    const token = core.getInput('github-token', &#123; required: true &#125;);
+    const allowedTypes = core.getInput('types').split(',').map(s =&gt; s.trim());
+    const requireScope = core.getInput('require-scope') === 'true';
+
+    const context = github.context;
+    const octokit = github.getOctokit(token);
+
+    // Get PR title from context or fetch it
+    let prTitle: string;
+    if (context.eventName === 'pull_request') &#123;
+      prTitle = context.payload.pull_request?.title as string;
+    &#125; else &#123;
+      // Fetch from API if triggered differently
+      const &#123; data: pr &#125; = await octokit.rest.pulls.get(&#123;
+        ...context.repo,
+        pull_number: context.payload.number as number,
+      &#125;);
+      prTitle = pr.title;
+    &#125;
+
+    core.info(`Checking PR title: "$&#123;prTitle&#125;"`);
+
+    const parsed = parsePRTitle(prTitle);
+
+    if (!parsed) &#123;
+      core.setOutput('valid', 'false');
+      core.setFailed(
+        `PR title does not follow Conventional Commits format.\n` +
+        `Expected: type(scope): description\n` +
+        `Got: "$&#123;prTitle&#125;"\n` +
+        `Examples: feat(auth): add OAuth2 support, fix: resolve memory leak`
+      );
+      return;
+    &#125;
+
+    if (!allowedTypes.includes(parsed.type)) &#123;
+      core.setOutput('valid', 'false');
+      core.setFailed(
+        `PR type "$&#123;parsed.type&#125;" is not allowed.\n` +
+        `Allowed types: $&#123;allowedTypes.join(', ')&#125;`
+      );
+      return;
+    &#125;
+
+    if (requireScope &amp;&amp; !parsed.scope) &#123;
+      core.setOutput('valid', 'false');
+      core.setFailed(`PR title must include a scope: $&#123;parsed.type&#125;(scope): description`);
+      return;
+    &#125;
+
+    // All checks passed
+    core.setOutput('valid', 'true');
+    core.setOutput('type', parsed.type);
+    if (parsed.scope) core.setOutput('scope', parsed.scope);
+
+    if (parsed.breaking) &#123;
+      core.warning('This PR introduces a breaking change (!)');
+    &#125;
+
+    core.info(`✅ PR title is valid: type=$&#123;parsed.type&#125;$&#123;parsed.scope ? `, scope=$&#123;parsed.scope&#125;` : ''&#125;`);
+
+  &#125; catch (error) &#123;
+    core.setFailed(error instanceof Error ? error.message : String(error));
+  &#125;
+&#125;
+
+run();</code></pre>
+
+<h3>Working with the GitHub API</h3>
+
+<pre><code>// Common patterns with @actions/github
+const octokit = github.getOctokit(core.getInput('github-token'));
+const &#123; owner, repo &#125; = github.context.repo;
+
+// Comment on a PR
+await octokit.rest.issues.createComment(&#123;
+  owner, repo,
+  issue_number: github.context.payload.pull_request?.number!,
+  body: '## Analysis Results\n\nAll checks passed ✅',
+&#125;);
+
+// Add labels to a PR
+await octokit.rest.issues.addLabels(&#123;
+  owner, repo,
+  issue_number: github.context.payload.pull_request?.number!,
+  labels: ['ready-for-review'],
+&#125;);
+
+// List changed files in a PR
+const &#123; data: files &#125; = await octokit.rest.pulls.listFiles(&#123;
+  owner, repo,
+  pull_number: github.context.payload.pull_request?.number!,
+  per_page: 100,
+&#125;);
+const changedFiles = files.map(f =&gt; f.filename);</code></pre>
+
+<h2>Testing Your Action</h2>
+
+<h3>Unit Testing with Jest</h3>
+
+<pre><code>// src/__tests__/index.test.ts
+jest.mock('@actions/core');
+jest.mock('@actions/github');
+
+import * as core from '@actions/core';
+import &#123; parsePRTitle &#125; from '../index'; // Export for testing
+
+describe('parsePRTitle', () =&gt; &#123;
+  it('parses standard conventional commit', () =&gt; &#123;
+    const result = parsePRTitle('feat(auth): add OAuth2 support');
+    expect(result).toEqual(&#123;
+      type: 'feat',
+      scope: 'auth',
+      breaking: false,
+      description: 'add OAuth2 support',
+    &#125;);
+  &#125;);
+
+  it('parses breaking change', () =&gt; &#123;
+    const result = parsePRTitle('feat!: remove deprecated API');
+    expect(result).toEqual(&#123;
+      type: 'feat',
+      scope: undefined,
+      breaking: true,
+      description: 'remove deprecated API',
+    &#125;);
+  &#125;);
+
+  it('returns null for invalid format', () =&gt; &#123;
+    expect(parsePRTitle('update some stuff')).toBeNull();
+    expect(parsePRTitle('WIP: in progress')).toBeNull();
+  &#125;);
+&#125;);</code></pre>
+
+<h3>Integration Testing with act</h3>
+
+<p>
+  <code>act</code> is a CLI tool that runs GitHub Actions locally using Docker:
+</p>
+
+<pre><code># Install act
+brew install act  # macOS
+# Or: https://github.com/nektos/act
+
+# Create a test workflow
+# .github/workflows/test-action.yml
+name: Test Action
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./  # Uses the action in the current directory
+        with:
+          github-token: $&#123;&#123; secrets.GITHUB_TOKEN &#125;&#125;
+
+# Run locally
+act push -s GITHUB_TOKEN=your_token</code></pre>
+
+<h2>Versioning and Publishing</h2>
+
+<h3>Semantic Versioning for Actions</h3>
+
+<pre><code># Tag your releases
+git tag -a v1.0.0 -m "Initial release"
+git push origin v1.0.0
+
+# Also create/update a major version tag (allows users to pin to v1)
+git tag -fa v1 -m "Update v1 tag"
+git push origin v1 --force
+
+# Users can reference any of these:
+uses: your-org/your-action@v1       # Latest v1.x (recommended for users)
+uses: your-org/your-action@v1.2.3   # Exact version (most stable)
+uses: your-org/your-action@main     # Latest (risky — never for production)</code></pre>
+
+<h3>Release Workflow</h3>
+
+<pre><code># .github/workflows/release.yml
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run package
+
+      - name: Verify dist is up to date
+        run: |
+          git diff --exit-code dist/ || (echo "dist/ is not up to date. Run 'npm run package' and commit." &amp;&amp; exit 1)
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/index.js
+            action.yml</code></pre>
+
+<h2>Security Best Practices</h2>
+
+<ul>
+  <li><strong>Pin third-party actions to full commit SHA:</strong> <code>uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683</code> instead of <code>@v4</code>. Prevents supply chain attacks via tag mutation.</li>
+  <li><strong>Set minimum permissions:</strong> Request only the permissions your action needs in the workflow's <code>permissions</code> block.</li>
+  <li><strong>Never log secrets:</strong> <code>core.setSecret()</code> masks values in logs, but avoid logging anything that might contain sensitive data at all.</li>
+  <li><strong>Validate all inputs:</strong> Inputs come from workflow files and could be influenced by untrusted sources (PR titles, issue bodies). Validate and sanitize before use in shell commands.</li>
+</ul>
+
+<pre><code>// Always validate inputs before using in shell commands
+const branchName = core.getInput('branch-name');
+if (!/^[a-zA-Z0-9_/-]+$/.test(branchName)) &#123;
+  core.setFailed(`Invalid branch name: $&#123;branchName&#125;`);
+  return;
+&#125;
+
+// Use @actions/exec instead of string interpolation in shell
+import * as exec from '@actions/exec';
+await exec.exec('git', ['checkout', '-b', branchName]); // Safe
+// NOT: await exec.exec(`git checkout -b $&#123;branchName&#125;`); // Injection risk</code></pre>
+
+<h2>Publishing to the GitHub Marketplace</h2>
+
+<p>
+  To list your action in the Marketplace, add branding to your <code>action.yml</code>:
+</p>
+
+<pre><code># action.yml — add branding block
+branding:
+  icon: 'check-circle'   # Feather icon name
+  color: 'green'         # Background color</code></pre>
+
+<p>
+  Then create a GitHub Release with a version tag. GitHub automatically prompts you to publish to the Marketplace when you create a release from a repository containing a top-level <code>action.yml</code>.
+</p>
+
+<h2>Conclusion</h2>
+
+<p>
+  Custom GitHub Actions are one of the highest-leverage investments in your CI/CD infrastructure. A well-built action can save hours of workflow duplication across dozens of repositories and enforce organizational standards automatically.
+</p>
+
+<ul>
+  <li>Start with <strong>composite actions</strong> for grouping existing actions and shell scripts — no code required</li>
+  <li>Use <strong>JavaScript actions</strong> with TypeScript for complex logic, API calls, and reusable behavior</li>
+  <li>Reserve <strong>Docker actions</strong> for when you need a specific toolchain or OS environment</li>
+  <li>Always bundle with <code>ncc</code>, pin your dependencies, and test before publishing</li>
+</ul>
+
+<p>
+  For more on CI/CD automation, see our guide on <a href="/blog/github-actions-vs-gitlab-ci-comparison">GitHub Actions vs GitLab CI</a> and <a href="/blog/best-ci-cd-pipeline-for-small-teams">the best CI/CD pipeline for small teams</a>.
+</p>
+
+</BlogLayout>

@@ -1,0 +1,688 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const content = `
+<p>
+  If you have ever looked at a Git log full of "WIP", "fix typo", and "oops forgot a file" commits and wished you could clean it all up before merging, <strong>git rebase interactive</strong> is the tool you need. Interactive rebase gives you surgical control over your commit history — letting you squash, reorder, reword, edit, and drop commits before they become part of the permanent record.
+</p>
+
+<p>
+  In this comprehensive guide, you will learn exactly how interactive rebase works, when to use it, and how to handle every operation it offers. Whether you are preparing a feature branch for code review or tidying up a messy development session, this tutorial has you covered with real-world examples and best practices.
+</p>
+
+<h2>What Is Git Rebase Interactive?</h2>
+
+<p>
+  At its core, <code>git rebase -i</code> (short for <code>git rebase --interactive</code>) replays a series of commits onto a new base, but with a twist: before replaying, it opens a todo list in your editor where you can choose what to do with each commit. You can keep commits as-is, combine them, change their messages, split them apart, or remove them entirely.
+</p>
+
+<p>
+  The standard (non-interactive) rebase simply moves commits from one base to another. Interactive rebase adds a planning step — think of it as a commit-by-commit editing session. This makes it one of the most powerful tools in the Git ecosystem for maintaining a clean, readable project history.
+</p>
+
+<h3>Interactive Rebase vs. Regular Rebase vs. Merge</h3>
+
+<p>
+  Understanding when to use interactive rebase requires knowing how it differs from the alternatives:
+</p>
+
+<ul>
+  <li><strong>git merge:</strong> Creates a merge commit that joins two branches. Preserves the full history, including all individual commits. Simple and safe, but can create a tangled history graph.</li>
+  <li><strong>git rebase:</strong> Replays your commits on top of another branch, creating a linear history. Cleaner than merge, but rewrites commit hashes.</li>
+  <li><strong>git rebase -i:</strong> Same as rebase, but lets you edit, combine, reorder, or drop individual commits during the replay. Maximum control over the final history.</li>
+</ul>
+
+<h2>When Should You Use Interactive Rebase?</h2>
+
+<p>
+  Interactive rebase shines in several common development scenarios:
+</p>
+
+<ul>
+  <li><strong>Before opening a pull request:</strong> Clean up your feature branch so reviewers see logical, atomic commits instead of your messy development trail.</li>
+  <li><strong>Squashing fixup commits:</strong> Combine small correction commits (typo fixes, forgotten files) into the commits they belong with.</li>
+  <li><strong>Rewriting commit messages:</strong> Fix unclear or incorrect commit messages before pushing to a shared branch.</li>
+  <li><strong>Reordering commits:</strong> Arrange commits in a logical sequence that tells a better story.</li>
+  <li><strong>Splitting a commit:</strong> Break a large commit into smaller, more focused pieces.</li>
+  <li><strong>Removing accidental commits:</strong> Drop commits that should never have been made (debug logging, temporary changes).</li>
+</ul>
+
+<p>
+  A good rule of thumb: use interactive rebase on <strong>local, unpushed commits</strong>. Once commits are shared with others, rewriting history becomes risky — more on that in the best practices section.
+</p>
+
+<h2>Step-by-Step: Your First Interactive Rebase</h2>
+
+<h3>Step 1: Identify the Range of Commits</h3>
+
+<p>
+  First, decide how far back you want to go. The most common approach is to specify the number of commits:
+</p>
+
+<pre><code># Rebase the last 4 commits
+git rebase -i HEAD~4
+
+# Or rebase onto a specific branch point
+git rebase -i main
+
+# Or rebase onto a specific commit hash
+git rebase -i abc1234</code></pre>
+
+<p>
+  When you run this command, Git opens your default editor with a todo list. Let us say you ran <code>git rebase -i HEAD~4</code> and your recent commits look like this:
+</p>
+
+<pre><code>pick a1b2c3d Add user authentication module
+pick e4f5g6h Fix typo in auth error message
+pick i7j8k9l Add password reset endpoint
+pick m0n1o2p Forgot to add password validator</code></pre>
+
+<h3>Step 2: Choose Your Operations</h3>
+
+<p>
+  Each line starts with the word <code>pick</code>, which means "use this commit as-is." Below the todo list, Git shows a legend of available commands. You edit the todo list to tell Git what to do with each commit:
+</p>
+
+<pre><code># Commands:
+# p, pick   = use commit
+# r, reword = use commit, but edit the commit message
+# e, edit   = use commit, but stop for amending
+# s, squash = use commit, but meld into previous commit
+# f, fixup  = like squash, but discard this commit's log message
+# x, exec   = run command (the rest of the line) using shell
+# b, break  = stop here (continue rebase later with 'git rebase --continue')
+# d, drop   = remove commit
+# l, label  = label current HEAD with a name
+# t, reset  = reset HEAD to a label</code></pre>
+
+<h3>Step 3: Edit, Save, and Let Git Work</h3>
+
+<p>
+  Modify the todo list to reflect your desired operations, then save and close the editor. Git will replay the commits in order, pausing when you have chosen operations that require your input (like <code>reword</code> or <code>edit</code>).
+</p>
+
+<p>
+  Here is a practical example. Suppose you want to squash the typo fix into the auth commit and fix a commit message:
+</p>
+
+<pre><code>pick a1b2c3d Add user authentication module
+fixup e4f5g6h Fix typo in auth error message
+reword i7j8k9l Add password reset endpoint
+fixup m0n1o2p Forgot to add password validator</code></pre>
+
+<p>
+  When you save this, Git will:
+</p>
+
+<ol>
+  <li>Apply commit <code>a1b2c3d</code> as-is.</li>
+  <li>Squash <code>e4f5g6h</code> into it silently (fixup discards the message).</li>
+  <li>Apply <code>i7j8k9l</code> and open your editor so you can rewrite the message.</li>
+  <li>Squash <code>m0n1o2p</code> into the reworded commit silently.</li>
+</ol>
+
+<p>
+  The result: your four messy commits become two clean, logical commits.
+</p>
+
+<h2>All Interactive Rebase Operations Explained</h2>
+
+<h3>pick — Keep the Commit</h3>
+
+<p>
+  The default operation. The commit is applied exactly as it is, with no changes to its content or message.
+</p>
+
+<pre><code>pick a1b2c3d Add user authentication module</code></pre>
+
+<p>
+  Use <code>pick</code> for commits that are already clean and well-described.
+</p>
+
+<h3>reword — Change the Commit Message</h3>
+
+<p>
+  Applies the commit with the same changes, but opens your editor so you can write a new commit message.
+</p>
+
+<pre><code>reword a1b2c3d Add user authentication module</code></pre>
+
+<p>
+  When Git reaches this commit during the rebase, your editor opens with the current message pre-filled. Edit it, save, and Git continues. This is perfect for fixing vague messages like "updates" or "stuff" without changing any code.
+</p>
+
+<h3>edit — Pause and Amend</h3>
+
+<p>
+  Applies the commit and then stops, dropping you back to the command line. From there, you can amend the commit, add or remove files, or even split the commit into multiple smaller ones.
+</p>
+
+<pre><code>edit a1b2c3d Add user authentication module</code></pre>
+
+<p>
+  After Git pauses, you might do something like:
+</p>
+
+<pre><code># You're now at the paused commit. Make changes:
+git add forgotten-file.js
+git commit --amend --no-edit
+
+# Or split the commit:
+git reset HEAD~1
+git add src/auth.js
+git commit -m "Add auth module"
+git add src/auth.test.js
+git commit -m "Add auth module tests"
+
+# Then continue the rebase:
+git rebase --continue</code></pre>
+
+<p>
+  The <code>edit</code> command is the most flexible operation — use it whenever you need to make changes that go beyond simply rewriting a message.
+</p>
+
+<h3>squash — Combine Commits (Keep Messages)</h3>
+
+<p>
+  Merges a commit into the one above it in the todo list. Git then opens your editor with both commit messages combined, letting you write a new unified message.
+</p>
+
+<pre><code>pick a1b2c3d Add user authentication module
+squash e4f5g6h Fix auth error handling
+squash i7j8k9l Add auth rate limiting</code></pre>
+
+<p>
+  Your editor will show all three messages together:
+</p>
+
+<pre><code># This is a combination of 3 commits.
+# This is the 1st commit message:
+
+Add user authentication module
+
+# This is the commit message #2:
+
+Fix auth error handling
+
+# This is the commit message #3:
+
+Add auth rate limiting</code></pre>
+
+<p>
+  Edit this into a single coherent message, save, and Git creates one commit with all three sets of changes.
+</p>
+
+<h3>fixup — Combine Commits (Discard Message)</h3>
+
+<p>
+  Works exactly like <code>squash</code>, but automatically discards the fixup commit's message. The resulting commit keeps only the message from the target commit.
+</p>
+
+<pre><code>pick a1b2c3d Add user authentication module
+fixup e4f5g6h fix typo
+fixup i7j8k9l forgot test file</code></pre>
+
+<p>
+  This is the go-to operation for absorbing small corrections into the commit they fix. No editor prompt — Git just folds the changes in silently.
+</p>
+
+<p>
+  <strong>Pro tip:</strong> When you know you will fixup a commit later, create it with <code>git commit --fixup=TARGET_SHA</code>. Then run <code>git rebase -i --autosquash</code> and Git will automatically arrange the fixup commits in the right order with the <code>fixup</code> keyword already set.
+</p>
+
+<h3>drop — Remove a Commit</h3>
+
+<p>
+  Completely removes a commit and its changes from the history.
+</p>
+
+<pre><code>pick a1b2c3d Add user authentication module
+drop e4f5g6h Add debug console.log everywhere
+pick i7j8k9l Add password reset endpoint</code></pre>
+
+<p>
+  You can also simply delete the line from the todo list — that has the same effect as <code>drop</code>. Use this for commits that should never have been made: debug logging, temporary workarounds, or accidental data file commits.
+</p>
+
+<h3>exec — Run a Shell Command</h3>
+
+<p>
+  Runs an arbitrary shell command at that point in the rebase. Useful for running tests between commits to make sure each commit in your history is valid.
+</p>
+
+<pre><code>pick a1b2c3d Add user authentication module
+exec npm test
+pick i7j8k9l Add password reset endpoint
+exec npm test</code></pre>
+
+<p>
+  If the command exits with a non-zero status, the rebase pauses so you can fix the issue. This is invaluable for ensuring that every commit in your branch passes tests — a practice called "bisect-safe history."
+</p>
+
+<h2>Real-World Examples</h2>
+
+<h3>Example 1: Cleaning Up a Feature Branch Before Code Review</h3>
+
+<p>
+  You have been working on a feature for a few days. Your commit log looks like this:
+</p>
+
+<pre><code>$ git log --oneline HEAD~7..HEAD
+f8a2b1c WIP: starting API endpoint
+c3d4e5f Add GET /api/users endpoint
+a6b7c8d fix: missing import
+d9e0f1a Add POST /api/users endpoint
+b2c3d4e WIP: validation
+e5f6a7b Complete request validation
+g8h9i0j Add API documentation</code></pre>
+
+<p>
+  You want to present three clean commits: the GET endpoint, the POST endpoint with validation, and the documentation. Run <code>git rebase -i HEAD~7</code> and set up the todo list:
+</p>
+
+<pre><code>pick f8a2b1c WIP: starting API endpoint
+fixup c3d4e5f Add GET /api/users endpoint
+fixup a6b7c8d fix: missing import
+pick d9e0f1a Add POST /api/users endpoint
+fixup b2c3d4e WIP: validation
+fixup e5f6a7b Complete request validation
+pick g8h9i0j Add API documentation</code></pre>
+
+<p>
+  Wait — the first commit is the WIP, but we want the second commit's message. Let us use <code>squash</code> instead so we can choose the message:
+</p>
+
+<pre><code>pick f8a2b1c WIP: starting API endpoint
+squash c3d4e5f Add GET /api/users endpoint
+fixup a6b7c8d fix: missing import
+pick d9e0f1a Add POST /api/users endpoint
+fixup b2c3d4e WIP: validation
+fixup e5f6a7b Complete request validation
+pick g8h9i0j Add API documentation</code></pre>
+
+<p>
+  When the editor opens for the squash, keep only "Add GET /api/users endpoint" as the message. Result: three clean commits ready for review.
+</p>
+
+<h3>Example 2: Reordering Commits for a Logical Story</h3>
+
+<p>
+  Sometimes you work on things out of order. Maybe you added tests after writing the implementation, but you want the history to show tests first (TDD style):
+</p>
+
+<pre><code># Original order:
+pick a1b2c3d Implement payment processor
+pick e4f5g6h Add payment processor tests
+pick i7j8k9l Update payment documentation
+
+# Reordered:
+pick e4f5g6h Add payment processor tests
+pick a1b2c3d Implement payment processor
+pick i7j8k9l Update payment documentation</code></pre>
+
+<p>
+  Simply move lines around in the editor. Be aware that reordering can cause conflicts if the commits depend on each other — Git will pause and let you resolve conflicts if that happens.
+</p>
+
+<h3>Example 3: Splitting a Large Commit</h3>
+
+<p>
+  You accidentally committed both a feature and a refactor in the same commit. Use <code>edit</code> to split it:
+</p>
+
+<pre><code>edit a1b2c3d Add user dashboard and refactor CSS
+pick e4f5g6h Update navigation links</code></pre>
+
+<p>
+  When Git pauses at the edit:
+</p>
+
+<pre><code># Undo the commit but keep the changes staged
+$ git reset HEAD~1
+
+# Stage and commit only the CSS refactor
+$ git add src/styles/*.css
+$ git commit -m "Refactor CSS to use design tokens"
+
+# Stage and commit the feature
+$ git add src/components/Dashboard.jsx src/components/Dashboard.css
+$ git commit -m "Add user dashboard component"
+
+# Continue the rebase
+$ git rebase --continue</code></pre>
+
+<p>
+  One messy commit becomes two focused ones. If you work with structured data during development, our <a href="/tools/json-formatter">JSON Formatter</a> can help you clean up API response fixtures and config files before committing them.
+</p>
+
+<h2>Handling Conflicts During Interactive Rebase</h2>
+
+<p>
+  Conflicts during interactive rebase are common, especially when squashing or reordering commits. When a conflict occurs, Git pauses and shows you which files are affected:
+</p>
+
+<pre><code>$ git rebase -i HEAD~3
+Auto-merging src/auth.js
+CONFLICT (content): Merge conflict in src/auth.js
+error: could not apply e4f5g6h... Fix auth error handling
+hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add &lt;pathspec&gt;..." and run "git rebase --continue".
+hint: You can instead skip this commit with "git rebase --skip".
+hint: To abort and get back to the state before "git rebase",
+hint: run "git rebase --abort".</code></pre>
+
+<p>
+  You have three options:
+</p>
+
+<ul>
+  <li><strong>Resolve and continue:</strong> Edit the conflicting files, run <code>git add</code>, then <code>git rebase --continue</code>.</li>
+  <li><strong>Skip the commit:</strong> Run <code>git rebase --skip</code> to discard the conflicting commit entirely.</li>
+  <li><strong>Abort:</strong> Run <code>git rebase --abort</code> to undo the entire rebase and return to your original state.</li>
+</ul>
+
+<p>
+  <strong>Important:</strong> <code>git rebase --abort</code> is your safety net. If things go wrong, you can always abort and start over. Nothing is lost until the rebase completes successfully.
+</p>
+
+<h2>The Autosquash Workflow</h2>
+
+<p>
+  One of the most efficient workflows with interactive rebase uses the <code>--autosquash</code> flag. Here is how it works:
+</p>
+
+<pre><code># Make your initial commit
+$ git add src/auth.js
+$ git commit -m "Add authentication middleware"
+
+# Later, you find a bug in that commit. Create a fixup commit:
+$ git add src/auth.js
+$ git commit --fixup=HEAD
+
+# Or if the target commit is further back:
+$ git commit --fixup=a1b2c3d
+
+# Now run interactive rebase with autosquash:
+$ git rebase -i --autosquash HEAD~5</code></pre>
+
+<p>
+  Git automatically moves fixup commits next to their targets and marks them with the <code>fixup</code> command. You just review the todo list and save. To make this the default behavior, set the config:
+</p>
+
+<pre><code>$ git config --global rebase.autoSquash true</code></pre>
+
+<p>
+  With this enabled, every <code>git rebase -i</code> automatically arranges fixup and squash commits.
+</p>
+
+<h2>Best Practices for Interactive Rebase</h2>
+
+<h3>1. Never Rebase Shared History</h3>
+
+<p>
+  The golden rule: <strong>do not rebase commits that have been pushed to a shared branch</strong>. Rebasing rewrites commit hashes. If others have based work on the original commits, their history will diverge from yours, causing confusion and merge conflicts.
+</p>
+
+<p>
+  Safe to rebase: your local feature branch that only you work on, or a branch you have pushed but not yet opened a PR for (just force-push after rebasing).
+</p>
+
+<h3>2. Keep Commits Atomic</h3>
+
+<p>
+  Each commit should represent one logical change. Interactive rebase helps you achieve this after the fact, but it is even better to aim for atomic commits as you work. If a commit message needs the word "and" — like "Add login form and fix navbar styling" — it should probably be two commits.
+</p>
+
+<h3>3. Write Meaningful Commit Messages</h3>
+
+<p>
+  Use <code>reword</code> liberally. A good commit message explains <em>why</em> a change was made, not just what changed. Future you (and your teammates) will thank you. If you are working with tokens or encoded data during development, our <a href="/blog/jwt-token-explained">JWT Token guide</a> explains how to decode and debug authentication tokens that often appear in commit-related API testing.
+</p>
+
+<h3>4. Use fixup Commits During Development</h3>
+
+<p>
+  Adopt the habit of creating <code>--fixup</code> commits as you work. Find a bug in a commit from an hour ago? Do not just make a new "fix bug" commit — create a <code>--fixup</code> commit targeting the original. Then, before pushing, run <code>git rebase -i --autosquash</code> to fold everything together.
+</p>
+
+<h3>5. Test After Rebasing</h3>
+
+<p>
+  Always run your test suite after an interactive rebase. Even if you only reworded messages, it is good practice. Use the <code>exec</code> command in your todo list to automate this:
+</p>
+
+<pre><code>pick a1b2c3d Add feature X
+exec npm test
+pick e4f5g6h Add feature Y
+exec npm test</code></pre>
+
+<h3>6. Create a Backup Branch</h3>
+
+<p>
+  Before a complex rebase, create a backup:
+</p>
+
+<pre><code>$ git branch backup-before-rebase
+$ git rebase -i HEAD~10</code></pre>
+
+<p>
+  If something goes wrong and you want to start completely fresh (not just abort), you can reset to the backup branch.
+</p>
+
+<h2>Common Mistakes and How to Avoid Them</h2>
+
+<h3>Mistake 1: Squashing in the Wrong Direction</h3>
+
+<p>
+  A commit can only be squashed or fixed up <em>into the commit above it</em> in the todo list. This fails:
+</p>
+
+<pre><code>squash a1b2c3d Fix typo   &lt;-- ERROR: nothing above to squash into
+pick e4f5g6h Add feature</code></pre>
+
+<p>
+  The first commit in the list must always be <code>pick</code> (or <code>reword</code> / <code>edit</code>). Squash and fixup commits are absorbed into the preceding entry.
+</p>
+
+<h3>Mistake 2: Rebasing Public Branches</h3>
+
+<p>
+  If you rebase <code>main</code> or any branch others are working on, everyone who pulled the original commits will have divergent history. Use merge for shared branches; reserve rebase for private feature branches.
+</p>
+
+<h3>Mistake 3: Forgetting to Continue</h3>
+
+<p>
+  After resolving a conflict or finishing an <code>edit</code> stop, you must run <code>git rebase --continue</code>. A common mistake is to start working on new things while in the middle of a rebase. Check your status:
+</p>
+
+<pre><code>$ git status
+interactive rebase in progress; onto abc1234
+Last command done (1 command done):
+   edit a1b2c3d Add feature
+Next commands to do (2 remaining commands):
+   pick e4f5g6h Update tests
+   pick i7j8k9l Fix docs</code></pre>
+
+<h3>Mistake 4: Deleting All Lines in the Todo List</h3>
+
+<p>
+  If you save an empty todo list (or one with all lines commented out), Git aborts the rebase. This is actually a safety feature — it means you can cancel a rebase by clearing the file.
+</p>
+
+<h3>Mistake 5: Not Understanding That Rebase Rewrites Hashes</h3>
+
+<p>
+  Every rebased commit gets a new SHA. Even <code>reword</code> changes the hash because the commit message is part of the hash computation. This means any branch pointers, tags, or references to old commits become invalid.
+</p>
+
+<h2>Advanced Tips</h2>
+
+<h3>Using rebase.instructionFormat</h3>
+
+<p>
+  Customize what information appears in the todo list to make better decisions:
+</p>
+
+<pre><code>$ git config --global rebase.instructionFormat "(%an) %s"</code></pre>
+
+<p>
+  Now each line shows the author name alongside the commit message — useful when rebasing branches with commits from multiple contributors.
+</p>
+
+<h3>Combining with git reflog for Recovery</h3>
+
+<p>
+  Even after a completed rebase, the original commits still exist in Git's reflog for at least 30 days. If you need to undo a rebase:
+</p>
+
+<pre><code># Find the commit before the rebase started
+$ git reflog
+abc1234 HEAD@&#123;0&#125;: rebase (finish): returning to refs/heads/feature
+def5678 HEAD@&#123;1&#125;: rebase (squash): Add user auth
+ghi9012 HEAD@&#123;5&#125;: commit: Forgot test file       &lt;-- pre-rebase state
+
+# Reset to the pre-rebase state
+$ git reset --hard ghi9012</code></pre>
+
+<h3>Rebasing with --rebase-merges</h3>
+
+<p>
+  If your branch contains merge commits and you want to preserve them during interactive rebase, use the <code>--rebase-merges</code> flag:
+</p>
+
+<pre><code>$ git rebase -i --rebase-merges main</code></pre>
+
+<p>
+  The todo list will include <code>label</code>, <code>reset</code>, and <code>merge</code> commands that maintain the merge topology while still letting you edit individual commits.
+</p>
+
+<h2>Configuring Your Editor for Interactive Rebase</h2>
+
+<p>
+  By default, Git uses your system's default editor. You can change it to make interactive rebasing more comfortable:
+</p>
+
+<pre><code># Use VS Code (waits for you to close the tab)
+$ git config --global core.editor "code --wait"
+
+# Use Vim
+$ git config --global core.editor "vim"
+
+# Use Nano (beginner-friendly)
+$ git config --global core.editor "nano"
+
+# Use Notepad++ on Windows
+$ git config --global core.editor "'C:/Program Files/Notepad++/notepad++.exe' -multiInst -notabbar -nosession"</code></pre>
+
+<p>
+  Some editors and IDEs also have built-in interactive rebase interfaces with drag-and-drop commit reordering and visual squash controls — check your tools for this feature.
+</p>
+
+<h2>Frequently Asked Questions</h2>
+
+<h3>Can I undo an interactive rebase?</h3>
+
+<p>
+  Yes. If the rebase is still in progress, run <code>git rebase --abort</code>. If the rebase has already completed, use <code>git reflog</code> to find the pre-rebase commit and <code>git reset --hard</code> to that point. Original commits persist in the reflog for at least 30 days.
+</p>
+
+<h3>What happens if I get a conflict during interactive rebase?</h3>
+
+<p>
+  Git pauses the rebase and marks the conflicting files. You resolve the conflicts in your editor, stage the resolved files with <code>git add</code>, and run <code>git rebase --continue</code>. If you cannot resolve it, <code>git rebase --abort</code> takes you back to the starting state.
+</p>
+
+<h3>Is it safe to rebase after pushing?</h3>
+
+<p>
+  If you are the only person working on the branch, yes — just force-push with <code>git push --force-with-lease</code> after rebasing. The <code>--force-with-lease</code> flag adds a safety check: it refuses to push if someone else has pushed to the branch since your last fetch. Never force-push to shared branches like <code>main</code> or <code>develop</code>.
+</p>
+
+<h3>What is the difference between squash and fixup?</h3>
+
+<p>
+  Both combine a commit into the one above it. The difference is in the commit message: <code>squash</code> opens your editor with both messages so you can compose a new one, while <code>fixup</code> silently discards the squashed commit's message and keeps only the target's message.
+</p>
+
+<h3>Can I rebase the very first commit in a repository?</h3>
+
+<p>
+  Yes, using the <code>--root</code> flag: <code>git rebase -i --root</code>. This lets you edit every commit from the initial commit onward. Use this sparingly — it rewrites the entire project history.
+</p>
+
+<h3>How do I interactive rebase onto a different branch?</h3>
+
+<p>
+  Specify the target branch: <code>git rebase -i main</code>. This replays all commits on your current branch that are not on <code>main</code>, giving you the interactive todo list for each one. It is the most common way to clean up a feature branch before merging. If you need to format configuration files or API payloads during your development workflow, try our <a href="/tools/json-formatter">JSON Formatter</a> to validate and pretty-print JSON data directly in the browser.
+</p>
+
+<h2>Quick Reference Cheat Sheet</h2>
+
+<pre><code># Start interactive rebase for last N commits
+git rebase -i HEAD~N
+
+# Start interactive rebase onto a branch
+git rebase -i main
+
+# During rebase — resolve conflicts and continue
+git add .
+git rebase --continue
+
+# During rebase — skip a problematic commit
+git rebase --skip
+
+# During rebase — cancel and restore original state
+git rebase --abort
+
+# Create a fixup commit targeting a specific commit
+git commit --fixup=TARGET_SHA
+
+# Auto-arrange fixup commits
+git rebase -i --autosquash HEAD~N
+
+# Enable autosquash by default
+git config --global rebase.autoSquash true
+
+# Rebase preserving merge commits
+git rebase -i --rebase-merges main
+
+# Rebase from the very first commit
+git rebase -i --root</code></pre>
+
+<h2>Conclusion</h2>
+
+<p>
+  Git interactive rebase is one of the most powerful tools in a developer's arsenal for maintaining clean, professional commit history. It transforms a chaotic series of WIP commits, fixups, and experiments into a coherent narrative that is easy to review, easy to bisect, and easy to understand months later.
+</p>
+
+<p>
+  The key takeaways are: use interactive rebase on local branches before sharing; prefer <code>fixup</code> for small corrections; use <code>reword</code> to craft meaningful messages; always keep <code>git rebase --abort</code> in your back pocket as a safety net; and adopt the <code>--fixup</code> plus <code>--autosquash</code> workflow for maximum efficiency.
+</p>
+
+<p>
+  Start with simple squash operations on a test branch, build confidence, and gradually incorporate more advanced techniques like <code>edit</code> for commit splitting and <code>exec</code> for automated testing. Before long, interactive rebase will become an indispensable part of your daily Git workflow. For more developer productivity guides, check out our <a href="/blog/regex-cheat-sheet">Regex Cheat Sheet</a> or explore the full suite of <a href="/tools">free developer tools</a> available on DevToolkit.
+</p>
+`;
+
+const codeBlock = [
+  '# Find the commit before the rebase started',
+  '$ git reflog',
+  'abc1234 HEAD@{0}: rebase (finish): returning to refs/heads/feature',
+  'def5678 HEAD@{1}: rebase (squash): Add user auth',
+  'ghi9012 HEAD@{5}: commit: Forgot test file       &lt;-- pre-rebase state',
+  '',
+  '# Reset to the pre-rebase state',
+  '$ git reset --hard ghi9012'
+].join('\n');
+---
+<pre><code set:html=&#123;codeBlock&#125;></code></pre>
+<BlogLayout
+  title="How to Use Git Rebase Interactive: Complete Guide with Examples"
+  description="Master git rebase interactive to clean up commit history, squash commits, reorder changes, and maintain a professional Git workflow. Step-by-step tutorial with real examples."
+  slug="how-to-use-git-rebase-interactive"
+  publishDate="2026-03-20"
+  readTime="18 min read"
+>
+  <Fragment set:html={content} />
+</BlogLayout>

@@ -1,0 +1,466 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="The Complete Guide to Developer Productivity Tools in 2026"
+  description="Discover the best developer productivity tools in 2026 — from AI coding assistants to CLI utilities, task runners, and free online dev tools that save hours every week."
+  slug="developer-productivity-tools-2026"
+  publishDate="2026-03-20"
+  readTime="22 min read"
+>
+
+<p>
+  Developer productivity isn't about working faster — it's about eliminating friction. Every context switch, every manual task, every slow feedback loop compounds into hours of lost focus each week. In 2026, the tooling landscape has matured dramatically: AI assistants write boilerplate, CLI tools automate repetitive workflows, and browser-based utilities handle quick transformations without leaving your chair.
+</p>
+
+<p>
+  This guide covers the most impactful developer productivity tools across every category — from code editors and AI assistants to debugging, testing, deployment, and the small utility tools that quietly save you 20 minutes a day. Whether you're a solo developer or leading a team, you'll find tools here that immediately improve your workflow.
+</p>
+
+<h2>Why Developer Productivity Matters More Than Ever</h2>
+
+<p>
+  The average developer spends only 30-40% of their time actually writing code. The rest goes to meetings, code reviews, debugging, environment setup, and context switching. With codebases growing larger and deployment pipelines more complex, the gap between productive and unproductive developers keeps widening.
+</p>
+
+<p>
+  The good news: 2026's tool ecosystem addresses nearly every friction point. AI handles the boring parts. Automation handles the repetitive parts. And well-designed utilities handle the "I just need to convert this one thing" moments that used to break your flow.
+</p>
+
+<h2>AI-Powered Coding Assistants</h2>
+
+<p>
+  AI coding assistants have gone from novelty to necessity. They don't just autocomplete — they understand context, suggest architecture decisions, write tests, and refactor entire modules. Here's where the major players stand in 2026.
+</p>
+
+<h3>Claude Code</h3>
+
+<p>
+  Anthropic's CLI-based coding assistant runs directly in your terminal and operates on your actual codebase. Unlike editor-integrated tools, Claude Code can execute commands, run tests, manage git workflows, and make multi-file changes autonomously. It excels at complex refactoring tasks where understanding the full project context matters.
+</p>
+
+<p>
+  Key strengths: deep codebase understanding, multi-file edits, terminal integration, agentic workflows that chain multiple steps together. The 200K+ context window means it can hold entire modules in memory while working.
+</p>
+
+<h3>GitHub Copilot</h3>
+
+<p>
+  Still the most widely adopted AI coding tool, Copilot's editor integration remains seamless. The 2026 version includes workspace-aware suggestions that consider your project's patterns, not just the current file. Copilot Chat has improved significantly for explaining code and suggesting fixes inline.
+</p>
+
+<h3>Cursor</h3>
+
+<p>
+  Cursor has carved out a strong position as the "AI-native IDE." Built on VS Code's foundation, it provides deep integration between the editor and AI — you can select code, ask questions, and apply changes without leaving your editing flow. The Composer feature for multi-file edits has become a standout capability.
+</p>
+
+<h3>When to Use Which</h3>
+
+<p>
+  The choice isn't necessarily exclusive. Many developers use Copilot for inline completions, Cursor for editor-integrated AI workflows, and Claude Code for complex multi-step tasks that benefit from terminal access. The key is matching the tool to the task complexity.
+</p>
+
+<p>
+  For a detailed breakdown, see our <a href="/blog/claude-code-vs-cursor-vs-copilot">Claude Code vs Cursor vs GitHub Copilot comparison</a>.
+</p>
+
+<h2>Code Editors and IDEs</h2>
+
+<h3>VS Code</h3>
+
+<p>
+  VS Code continues to dominate with 75%+ market share among developers. The extension ecosystem is unmatched, performance has improved with the switch to a more efficient rendering pipeline, and remote development (SSH, containers, codespaces) works reliably. The 2026 updates added native AI integration points that let any assistant plug in through a standard API.
+</p>
+
+<h3>JetBrains IDEs (IntelliJ, WebStorm, PyCharm)</h3>
+
+<p>
+  JetBrains IDEs remain the gold standard for language-specific intelligence. Their refactoring tools, code inspections, and framework support are deeper than what VS Code extensions typically offer. The AI Assistant integration now works across all JetBrains products with project-aware suggestions.
+</p>
+
+<h3>Neovim</h3>
+
+<p>
+  The Neovim ecosystem has matured considerably. With Lazy.nvim for plugin management, native LSP support, and Treesitter for syntax awareness, the gap between Neovim and full IDEs has narrowed. For developers who value speed and customization, Neovim + a few well-chosen plugins delivers a remarkably productive setup.
+</p>
+
+<h3>Zed</h3>
+
+<p>
+  Zed has emerged as a serious contender for developers who want native performance without the overhead of Electron-based editors. Written in Rust, it's fast — noticeably faster than VS Code for large files and projects. Built-in collaboration features and AI integration make it worth evaluating, especially if editor performance is a pain point.
+</p>
+
+<h2>Terminal and CLI Tools</h2>
+
+<p>
+  The terminal is where productive developers spend a significant chunk of their time. Modern CLI tools have replaced many slow, traditional Unix utilities with faster, more user-friendly alternatives.
+</p>
+
+<h3>Essential Modern CLI Replacements</h3>
+
+<ul>
+  <li><strong>ripgrep (rg)</strong> — Search code 10-50x faster than grep. Respects .gitignore, supports regex, and outputs clean results. If you're still using grep for code search, switching to ripgrep is the single biggest quality-of-life improvement you can make.</li>
+  <li><strong>fd</strong> — A modern replacement for find. Intuitive syntax, fast parallel traversal, and sensible defaults (ignores hidden files and .gitignore patterns).</li>
+  <li><strong>bat</strong> — cat with syntax highlighting, line numbers, and git integration. Makes reading files in the terminal actually pleasant.</li>
+  <li><strong>eza</strong> — A modern ls replacement with color-coded output, git status integration, and tree view. The successor to exa.</li>
+  <li><strong>delta</strong> — A better git diff viewer with syntax highlighting, line numbers, and side-by-side mode.</li>
+  <li><strong>zoxide</strong> — A smarter cd that learns your most-visited directories. Type <code>z project</code> instead of <code>cd ~/work/clients/acme/projects/frontend</code>.</li>
+  <li><strong>fzf</strong> — Fuzzy finder for everything: files, command history, git branches, processes. Integrates with your shell for instant fuzzy search on Ctrl+R.</li>
+</ul>
+
+<h3>Shell and Terminal Emulators</h3>
+
+<p>
+  <strong>Warp</strong> has redefined what a terminal can be — with block-based output, AI command suggestions, and built-in workflows. <strong>Alacritty</strong> and <strong>WezTerm</strong> remain excellent choices for developers who want speed and configurability. And <strong>Starship</strong> provides a fast, customizable prompt that works across any shell.
+</p>
+
+<h3>Task Runners and Build Tools</h3>
+
+<ul>
+  <li><strong>just</strong> — A command runner that replaces Makefiles for project-specific tasks. Simpler syntax, better error messages, and no surprising behavior from tab vs. spaces.</li>
+  <li><strong>Turborepo</strong> — For monorepo task orchestration. Caches build outputs, runs tasks in parallel, and understands the dependency graph between packages.</li>
+  <li><strong>Nx</strong> — Another strong monorepo tool with deep framework integration. Particularly good for Angular and React projects in large organizations.</li>
+</ul>
+
+<h2>Online Developer Utilities</h2>
+
+<p>
+  Sometimes you need to quickly format JSON, encode a string, test a regex, or generate a hash — and you don't want to install anything or write a script. Browser-based developer tools handle these micro-tasks instantly.
+</p>
+
+<h3>Data Format Tools</h3>
+
+<p>
+  Working with data formats is a daily task for most developers. A good <a href="/tools/json-formatter">JSON Formatter</a> validates and pretty-prints JSON with syntax highlighting, making it easy to spot structural issues in API responses. When you need to convert between formats, a <a href="/tools/yaml-to-json">YAML to JSON converter</a> handles the translation without manual editing errors.
+</p>
+
+<p>
+  <a href="/tools/base64-encoder">Base64 encoding and decoding</a> comes up constantly — embedding images, handling auth tokens, working with binary data in text formats. Having a reliable browser tool means you're not writing throwaway scripts for one-off conversions.
+</p>
+
+<h3>Text and String Manipulation</h3>
+
+<p>
+  <a href="/tools/url-encoder">URL encoding/decoding</a> is essential when debugging query strings or building API requests. For testing pattern matching, a <a href="/tools/regex-tester">Regex Tester</a> with real-time matching and group highlighting saves enormous time compared to iterating in code.
+</p>
+
+<p>
+  Need to quickly hash a string for comparison or verification? A <a href="/tools/hash-generator">Hash Generator</a> supporting MD5, SHA-1, SHA-256, and SHA-512 handles it without requiring you to remember the openssl command syntax.
+</p>
+
+<h3>Development Utilities</h3>
+
+<p>
+  <a href="/tools/cron-generator">Cron expression generators</a> turn human-readable schedules into cron syntax — because nobody wants to debug whether <code>0 */2 * * 1-5</code> actually means "every 2 hours on weekdays." For frontend work, a <a href="/tools/color-converter">Color Converter</a> handles HEX, RGB, HSL translations instantly.
+</p>
+
+<p>
+  <a href="/tools/qr-code-generator">QR Code generators</a> are surprisingly useful for development — sharing localhost URLs with mobile devices, linking to staging environments, or embedding in documentation. Our guide on <a href="/blog/how-to-create-qr-codes">how to create QR codes</a> covers both online tools and programmatic approaches.
+</p>
+
+<h2>Version Control and Collaboration</h2>
+
+<h3>Git Workflows</h3>
+
+<p>
+  Git itself hasn't changed much, but the tools around it have improved significantly:
+</p>
+
+<ul>
+  <li><strong>GitHub CLI (gh)</strong> — Create PRs, review code, manage issues, and trigger workflows without leaving the terminal. The <code>gh copilot</code> integration adds AI-powered command suggestions.</li>
+  <li><strong>lazygit</strong> — A terminal UI for git that makes staging, committing, branching, and rebasing visual and fast. Particularly good for interactive rebases and selective staging.</li>
+  <li><strong>git-absorb</strong> — Automatically fixup commits in your branch. Write a fix, run git absorb, and it figures out which commit the fix belongs to.</li>
+  <li><strong>Graphite</strong> — Stacked PR workflow tool that makes it practical to submit small, reviewable PRs while still building complex features incrementally.</li>
+</ul>
+
+<h3>Code Review</h3>
+
+<p>
+  AI-assisted code review has become standard. Tools like <strong>CodeRabbit</strong>, <strong>Sourcery</strong>, and GitHub's own Copilot review catch common issues before human reviewers spend time on them. The key is configuring them to match your team's standards rather than using generic rules.
+</p>
+
+<h2>Testing and Quality</h2>
+
+<h3>Testing Frameworks</h3>
+
+<p>
+  The testing landscape has consolidated somewhat:
+</p>
+
+<ul>
+  <li><strong>Vitest</strong> — Now the default choice for JavaScript/TypeScript projects. Compatible with Jest's API but significantly faster thanks to Vite's transform pipeline and native ESM support.</li>
+  <li><strong>Playwright</strong> — Dominated the E2E testing space. Cross-browser, fast, and with excellent debugging tools (trace viewer, codegen). Has largely replaced Cypress for new projects.</li>
+  <li><strong>pytest</strong> — Still the best testing framework in the Python ecosystem. The fixture system and plugin ecosystem are unmatched.</li>
+</ul>
+
+<h3>Code Quality</h3>
+
+<ul>
+  <li><strong>Biome</strong> — An all-in-one linter and formatter for JavaScript/TypeScript that's replacing ESLint + Prettier for many teams. Written in Rust, it's dramatically faster.</li>
+  <li><strong>Ruff</strong> — The equivalent revolution in Python. A Rust-powered linter that replaces flake8, isort, pyflakes, and more — at 10-100x the speed.</li>
+  <li><strong>SonarQube / SonarCloud</strong> — For teams that need comprehensive code quality gates. The AI-enhanced rules in 2026 catch more subtle issues like potential race conditions and security vulnerabilities.</li>
+</ul>
+
+<h2>Containerization and Deployment</h2>
+
+<h3>Container Tools</h3>
+
+<p>
+  Docker remains essential, but the ecosystem around it has evolved:
+</p>
+
+<ul>
+  <li><strong>Docker Desktop</strong> — Still the easiest way to run containers locally, though <strong>OrbStack</strong> has become the preferred alternative on macOS for its speed and lower resource usage.</li>
+  <li><strong>Podman</strong> — The daemonless alternative that's gaining traction, especially in enterprise environments where running a Docker daemon raises security concerns.</li>
+  <li><strong>Docker Compose v2</strong> — The Go rewrite is now the default. For understanding when to use Docker vs. Kubernetes, see our <a href="/blog/docker-vs-kubernetes-decision-framework">Docker vs Kubernetes decision framework</a>.</li>
+</ul>
+
+<h3>Deployment Platforms</h3>
+
+<ul>
+  <li><strong>Vercel</strong> — The default for Next.js and frontend projects. Zero-config deployments, preview URLs for every PR, and edge functions for API routes.</li>
+  <li><strong>Railway</strong> — Excellent for backend services. Supports any Docker container, provides managed databases, and handles scaling automatically.</li>
+  <li><strong>Fly.io</strong> — When you need containers running close to your users globally. Great for latency-sensitive applications.</li>
+  <li><strong>Coolify</strong> — Self-hosted alternative to Heroku/Vercel. Deploy anything on your own servers with a clean UI and automated SSL.</li>
+</ul>
+
+<h2>API Development and Testing</h2>
+
+<h3>API Clients</h3>
+
+<p>
+  <strong>Bruno</strong> has emerged as the go-to API client for developers who want their API collections in version control. Unlike Postman (which moved to cloud-first), Bruno stores everything as plain files in your repo. <strong>Hoppscotch</strong> remains excellent as a lightweight, browser-based alternative.
+</p>
+
+<p>
+  For a comprehensive API design approach, check our <a href="/blog/api-design-checklist-production">API Design Checklist</a> covering authentication, versioning, error handling, and documentation.
+</p>
+
+<h3>API Documentation</h3>
+
+<ul>
+  <li><strong>Scalar</strong> — Beautiful API reference docs from OpenAPI specs. Has replaced Swagger UI for many teams.</li>
+  <li><strong>Mintlify</strong> — Developer documentation platform with built-in AI search and beautiful defaults.</li>
+  <li><strong>Redocly</strong> — Enterprise-grade API documentation with governance features.</li>
+</ul>
+
+<h2>Monitoring and Observability</h2>
+
+<h3>Error Tracking</h3>
+
+<p>
+  <strong>Sentry</strong> remains the leader for error tracking across all platforms. The 2026 version includes AI-powered error grouping and fix suggestions. <strong>Highlight.io</strong> is a strong open-source alternative that combines error tracking, session replay, and logging in one tool.
+</p>
+
+<h3>Logging and Metrics</h3>
+
+<ul>
+  <li><strong>Grafana + Prometheus</strong> — The open-source observability stack. Grafana's dashboards are unmatched for custom metrics visualization.</li>
+  <li><strong>Axiom</strong> — Modern log management that's developer-friendly. Ingest everything, query with a simple language, and pay based on what you store.</li>
+  <li><strong>Better Stack</strong> — Combines uptime monitoring, incident management, and log aggregation in a well-designed package.</li>
+</ul>
+
+<h2>Database Tools</h2>
+
+<h3>Database Clients</h3>
+
+<ul>
+  <li><strong>TablePlus</strong> — Clean, fast database client for PostgreSQL, MySQL, SQLite, Redis, and more. The native UI makes it feel like a first-class app, not a web wrapper.</li>
+  <li><strong>DBeaver</strong> — Free, open-source, and supports virtually every database. The SQL editor with autocomplete and ER diagrams is powerful.</li>
+  <li><strong>Drizzle Studio</strong> — If you're using Drizzle ORM, the built-in studio provides a type-safe way to browse and edit data.</li>
+</ul>
+
+<h3>Database Platforms</h3>
+
+<p>
+  <strong>Neon</strong> (serverless PostgreSQL), <strong>PlanetScale</strong> (serverless MySQL), and <strong>Turso</strong> (edge SQLite) have made database management significantly easier for small to medium projects. The branching feature in Neon and PlanetScale — creating database branches like git branches — is genuinely transformative for development workflows.
+</p>
+
+<h2>Documentation and Knowledge Management</h2>
+
+<h3>For Code Documentation</h3>
+
+<ul>
+  <li><strong>Notion</strong> — Still dominant for team knowledge bases. The API and integrations have matured, making it practical to automate documentation updates.</li>
+  <li><strong>Obsidian</strong> — For personal knowledge management. The local-first, Markdown-based approach resonates with developers. The graph view helps connect related concepts.</li>
+  <li><strong>Docusaurus</strong> — For public-facing documentation sites. React-based, versioned docs, and excellent search integration.</li>
+</ul>
+
+<h2>Security Tools</h2>
+
+<p>
+  Security has shifted left — meaning it's now integrated into the development workflow rather than being a separate phase:
+</p>
+
+<ul>
+  <li><strong>Snyk</strong> — Scans dependencies for known vulnerabilities and suggests fixes. Integrates with CI/CD pipelines for automated checking.</li>
+  <li><strong>GitGuardian</strong> — Prevents secrets from being committed to repositories. Catches API keys, passwords, and certificates before they reach your git history.</li>
+  <li><strong>Trivy</strong> — Open-source vulnerability scanner for containers, file systems, and git repositories. Fast and comprehensive.</li>
+</ul>
+
+<h2>Putting It All Together: A Modern Developer Stack</h2>
+
+<p>
+  Here's a practical, opinionated stack that maximizes productivity for a full-stack developer in 2026:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Tool</th>
+      <th>Why</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Editor</td>
+      <td>VS Code or Cursor</td>
+      <td>Ecosystem + AI integration</td>
+    </tr>
+    <tr>
+      <td>AI Assistant</td>
+      <td>Claude Code + Copilot</td>
+      <td>Terminal tasks + inline completions</td>
+    </tr>
+    <tr>
+      <td>Terminal</td>
+      <td>Warp or WezTerm + Starship</td>
+      <td>Modern UX + fast prompt</td>
+    </tr>
+    <tr>
+      <td>Search</td>
+      <td>ripgrep + fzf</td>
+      <td>Fast code search + fuzzy finding</td>
+    </tr>
+    <tr>
+      <td>Git UI</td>
+      <td>lazygit + GitHub CLI</td>
+      <td>Visual staging + PR management</td>
+    </tr>
+    <tr>
+      <td>Testing</td>
+      <td>Vitest + Playwright</td>
+      <td>Fast unit tests + reliable E2E</td>
+    </tr>
+    <tr>
+      <td>Linting</td>
+      <td>Biome (JS) or Ruff (Python)</td>
+      <td>Speed + comprehensive rules</td>
+    </tr>
+    <tr>
+      <td>Containers</td>
+      <td>Docker + OrbStack (macOS)</td>
+      <td>Standard + lightweight</td>
+    </tr>
+    <tr>
+      <td>Deploy</td>
+      <td>Vercel (frontend) + Railway (backend)</td>
+      <td>Zero-config + managed infra</td>
+    </tr>
+    <tr>
+      <td>Database</td>
+      <td>Neon (PostgreSQL)</td>
+      <td>Serverless + branching</td>
+    </tr>
+    <tr>
+      <td>Monitoring</td>
+      <td>Sentry + Better Stack</td>
+      <td>Errors + uptime + logs</td>
+    </tr>
+    <tr>
+      <td>Quick Utils</td>
+      <td><a href="/">DevPlaybook.cc</a></td>
+      <td>JSON, Base64, regex, hashing — no install</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Productivity Habits That Matter More Than Tools</h2>
+
+<p>
+  Tools are force multipliers, but they multiply your existing habits. Here are the practices that consistently separate highly productive developers from the rest:
+</p>
+
+<h3>1. Automate Your Onboarding</h3>
+
+<p>
+  Keep a <code>setup.sh</code> or <code>Makefile</code> that installs dependencies, sets up the database, seeds test data, and runs a smoke test. When a new team member can go from <code>git clone</code> to running the app in under 5 minutes, you know your project is healthy.
+</p>
+
+<h3>2. Use Keyboard Shortcuts Religiously</h3>
+
+<p>
+  Every time you reach for the mouse, you lose flow. Learn the 20 most common shortcuts in your editor, then add 5 more each month. In VS Code: <code>Cmd+P</code> (file search), <code>Cmd+Shift+P</code> (command palette), <code>Cmd+D</code> (multi-cursor select), and <code>Cmd+Shift+F</code> (project search) eliminate most mouse usage.
+</p>
+
+<h3>3. Write Things Down Before You Code</h3>
+
+<p>
+  Spend 10 minutes writing a short plan before starting any task that will take more than an hour. List the files you'll change, the approach you'll take, and the edge cases you need to handle. This simple habit prevents more wasted time than any tool.
+</p>
+
+<h3>4. Keep a Running "Friction Log"</h3>
+
+<p>
+  Every time something annoys you — a slow build, a confusing error message, a manual step — write it down. Review the log weekly and fix the top item. Over months, this compounds into a dramatically smoother workflow.
+</p>
+
+<h3>5. Batch Context Switches</h3>
+
+<p>
+  Don't check Slack between every function. Set specific times for communication (e.g., top of every hour). Use "Do Not Disturb" during focus blocks. The productivity research is clear: every interruption costs 15-25 minutes of recovery time.
+</p>
+
+<h2>What's Coming Next</h2>
+
+<p>
+  Several trends are shaping the next wave of developer tools:
+</p>
+
+<ul>
+  <li><strong>Agentic development</strong> — AI tools that don't just suggest code but execute multi-step workflows autonomously. Claude Code's agent mode and similar features in Cursor are early examples. Read our <a href="/blog/build-first-ai-agent-tutorial">guide to building AI agents</a> to understand the underlying concepts.</li>
+  <li><strong>AI-native testing</strong> — Tools that automatically generate test cases, identify untested paths, and maintain tests as code changes.</li>
+  <li><strong>Universal dev environments</strong> — Cloud-based development environments (Gitpod, GitHub Codespaces, Devbox) that eliminate "works on my machine" entirely.</li>
+  <li><strong>Observability-driven development</strong> — Writing code with built-in observability from the start, not bolting it on after deployment.</li>
+</ul>
+
+<h2>Frequently Asked Questions</h2>
+
+<h3>What's the single most impactful productivity tool for developers?</h3>
+
+<p>
+  If you're not using one already, an AI coding assistant (Claude Code, Copilot, or Cursor) will give you the biggest immediate productivity boost. For developers already using AI tools, switching to modern CLI utilities (ripgrep, fzf, zoxide) often provides the next biggest improvement.
+</p>
+
+<h3>Are paid tools worth it compared to free alternatives?</h3>
+
+<p>
+  It depends on the category. For editors and CLI tools, free options (VS Code, ripgrep, lazygit) are genuinely excellent. For AI assistants and deployment platforms, paid tiers usually offer meaningfully better capabilities. Calculate the value based on time saved — if a $20/month tool saves you 2 hours per month, it's paying for itself many times over.
+</p>
+
+<h3>How do I avoid "tool fatigue" from constantly switching tools?</h3>
+
+<p>
+  Evaluate new tools quarterly, not daily. When you find something that works, commit to it for at least 3 months before considering alternatives. The switching cost (learning curve, config migration, muscle memory) is real and often underestimated.
+</p>
+
+<h3>What tools should a junior developer learn first?</h3>
+
+<p>
+  Start with your editor (learn it deeply), Git (command line, not just GUI), and one terminal multiplexer. Add an AI assistant early — it's a learning accelerator, not a crutch. Browser-based tools like our <a href="/tools/json-formatter">JSON Formatter</a> and <a href="/tools/regex-tester">Regex Tester</a> are also great for beginners since they provide instant feedback without any setup.
+</p>
+
+<h2>Conclusion</h2>
+
+<p>
+  The best developer productivity stack in 2026 isn't about using the most tools — it's about using the right tools for your workflow and actually learning them well. Start with the pain points in your current workflow, pick one tool from this guide that addresses it, and give it a real chance. Then repeat.
+</p>
+
+<p>
+  For quick data transformations and utility tasks, bookmark <a href="/">DevPlaybook.cc</a> — we maintain 30+ free browser-based <a href="/">developer tools</a> including <a href="/tools/json-formatter">JSON formatting</a>, <a href="/tools/base64-encoder">Base64 encoding</a>, <a href="/tools/regex-tester">regex testing</a>, <a href="/tools/hash-generator">hash generation</a>, and more. No signup, no install, no tracking.
+</p>
+
+</BlogLayout>

@@ -80,8 +80,8 @@ order by last_name asc;</code></pre>
 FROM users u
 INNER JOIN orders o
     ON u.id = o.user_id
-WHERE o.order_date >= '2026-01-01'
-    AND o.total_amount > 100
+WHERE o.order_date &gt;= '2026-01-01'
+    AND o.total_amount &gt; 100
 ORDER BY o.order_date DESC;</code></pre>
 
 <p>
@@ -145,9 +145,9 @@ FROM users;</code></pre>
     COUNT(*) AS employee_count,
     AVG(salary) AS avg_salary
 FROM employees
-WHERE hire_date >= '2024-01-01'
+WHERE hire_date &gt;= '2024-01-01'
 GROUP BY department
-HAVING COUNT(*) >= 5
+HAVING COUNT(*) &gt;= 5
 ORDER BY avg_salary DESC
 LIMIT 10;</code></pre>
 
@@ -206,13 +206,13 @@ LEFT JOIN orders o
     ON u.id = o.user_id
     AND o.status = 'completed'
 WHERE u.is_active = 1
-    AND u.created_at >= '2025-01-01'
+    AND u.created_at &gt;= '2025-01-01'
 GROUP BY
     u.id,
     u.first_name,
     u.last_name,
     u.email
-HAVING COUNT(o.id) >= 3
+HAVING COUNT(o.id) &gt;= 3
 ORDER BY total_spent DESC
 LIMIT 50;</code></pre>
 
@@ -246,7 +246,7 @@ INNER JOIN order_items oi
     ON o.id = oi.order_id
 INNER JOIN products p
     ON oi.product_id = p.id
-WHERE o.order_date >= '2026-01-01';
+WHERE o.order_date &gt;= '2026-01-01';
 
 -- Bad: implicit join (hard to read, easy to create accidental cross joins)
 SELECT c.name, p.name, oi.quantity, oi.unit_price
@@ -254,7 +254,7 @@ FROM customers c, orders o, order_items oi, products p
 WHERE c.id = o.customer_id
 AND o.id = oi.order_id
 AND oi.product_id = p.id
-AND o.order_date >= '2026-01-01';</code></pre>
+AND o.order_date &gt;= '2026-01-01';</code></pre>
 
 <p>
   The explicit join syntax separates join conditions from filter conditions, making the query's intent much clearer.
@@ -269,7 +269,7 @@ AND o.order_date >= '2026-01-01';</code></pre>
 <pre><code>SELECT *
 FROM orders
 WHERE status = 'shipped'
-    AND total_amount > 50
+    AND total_amount &gt; 50
     AND (
         shipping_country = 'US'
         OR shipping_country = 'CA'
@@ -338,8 +338,8 @@ FROM users u
 WHERE u.id IN (
     SELECT DISTINCT o.user_id
     FROM orders o
-    WHERE o.total_amount > 500
-        AND o.order_date >= '2026-01-01'
+    WHERE o.total_amount &gt; 500
+        AND o.order_date &gt;= '2026-01-01'
 )
 ORDER BY u.last_name;</code></pre>
 
@@ -356,9 +356,9 @@ FROM (
         user_id,
         SUM(total_amount) AS total_spent
     FROM orders
-    WHERE order_date >= '2025-01-01'
+    WHERE order_date &gt;= '2025-01-01'
     GROUP BY user_id
-    HAVING SUM(total_amount) > 1000
+    HAVING SUM(total_amount) &gt; 1000
 ) top_customers
 INNER JOIN users u
     ON top_customers.user_id = u.id
@@ -402,7 +402,7 @@ SELECT
     prev_month_revenue,
     growth_pct
 FROM revenue_growth
-WHERE month >= '2025-07-01'
+WHERE month &gt;= '2025-07-01'
 ORDER BY month;</code></pre>
 
 <p>
@@ -452,12 +452,12 @@ SET
     cancelled_at = CURRENT_TIMESTAMP,
     cancelled_by = 'system'
 WHERE status = 'pending'
-    AND created_at < '2026-01-01';</code></pre>
+    AND created_at &lt; '2026-01-01';</code></pre>
 
 <h3>DELETE</h3>
 
 <pre><code>DELETE FROM session_tokens
-WHERE expires_at < CURRENT_TIMESTAMP
+WHERE expires_at &lt; CURRENT_TIMESTAMP
     AND is_revoked = 1;</code></pre>
 
 <h2>Step-by-Step: Format SQL with DevToolkit SQL Formatter</h2>
@@ -478,7 +478,7 @@ WHERE expires_at < CURRENT_TIMESTAMP
   Paste your unformatted SQL into the input area. The formatter accepts any valid SQL, including queries with subqueries, CTEs, window functions, and complex joins. For example, paste this messy query:
 </p>
 
-<pre><code>select u.id,u.first_name,u.last_name,count(o.id) as order_count,sum(o.total_amount) as total_spent from users u left join orders o on u.id=o.user_id where u.is_active=1 and u.created_at>='2025-01-01' group by u.id,u.first_name,u.last_name having count(o.id)>=3 order by total_spent desc limit 50;</code></pre>
+<pre><code>select u.id,u.first_name,u.last_name,count(o.id) as order_count,sum(o.total_amount) as total_spent from users u left join orders o on u.id=o.user_id where u.is_active=1 and u.created_at&gt;='2025-01-01' group by u.id,u.first_name,u.last_name having count(o.id)&gt;=3 order by total_spent desc limit 50;</code></pre>
 
 <h3>Step 3: Click Format</h3>
 
@@ -496,12 +496,12 @@ FROM users u
 LEFT JOIN orders o
     ON u.id = o.user_id
 WHERE u.is_active = 1
-    AND u.created_at >= '2025-01-01'
+    AND u.created_at &gt;= '2025-01-01'
 GROUP BY
     u.id,
     u.first_name,
     u.last_name
-HAVING COUNT(o.id) >= 3
+HAVING COUNT(o.id) &gt;= 3
 ORDER BY total_spent DESC
 LIMIT 50;</code></pre>
 
@@ -609,7 +609,7 @@ pg_format -s 4 -u 1 input.sql -o output.sql</code></pre>
 
 <p><strong>Before (unformatted):</strong></p>
 
-<pre><code>select c.name as category,count(distinct o.id) as num_orders,count(distinct o.customer_id) as num_customers,sum(oi.quantity*oi.unit_price) as gross_revenue,sum(case when o.status='returned' then oi.quantity*oi.unit_price else 0 end) as returned_revenue,sum(oi.quantity*oi.unit_price)-sum(case when o.status='returned' then oi.quantity*oi.unit_price else 0 end) as net_revenue from categories c inner join products p on c.id=p.category_id inner join order_items oi on p.id=oi.product_id inner join orders o on oi.order_id=o.id where o.order_date between '2025-01-01' and '2025-12-31' group by c.name having sum(oi.quantity*oi.unit_price)>10000 order by net_revenue desc;</code></pre>
+<pre><code>select c.name as category,count(distinct o.id) as num_orders,count(distinct o.customer_id) as num_customers,sum(oi.quantity*oi.unit_price) as gross_revenue,sum(case when o.status='returned' then oi.quantity*oi.unit_price else 0 end) as returned_revenue,sum(oi.quantity*oi.unit_price)-sum(case when o.status='returned' then oi.quantity*oi.unit_price else 0 end) as net_revenue from categories c inner join products p on c.id=p.category_id inner join order_items oi on p.id=oi.product_id inner join orders o on oi.order_id=o.id where o.order_date between '2025-01-01' and '2025-12-31' group by c.name having sum(oi.quantity*oi.unit_price)&gt;10000 order by net_revenue desc;</code></pre>
 
 <p><strong>After (formatted):</strong></p>
 
@@ -641,7 +641,7 @@ INNER JOIN orders o
     ON oi.order_id = o.id
 WHERE o.order_date BETWEEN '2025-01-01' AND '2025-12-31'
 GROUP BY c.name
-HAVING SUM(oi.quantity * oi.unit_price) > 10000
+HAVING SUM(oi.quantity * oi.unit_price) &gt; 10000
 ORDER BY net_revenue DESC;</code></pre>
 
 <p>
@@ -722,8 +722,8 @@ ORDER BY
     order_id,
     total_amount,
     CASE
-        WHEN total_amount >= 1000 THEN 'high'
-        WHEN total_amount >= 100 THEN 'medium'
+        WHEN total_amount &gt;= 1000 THEN 'high'
+        WHEN total_amount &gt;= 100 THEN 'medium'
         ELSE 'low'
     END AS order_tier
 FROM orders;</code></pre>

@@ -1,0 +1,671 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeBlock = [
+  '',
+  'Client                          Authorization Server',
+  '  |                                      |',
+  '  |  POST /token                         |',
+  '  |  grant_type=refresh_token            |',
+  '  |  refresh_token=old_RT                |',
+  '  | -----------------------------------&gt; |',
+  '  |                                      |',
+  '  |  {                                   |',
+  '  |    access_token: "new_AT",           |',
+  '  |    refresh_token: "new_RT",  &lt;-- rotated!',
+  '  |    expires_in: 3600                  |',
+  '  |  }                                   |',
+  '  | &lt;----------------------------------- |',
+  '  |                                      |',
+  '  |  (old_RT is now invalidated)         |',
+  ''
+].join('\n');
+
+const codeBlock2 = [
+  '// oauth-client.js',
+  "import express from 'express';",
+  "import crypto from 'crypto';",
+  "import session from 'express-session';",
+  '',
+  'const app = express();',
+  '',
+  '// Session configuration for secure token storage',
+  'app.use(session({',
+  "  secret: crypto.randomBytes(32).toString('hex'),",
+  '  resave: false,',
+  '  saveUninitialized: false,',
+  '  cookie: {',
+  '    secure: true,       // HTTPS only',
+  '    httpOnly: true,      // No JavaScript access',
+  "    sameSite: 'lax',     // CSRF protection",
+  '    maxAge: 24 * 60 * 60 * 1000  // 24 hours',
+  '  }',
+  '}));',
+  '',
+  '// OAuth 2.0 configuration',
+  'const config = {',
+  '  clientId: process.env.OAUTH_CLIENT_ID,',
+  '  clientSecret: process.env.OAUTH_CLIENT_SECRET,',
+  "  authorizationEndpoint: 'https://auth.example.com/authorize',",
+  "  tokenEndpoint: 'https://auth.example.com/token',",
+  "  redirectUri: 'https://myapp.com/callback',",
+  "  scopes: ['openid', 'profile', 'email']",
+  '};',
+  '',
+  '// --- PKCE Helpers ---',
+  '',
+  'function generateCodeVerifier() {',
+  '  return crypto.randomBytes(32)',
+  "    .toString('base64url');  // 43-char URL-safe string",
+  '}',
+  '',
+  'function generateCodeChallenge(verifier) {',
+  "  return crypto.createHash('sha256')",
+  '    .update(verifier)',
+  "    .digest('base64url');",
+  '}',
+  '',
+  '// --- Routes ---',
+  '',
+  '// Step 1: Initiate login',
+  "app.get('/login', (req, res) =&gt; {",
+  "  const state = crypto.randomBytes(16).toString('hex');",
+  '  const codeVerifier = generateCodeVerifier();',
+  '  const codeChallenge = generateCodeChallenge(codeVerifier);',
+  '',
+  '  // Store state and verifier in session',
+  '  req.session.oauthState = state;',
+  '  req.session.codeVerifier = codeVerifier;',
+  '',
+  '  const authUrl = new URL(config.authorizationEndpoint);',
+  "  authUrl.searchParams.set('response_type', 'code');",
+  "  authUrl.searchParams.set('client_id', config.clientId);",
+  "  authUrl.searchParams.set('redirect_uri', config.redirectUri);",
+  "  authUrl.searchParams.set('scope', config.scopes.join(' '));",
+  "  authUrl.searchParams.set('state', state);",
+  "  authUrl.searchParams.set('code_challenge', codeChallenge);",
+  "  authUrl.searchParams.set('code_challenge_method', 'S256');",
+  '',
+  '  res.redirect(authUrl.toString());',
+  '});',
+  '',
+  '// Step 2: Handle callback',
+  "app.get('/callback', async (req, res) =&gt; {",
+  '  const { code, state, error } = req.query;',
+  '',
+  '  // Check for errors from the authorization server',
+  '  if (error) {',
+  "    console.error('OAuth error:', error);",
+  '    return res.status(400).send(`Authorization failed: ${error}`);',
+  '  }',
+  '',
+  '  // Validate state to prevent CSRF',
+  '  if (state !== req.session.oauthState) {',
+  "    return res.status(403).send('Invalid state parameter');",
+  '  }',
+  '',
+  '  // Clean up state from session',
+  '  const codeVerifier = req.session.codeVerifier;',
+  '  delete req.session.oauthState;',
+  '  delete req.session.codeVerifier;',
+  '',
+  '  try {',
+  '    // Exchange code for tokens',
+  '    const tokenResponse = await fetch(config.tokenEndpoint, {',
+  "      method: 'POST',",
+  "      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },",
+  '      body: new URLSearchParams({',
+  "        grant_type: 'authorization_code',",
+  '        code: code,',
+  '        redirect_uri: config.redirectUri,',
+  '        client_id: config.clientId,',
+  '        client_secret: config.clientSecret,',
+  '        code_verifier: codeVerifier',
+  '      })',
+  '    });',
+  '',
+  '    if (!tokenResponse.ok) {',
+  '      const errBody = await tokenResponse.text();',
+  '      throw new Error(`Token exchange failed: ${errBody}`);',
+  '    }',
+  '',
+  '    const tokens = await tokenResponse.json();',
+  '',
+  '    // Store tokens securely in server-side session',
+  '    req.session.accessToken = tokens.access_token;',
+  '    req.session.refreshToken = tokens.refresh_token;',
+  '    req.session.tokenExpiry = Date.now() + (tokens.expires_in * 1000);',
+  '',
+  "    res.redirect('/dashboard');",
+  '  } catch (err) {',
+  "    console.error('Token exchange error:', err);",
+  "    res.status(500).send('Authentication failed');",
+  '  }',
+  '});',
+  '',
+  '// Step 3: Token refresh middleware',
+  'async function ensureValidToken(req, res, next) {',
+  '  if (!req.session.accessToken) {',
+  "    return res.redirect('/login');",
+  '  }',
+  '',
+  '  // Check if token is expired (with 60s buffer)',
+  '  if (Date.now() &gt; req.session.tokenExpiry - 60000) {',
+  '    try {',
+  '      const refreshResponse = await fetch(config.tokenEndpoint, {',
+  "        method: 'POST',",
+  "        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },",
+  '        body: new URLSearchParams({',
+  "          grant_type: 'refresh_token',",
+  '          refresh_token: req.session.refreshToken,',
+  '          client_id: config.clientId,',
+  '          client_secret: config.clientSecret',
+  '        })',
+  '      });',
+  '',
+  '      if (!refreshResponse.ok) {',
+  '        // Refresh failed — force re-login',
+  '        req.session.destroy();',
+  "        return res.redirect('/login');",
+  '      }',
+  '',
+  '      const tokens = await refreshResponse.json();',
+  '      req.session.accessToken = tokens.access_token;',
+  '      req.session.refreshToken = tokens.refresh_token; // Rotation',
+  '      req.session.tokenExpiry = Date.now() + (tokens.expires_in * 1000);',
+  '    } catch (err) {',
+  "      console.error('Token refresh failed:', err);",
+  "      return res.redirect('/login');",
+  '    }',
+  '  }',
+  '',
+  '  next();',
+  '}',
+  '',
+  '// Step 4: Protected route using the access token',
+  "app.get('/dashboard', ensureValidToken, async (req, res) =&gt; {",
+  "  const apiResponse = await fetch('https://api.example.com/user/profile', {",
+  '    headers: {',
+  "      'Authorization': `Bearer ${req.session.accessToken}`",
+  '    }',
+  '  });',
+  '',
+  '  const profile = await apiResponse.json();',
+  "  res.json({ message: 'Authenticated!', profile });",
+  '});',
+  '',
+  '// Logout with token revocation',
+  "app.get('/logout', async (req, res) =&gt; {",
+  '  if (req.session.accessToken) {',
+  '    // Revoke tokens at the authorization server',
+  "    await fetch('https://auth.example.com/revoke', {",
+  "      method: 'POST',",
+  "      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },",
+  '      body: new URLSearchParams({',
+  '        token: req.session.refreshToken,',
+  '        client_id: config.clientId,',
+  '        client_secret: config.clientSecret',
+  '      })',
+  "    }).catch(err =&gt; console.error('Revocation failed:', err));",
+  '  }',
+  '',
+  '  req.session.destroy();',
+  "  res.redirect('/');",
+  '});',
+  '',
+  "app.listen(3000, () =&gt; console.log('Server running on port 3000'));",
+  ''
+].join('\n');
+
+const codeBlock3 = [
+  '// m2m-client.js — service-to-service authentication',
+  'async function getM2MToken() {',
+  "  const response = await fetch('https://auth.example.com/token', {",
+  "    method: 'POST',",
+  "    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },",
+  '    body: new URLSearchParams({',
+  "      grant_type: 'client_credentials',",
+  '      client_id: process.env.SERVICE_CLIENT_ID,',
+  '      client_secret: process.env.SERVICE_CLIENT_SECRET,',
+  "      scope: 'read:data write:events'",
+  '    })',
+  '  });',
+  '',
+  '  if (!response.ok) {',
+  '    throw new Error(`M2M auth failed: ${response.status}`);',
+  '  }',
+  '',
+  '  return response.json();',
+  '}',
+  '',
+  '// Cache the token and refresh before expiry',
+  'let cachedToken = null;',
+  'let tokenExpiry = 0;',
+  '',
+  'async function getValidToken() {',
+  '  if (cachedToken &amp;&amp; Date.now() &lt; tokenExpiry - 30000) {',
+  '    return cachedToken;',
+  '  }',
+  '',
+  '  const { access_token, expires_in } = await getM2MToken();',
+  '  cachedToken = access_token;',
+  '  tokenExpiry = Date.now() + (expires_in * 1000);',
+  '  return cachedToken;',
+  '}',
+  '',
+  '// Usage in an API call',
+  'async function fetchInternalData() {',
+  '  const token = await getValidToken();',
+  "  const res = await fetch('https://internal-api.example.com/data', {",
+  "    headers: { 'Authorization': `Bearer ${token}` }",
+  '  });',
+  '  return res.json();',
+  '}',
+  ''
+].join('\n');
+---
+
+<BlogLayout
+  title="Understanding OAuth 2.0 Flow: Complete Diagram and Implementation Guide"
+  description="Master OAuth 2.0 authorization flows with clear diagrams and code examples. Learn Authorization Code, PKCE, Client Credentials, and Implicit flows with step-by-step explanations."
+  slug="understanding-oauth2-flow-diagram"
+  publishDate="2026-03-20"
+  readTime="18 min read"
+>
+
+<h2>What Is OAuth 2.0?</h2>
+
+<p>OAuth 2.0 is the industry-standard authorization framework that enables third-party applications to obtain limited access to a user's resources without exposing their credentials. Instead of sharing passwords, OAuth 2.0 uses <strong>access tokens</strong>—short-lived, scoped strings that grant specific permissions to specific resources.</p>
+
+<p>If you've ever clicked "Sign in with Google" or authorized a GitHub app to access your repositories, you've used OAuth 2.0. The protocol was formalized in <a href="https://datatracker.ietf.org/doc/html/rfc6749" target="_blank" rel="noopener noreferrer">RFC 6749</a> and has become the backbone of modern API authorization across the web.</p>
+
+<p>OAuth 2.0 is <em>not</em> an authentication protocol by itself—it is an <strong>authorization</strong> framework. Authentication (proving who you are) is handled by extensions like OpenID Connect (OIDC), which layers identity on top of OAuth 2.0. Understanding this distinction is critical to building secure systems.</p>
+
+<h2>Key Terminology</h2>
+
+<p>Before diving into the flows, let's define the four roles that appear in every OAuth 2.0 interaction:</p>
+
+<h3>Resource Owner</h3>
+<p>The entity that owns the protected data—usually the end user. When you authorize Spotify to read your Facebook profile, <em>you</em> are the Resource Owner.</p>
+
+<h3>Client</h3>
+<p>The application requesting access to the Resource Owner's data. Clients are classified as <strong>confidential</strong> (can securely store a secret, e.g., a backend server) or <strong>public</strong> (cannot store secrets, e.g., a single-page app or mobile app).</p>
+
+<h3>Authorization Server</h3>
+<p>The server that authenticates the Resource Owner and issues access tokens. Examples include Google's OAuth server, Auth0, Okta, and Keycloak. It exposes two key endpoints: the <strong>authorization endpoint</strong> (user-facing) and the <strong>token endpoint</strong> (machine-to-machine).</p>
+
+<h3>Resource Server</h3>
+<p>The API that hosts the protected resources. It validates the access token on each request and returns data if the token is valid and has the required scopes. For instance, the GitHub API is the Resource Server when a third-party app reads your repositories.</p>
+
+<h2>Authorization Code Flow (The Gold Standard)</h2>
+
+<p>The Authorization Code flow is the most secure and widely recommended OAuth 2.0 grant type for server-side applications. It involves a front-channel redirect to the authorization server and a back-channel token exchange, ensuring the access token never touches the browser.</p>
+
+<h3>Step-by-Step Walkthrough</h3>
+
+<ol>
+  <li><strong>User clicks "Login"</strong> — The Client redirects the user's browser to the Authorization Server's <code>/authorize</code> endpoint with <code>response_type=code</code>, <code>client_id</code>, <code>redirect_uri</code>, <code>scope</code>, and a random <code>state</code> parameter.</li>
+  <li><strong>User authenticates</strong> — The Authorization Server presents a login screen. The user enters credentials and consents to the requested scopes.</li>
+  <li><strong>Authorization code issued</strong> — The Authorization Server redirects back to the Client's <code>redirect_uri</code> with a short-lived authorization code and the original <code>state</code> value.</li>
+  <li><strong>Client validates state</strong> — The Client checks that the returned <code>state</code> matches the one it sent. This prevents CSRF attacks.</li>
+  <li><strong>Token exchange</strong> — The Client's backend sends a POST request to the <code>/token</code> endpoint with the authorization code, <code>client_id</code>, <code>client_secret</code>, and <code>redirect_uri</code>.</li>
+  <li><strong>Tokens returned</strong> — The Authorization Server responds with an <code>access_token</code>, a <code>refresh_token</code> (optional), <code>token_type</code>, and <code>expires_in</code>.</li>
+  <li><strong>API call</strong> — The Client uses the access token in the <code>Authorization: Bearer</code> header to call the Resource Server.</li>
+</ol>
+
+<h3>ASCII Flow Diagram</h3>
+
+<pre><code>
++----------+                                +---------------+
+|          |  (1) Authorization Request      |               |
+|  User /  | -----------------------------&gt; | Authorization |
+| Browser  |                                 |    Server     |
+|          | &lt;-----------------------------  |               |
+|          |  (2) Login Page + Consent       |               |
+|          |                                 |               |
+|          |  (3) Authorization Code          |               |
+|          | -----------------------------&gt; |               |
++----------+                                 +---------------+
+     |                                              |
+     | (3) Redirect with code + state               |
+     v                                              |
++----------+                                        |
+|          |  (5) Exchange code for token            |
+|  Client  | ----------------------------------------&gt;
+| (Server) |                                        |
+|          | &lt;----------------------------------------
+|          |  (6) access_token + refresh_token       |
+|          |                                +---------------+
+|          |  (7) API Request with token    |               |
+|          | -----------------------------&gt; |   Resource    |
+|          |                                |    Server     |
+|          | &lt;-----------------------------  |               |
+|          |  (8) Protected Resource         |               |
++----------+                                +---------------+
+</code></pre>
+
+<p>The key security property: the authorization code is exchanged server-to-server (step 5), so the access token never appears in the browser's URL bar or history. The code itself is single-use and short-lived (typically 30–60 seconds).</p>
+
+<h2>Authorization Code Flow with PKCE</h2>
+
+<p>PKCE (Proof Key for Code Exchange, pronounced "pixy") was originally designed for public clients like mobile and single-page apps that cannot safely store a <code>client_secret</code>. However, as of the <a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics" target="_blank" rel="noopener noreferrer">OAuth 2.0 Security Best Current Practice</a>, PKCE is now recommended for <strong>all</strong> clients, including confidential ones.</p>
+
+<h3>How PKCE Works</h3>
+
+<ol>
+  <li><strong>Generate a code verifier</strong> — A cryptographically random string (43–128 characters).</li>
+  <li><strong>Create a code challenge</strong> — Apply <code>SHA-256</code> to the verifier and <a href="/tools/base64">Base64</a>-URL-encode the result.</li>
+  <li><strong>Send the challenge</strong> — Include <code>code_challenge</code> and <code>code_challenge_method=S256</code> in the authorization request.</li>
+  <li><strong>Send the verifier</strong> — When exchanging the code for a token, include the original <code>code_verifier</code>.</li>
+  <li><strong>Server validates</strong> — The Authorization Server hashes the verifier and compares it to the stored challenge. If they match, the token is issued.</li>
+</ol>
+
+<pre><code>
+  Client                         Authorization Server
+    |                                     |
+    |  (1) /authorize                     |
+    |      + code_challenge               |
+    |      + code_challenge_method=S256   |
+    | ----------------------------------&gt; |
+    |                                     |
+    |  (2) authorization_code             |
+    | &lt;---------------------------------- |
+    |                                     |
+    |  (3) /token                         |
+    |      + code                         |
+    |      + code_verifier                |
+    | ----------------------------------&gt; |
+    |                                     |
+    |      Server computes:               |
+    |      SHA256(code_verifier)           |
+    |        == stored code_challenge?     |
+    |                                     |
+    |  (4) access_token                   |
+    | &lt;---------------------------------- |
+</code></pre>
+
+<p>PKCE prevents authorization code interception attacks. Even if an attacker captures the code in transit, they cannot exchange it without the original <code>code_verifier</code>, which never leaves the client.</p>
+
+<h2>Client Credentials Flow</h2>
+
+<p>The Client Credentials flow is used for <strong>machine-to-machine (M2M)</strong> communication where no user is involved. Think of a backend microservice calling another internal API, or a cron job syncing data with a third-party service.</p>
+
+<pre><code>
++----------+                                +---------------+
+|          |  (1) POST /token               |               |
+|  Client  |      grant_type=               | Authorization |
+| (Server) |        client_credentials      |    Server     |
+|          |      client_id=xxx             |               |
+|          |      client_secret=yyy         |               |
+|          |      scope=read:data           |               |
+|          | -----------------------------&gt; |               |
+|          |                                |               |
+|          | &lt;-----------------------------  |               |
+|          |  (2) access_token              |               |
++----------+                                +---------------+
+</code></pre>
+
+<p>This flow is straightforward: the client authenticates directly with its credentials and receives an access token. There is no user consent step, no redirect, and no authorization code. The token represents the client itself, not a user.</p>
+
+<p><strong>When to use it:</strong> Internal service-to-service APIs, automated scripts, CI/CD pipelines accessing protected resources, and IoT backends.</p>
+
+<h2>Implicit Flow (Deprecated)</h2>
+
+<p>The Implicit flow was designed for browser-based JavaScript apps before PKCE existed. It returns the access token directly in the URL fragment (<code>#access_token=...</code>) after the user consents—<strong>skipping the code exchange step entirely</strong>.</p>
+
+<h3>Why It's Deprecated</h3>
+
+<ul>
+  <li><strong>Token exposure:</strong> The access token appears in the URL, making it visible in browser history, referrer headers, and proxy logs.</li>
+  <li><strong>No refresh tokens:</strong> The spec forbids issuing refresh tokens in the Implicit flow, forcing frequent re-authorization.</li>
+  <li><strong>Token injection attacks:</strong> Without a code exchange, it's easier for attackers to inject stolen tokens into the flow.</li>
+  <li><strong>PKCE is the better alternative:</strong> With PKCE, public clients can use the Authorization Code flow safely, making Implicit unnecessary.</li>
+</ul>
+
+<p>If you encounter Implicit flow in an existing codebase, plan a migration to Authorization Code + PKCE. Most OAuth providers have already deprecated Implicit in their documentation.</p>
+
+<h2>Device Authorization Flow</h2>
+
+<p>The Device Authorization flow (RFC 8628) is designed for devices with limited input capabilities—smart TVs, game consoles, CLI tools, and IoT devices. The user authorizes the device using a separate device like their phone or laptop.</p>
+
+<pre><code>
++----------+                                +---------------+
+|          |  (1) POST /device/code         |               |
+|  Device  | -----------------------------&gt; | Authorization |
+|          |                                |    Server     |
+|          | &lt;-----------------------------  |               |
+|          |  (2) device_code,              |               |
+|          |      user_code,                |               |
+|          |      verification_uri          |               |
++----------+                                +---------------+
+     |
+     |  (3) Display: "Go to https://example.com/device
+     |       and enter code: WDJB-MJHT"
+     v
++----------+                                +---------------+
+|   User   |  (4) Opens URL, enters code    |               |
+|  (Phone) | -----------------------------&gt; | Authorization |
+|          |  (5) Logs in + consents         |    Server     |
++----------+                                +---------------+
+                                                    |
++----------+                                        |
+|          |  (6) Poll POST /token                  |
+|  Device  |      grant_type=                       |
+|          |       device_code                      |
+|          | ----------------------------------------&gt;
+|          |                                        |
+|          | &lt;----------------------------------------
+|          |  (7) access_token (when approved)       |
++----------+                                +---------------+
+</code></pre>
+
+<p>The device polls the token endpoint at a specified interval. The server responds with <code>authorization_pending</code> until the user completes authorization, at which point it returns the access token. This flow is increasingly common in developer CLI tools and streaming devices.</p>
+
+<h2>Refresh Tokens: Maintaining Long-Lived Sessions</h2>
+
+<p>Access tokens are intentionally short-lived (minutes to hours). Refresh tokens allow clients to obtain new access tokens without requiring the user to re-authenticate. They are long-lived but can be revoked at any time by the Authorization Server.</p>
+
+<h3>Refresh Token Rotation</h3>
+
+<p>Modern best practice is <strong>refresh token rotation</strong>: every time a refresh token is used, the Authorization Server issues a new refresh token and invalidates the old one. This provides automatic detection of token theft—if a stolen refresh token is used, the legitimate client's next refresh will fail, signaling a security breach.</p>
+
+<pre><code set:html=&#123;codeBlock&#125;></code></pre>
+
+<p>The access tokens returned are typically <a href="/blog/jwt-token-explained">JWT tokens</a>. You can inspect their contents—claims, expiration, and scopes—using a <a href="/tools/jwt-decoder">JWT Decoder</a> to verify everything looks correct during development.</p>
+
+<h2>Token Storage Best Practices</h2>
+
+<p>Where you store tokens is just as important as how you obtain them. The wrong storage mechanism can expose tokens to XSS, CSRF, or other attacks.</p>
+
+<h3>Server-Side Applications</h3>
+<ul>
+  <li><strong>Encrypted server-side sessions:</strong> Store tokens in a server-managed session (Redis, database, encrypted cookie). The browser only holds a session ID.</li>
+  <li><strong>Never expose tokens to the frontend</strong> if the backend can make API calls on behalf of the user.</li>
+</ul>
+
+<h3>Single-Page Applications (SPAs)</h3>
+<ul>
+  <li><strong>Use a Backend-for-Frontend (BFF) pattern:</strong> A lightweight backend handles token storage and proxies API calls. The SPA never sees the tokens.</li>
+  <li><strong>If you must store tokens client-side:</strong> Use in-memory variables (not <code>localStorage</code> or <code>sessionStorage</code>). Tokens in storage are accessible to any JavaScript running on the page, including XSS payloads.</li>
+  <li><strong>HttpOnly, Secure, SameSite cookies:</strong> If using cookies, set all three flags. This protects against XSS (HttpOnly) and CSRF (SameSite).</li>
+</ul>
+
+<h3>Mobile Applications</h3>
+<ul>
+  <li><strong>iOS Keychain / Android Keystore:</strong> Use platform-specific secure storage designed for sensitive data.</li>
+  <li><strong>Never store tokens in shared preferences or plain files.</strong></li>
+</ul>
+
+<h3>Storage Comparison</h3>
+
+<pre><code>
++---------------------+----------+----------+----------+
+| Storage Method      | XSS Safe | CSRF Safe| Recommended |
++---------------------+----------+----------+----------+
+| HttpOnly Cookie     |    Yes   |  Partial |   Yes*      |
+| localStorage        |    No    |    Yes   |   No        |
+| sessionStorage      |    No    |    Yes   |   No        |
+| In-Memory Variable  |    Yes   |    Yes   |   Yes       |
+| Server Session      |    Yes   |    Yes   |   Yes       |
++---------------------+----------+----------+----------+
+* With SameSite=Strict or SameSite=Lax + CSRF token
+</code></pre>
+
+<h2>Common Security Pitfalls</h2>
+
+<p>Even with OAuth 2.0's well-defined flows, implementation mistakes are common. Here are the most dangerous ones and how to avoid them:</p>
+
+<h3>1. Missing State Parameter</h3>
+<p>The <code>state</code> parameter prevents CSRF attacks during the authorization flow. Without it, an attacker can trick the user into authorizing the attacker's account, linking it to the victim's session. <strong>Always generate a cryptographically random state, store it in the session, and validate it on callback.</strong></p>
+
+<h3>2. Open Redirect via redirect_uri</h3>
+<p>If the Authorization Server does not strictly validate the <code>redirect_uri</code>, an attacker can change it to their own server and capture the authorization code. <strong>Register exact redirect URIs (no wildcards) and validate them on both the client and server sides.</strong></p>
+
+<h3>3. Insufficient Scope Validation</h3>
+<p>Requesting overly broad scopes violates the principle of least privilege. If a token with <code>admin:write</code> scope is stolen, the damage is catastrophic. <strong>Request only the scopes you need. Validate scopes on the Resource Server for every request.</strong></p>
+
+<h3>4. Storing Tokens in localStorage</h3>
+<p>Any XSS vulnerability on your site can exfiltrate tokens stored in <code>localStorage</code>. This is the single most common token theft vector in SPAs. <strong>Use the BFF pattern or HttpOnly cookies instead.</strong></p>
+
+<h3>5. Not Validating JWT Signatures</h3>
+<p>If your Resource Server accepts JWTs without verifying the signature, an attacker can forge tokens with arbitrary claims. <strong>Always validate the signature using the Authorization Server's public key (JWKS endpoint). Never use <code>alg: none</code>.</strong></p>
+
+<h3>6. Long-Lived Access Tokens Without Revocation</h3>
+<p>Access tokens that last for days or weeks and cannot be revoked create a large attack window. <strong>Keep access token lifetimes short (5–15 minutes) and use refresh token rotation for longer sessions.</strong></p>
+
+<h3>7. Mixing Up Authorization and Authentication</h3>
+<p>OAuth 2.0 access tokens prove authorization, not identity. Using an access token to identify a user (e.g., calling <code>/userinfo</code> and trusting the result for login) without proper OIDC ID token validation can lead to impersonation attacks. <strong>Use OpenID Connect with proper ID token validation for authentication.</strong></p>
+
+<h2>Implementation Example: Node.js OAuth 2.0 Client</h2>
+
+<p>Here's a complete implementation of the Authorization Code flow with PKCE using Express.js. This example demonstrates best practices including state validation, PKCE, and secure token storage.</p>
+
+<h3>Setting Up the OAuth Client</h3>
+
+<pre><code set:html=&#123;codeBlock2&#125;></code></pre>
+
+<h3>Client Credentials Flow (M2M Example)</h3>
+
+<pre><code set:html=&#123;codeBlock3&#125;></code></pre>
+
+<h2>OAuth 2.0 Providers Comparison</h2>
+
+<p>Choosing the right OAuth provider depends on your application's requirements, scale, and budget. Here's a comparison of the most popular providers:</p>
+
+<pre><code>
++----------------+---------------+----------------+----------------+
+| Provider       | Free Tier     | Best For       | PKCE Support   |
++----------------+---------------+----------------+----------------+
+| Auth0          | 7,500 MAU     | Startups, SPAs | Yes            |
+| Okta           | 100 MAU       | Enterprise SSO | Yes            |
+| Firebase Auth  | Unlimited*    | Mobile apps    | Yes            |
+| AWS Cognito    | 50,000 MAU    | AWS ecosystem  | Yes            |
+| Keycloak       | Self-hosted   | Full control   | Yes            |
+| Google OAuth   | Unlimited     | Google APIs    | Yes            |
+| GitHub OAuth   | Unlimited     | Developer tools| Yes            |
+| Azure AD B2C   | 50,000 MAU    | Microsoft      | Yes            |
++----------------+---------------+----------------+----------------+
+* Firebase has usage-based pricing for SMS verification
+</code></pre>
+
+<h3>Key Considerations</h3>
+<ul>
+  <li><strong>Auth0</strong> offers the best developer experience with extensive documentation, quickstarts for every framework, and a generous free tier. Ideal for startups and MVPs.</li>
+  <li><strong>AWS Cognito</strong> is the best choice if you're already in the AWS ecosystem. The free tier is generous at 50,000 MAU, but the developer experience can be rough.</li>
+  <li><strong>Keycloak</strong> is the go-to for organizations that need full control over their identity infrastructure. It's open source, feature-rich, and runs on your own servers.</li>
+  <li><strong>Firebase Auth</strong> shines for mobile-first applications with its native SDKs and tight integration with the Firebase ecosystem.</li>
+  <li><strong>Okta/Azure AD</strong> are enterprise-focused with advanced features like multi-factor authentication, conditional access, and deep Active Directory integration.</li>
+</ul>
+
+<h2>When to Use Which Flow</h2>
+
+<p>Selecting the correct OAuth 2.0 flow depends on your client type and deployment context. Here's a decision guide:</p>
+
+<pre><code>
+Is a user involved?
+├── No  ──&gt; Client Credentials Flow
+│          (M2M, microservices, cron jobs)
+│
+└── Yes
+    │
+    ├── Can the client store a secret securely?
+    │   ├── Yes ──&gt; Authorization Code Flow + PKCE
+    │   │          (Web backends, confidential clients)
+    │   │
+    │   └── No  ──&gt; Authorization Code Flow + PKCE
+    │              (SPAs, mobile apps, public clients)
+    │
+    └── Is the device input-constrained?
+        └── Yes ──&gt; Device Authorization Flow
+                   (Smart TVs, CLIs, IoT)
+</code></pre>
+
+<p><strong>Notice that Authorization Code + PKCE appears for both confidential and public clients.</strong> This is intentional. PKCE adds security with minimal complexity, and the OAuth 2.0 Security BCP recommends it universally. There is no modern scenario where the Implicit flow is recommended.</p>
+
+<h3>Quick Reference Table</h3>
+
+<pre><code>
++----------------------------+------------------+------------------+
+| Scenario                   | Recommended Flow | Refresh Tokens?  |
++----------------------------+------------------+------------------+
+| Server-rendered web app    | Auth Code + PKCE | Yes              |
+| Single-page application    | Auth Code + PKCE | Yes (rotate)     |
+| Native mobile app          | Auth Code + PKCE | Yes (rotate)     |
+| Backend microservice       | Client Creds     | No (re-request)  |
+| CLI / developer tool       | Device Auth      | Yes              |
+| Smart TV / game console    | Device Auth      | Yes              |
+| Legacy browser app         | Auth Code + PKCE | Migrate away     |
++----------------------------+------------------+------------------+
+</code></pre>
+
+<h2>Best Practices Checklist</h2>
+
+<p>Use this checklist before deploying any OAuth 2.0 implementation to production:</p>
+
+<h3>Authorization Flow</h3>
+<ul>
+  <li>Use Authorization Code + PKCE for all user-facing flows</li>
+  <li>Generate a cryptographically random <code>state</code> parameter and validate it on callback</li>
+  <li>Register exact <code>redirect_uri</code> values—no wildcards, no open redirects</li>
+  <li>Request the minimum required scopes (principle of least privilege)</li>
+  <li>Validate all redirect URIs server-side before issuing codes</li>
+</ul>
+
+<h3>Token Management</h3>
+<ul>
+  <li>Keep access token lifetimes short (5–15 minutes)</li>
+  <li>Implement refresh token rotation</li>
+  <li>Store tokens server-side whenever possible (BFF pattern for SPAs)</li>
+  <li>Never store tokens in <code>localStorage</code> or <code>sessionStorage</code></li>
+  <li>Set <code>HttpOnly</code>, <code>Secure</code>, and <code>SameSite</code> flags on all cookies</li>
+  <li>Implement token revocation on logout</li>
+</ul>
+
+<h3>Security</h3>
+<ul>
+  <li>Validate JWT signatures using the provider's JWKS endpoint</li>
+  <li>Verify the <code>aud</code> (audience), <code>iss</code> (issuer), and <code>exp</code> (expiration) claims on every token</li>
+  <li>Use TLS (HTTPS) for all OAuth 2.0 endpoints—no exceptions</li>
+  <li>Implement rate limiting on token endpoints to prevent brute-force attacks</li>
+  <li>Log authentication events for security monitoring and incident response</li>
+  <li>Rotate client secrets periodically</li>
+  <li>Never log tokens—use token identifiers or hashes for debugging</li>
+</ul>
+
+<h3>Error Handling</h3>
+<ul>
+  <li>Handle all OAuth error responses gracefully (<code>invalid_grant</code>, <code>invalid_client</code>, etc.)</li>
+  <li>Implement automatic retry with exponential backoff for transient token endpoint failures</li>
+  <li>Force re-authentication when refresh token rotation detects reuse</li>
+  <li>Return generic error messages to end users—never expose OAuth error details in the UI</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>OAuth 2.0 remains the foundation of modern API authorization. While the protocol offers multiple flows for different scenarios, the industry is converging on a clear recommendation: <strong>use Authorization Code + PKCE for all interactive flows</strong> and <strong>Client Credentials for machine-to-machine communication</strong>. The Implicit flow is officially deprecated, and the Device Authorization flow fills the gap for input-constrained devices.</p>
+
+<p>The most important takeaway is that OAuth 2.0 security depends as much on implementation quality as on flow selection. Proper state validation, secure token storage, short token lifetimes, refresh token rotation, and JWT signature verification are all non-negotiable in production systems. Use the checklist above as your pre-launch security review, and always stay current with the <a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics" target="_blank" rel="noopener noreferrer">OAuth 2.0 Security Best Current Practice</a> RFC.</p>
+
+<p>If you're working with JWT-based access tokens, use our <a href="/tools/jwt-decoder">JWT Decoder</a> to inspect token claims during development. For a deeper dive into JWT structure and validation, read our guide on <a href="/blog/jwt-token-explained">JWT Token Explained</a>.</p>
+
+</BlogLayout>

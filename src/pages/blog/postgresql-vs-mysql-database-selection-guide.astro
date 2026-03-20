@@ -1,0 +1,780 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeBlock = [
+  '-- PostgreSQL: Create a table with JSONB and index it',
+  'CREATE TABLE products (',
+  '  id SERIAL PRIMARY KEY,',
+  '  name TEXT NOT NULL,',
+  "  metadata JSONB NOT NULL DEFAULT '{}'",
+  ');',
+  '',
+  '-- GIN index for fast containment queries',
+  'CREATE INDEX idx_products_metadata ON products USING GIN (metadata);',
+  '',
+  '-- Query: find products where metadata contains a specific key-value pair',
+  'SELECT * FROM products',
+  'WHERE metadata @&gt; \'{"color": "red"}\';',
+  '',
+  '-- Query: extract a nested value',
+  "SELECT metadata -&gt;&gt; 'brand' AS brand FROM products;",
+  '',
+  '-- Query: check if a key exists',
+  "SELECT * FROM products WHERE metadata ? 'warranty';"
+].join('\n');
+---
+
+<BlogLayout
+  title="PostgreSQL vs MySQL: Database Selection Guide for Developers (2026)"
+  description="Compare PostgreSQL and MySQL for your next project. Analyze performance, JSON support, full-text search, replication, cloud hosting, and when to choose each database."
+  slug="postgresql-vs-mysql-database-selection-guide"
+  publishDate="2026-03-20"
+  readTime="18 min read"
+>
+
+<p>
+  Choosing between PostgreSQL and MySQL is one of the most consequential decisions you will make early in a project. Both are mature, open-source relational databases with massive communities, excellent tooling, and decades of production use. Yet they differ in philosophy, feature depth, performance characteristics, and ecosystem strengths. Pick the wrong one and you face painful migrations later. Pick the right one and your data layer becomes a quiet, reliable foundation that scales with your business.
+</p>
+
+<p>
+  This guide is a thorough, developer-focused comparison of PostgreSQL and MySQL as they stand in 2026. We will cover architecture, data types, JSON handling, performance, full-text search, replication, cloud hosting, ORM compatibility, and concrete decision criteria. Every section includes SQL examples so you can see the differences firsthand. If you are writing SQL for either database, our <a href="/tools/sql-formatter">SQL Formatter</a> can help you keep your queries clean and readable.
+</p>
+
+<h2>Overview</h2>
+
+<p>
+  PostgreSQL began at the University of California, Berkeley in 1986 as the successor to Ingres. Its design philosophy has always been standards compliance, extensibility, and correctness. PostgreSQL calls itself "the world's most advanced open-source relational database," and that claim is well-supported. It implements the SQL standard more completely than any other open-source database, supports custom data types, operators, and procedural languages, and ships with advanced features like table inheritance, window functions, CTEs, and JSONB natively.
+</p>
+
+<p>
+  MySQL was created by Michael Widenius in 1995 with a focus on speed and simplicity. It became the "M" in the LAMP stack and powered the first generation of web applications — WordPress, Drupal, phpBB, and countless custom PHP apps. MySQL was acquired by Sun Microsystems in 2008 and then by Oracle in 2010. That acquisition led to the creation of MariaDB as a community fork. In 2026, MySQL 8.x is the current major release, and it has closed many of the feature gaps that once separated it from PostgreSQL.
+</p>
+
+<p>
+  Both databases are excellent. The question is which one fits your specific workload, team, and growth trajectory.
+</p>
+
+<h2>Architecture and Storage Engines</h2>
+
+<h3>PostgreSQL: Single Engine, Deep Integration</h3>
+
+<p>
+  PostgreSQL uses a single storage engine with a process-per-connection model. Every client connection spawns a dedicated backend process. The storage layer uses Multi-Version Concurrency Control (MVCC) implemented through tuple versioning — when a row is updated, PostgreSQL writes a new version of the entire tuple and marks the old one as dead. This approach provides strong isolation guarantees and eliminates most read-write lock contention, but it requires regular <code>VACUUM</code> operations to reclaim dead tuples.
+</p>
+
+<p>
+  The single-engine approach means every PostgreSQL feature — indexes, foreign keys, triggers, constraints, full-text search, JSON — is deeply integrated. There are no compatibility matrices between storage engines and features. Everything works together.
+</p>
+
+<h3>MySQL: Pluggable Storage Engines</h3>
+
+<p>
+  MySQL's defining architectural feature is its pluggable storage engine layer. The server handles parsing, optimization, and caching, while the actual data storage and retrieval is delegated to a storage engine. InnoDB is the default and the one you should use for almost everything in 2026. It provides ACID transactions, row-level locking, and MVCC through undo logs rather than tuple versioning.
+</p>
+
+<p>
+  Other engines still exist — MyISAM (legacy, no transactions), MEMORY (in-RAM tables), NDB (MySQL Cluster) — but InnoDB dominates production usage. The pluggable architecture means certain features are engine-dependent. For example, full-text indexes work differently on InnoDB than they did on MyISAM.
+</p>
+
+<pre><code>-- PostgreSQL: Check storage engine (there is only one)
+SELECT version();
+
+-- MySQL: Check default storage engine
+SHOW VARIABLES LIKE 'default_storage_engine';
+
+-- MySQL: See engine for a specific table
+SHOW TABLE STATUS WHERE Name = 'users';</code></pre>
+
+<h2>Data Types and JSON Support</h2>
+
+<h3>PostgreSQL's Rich Type System</h3>
+
+<p>
+  PostgreSQL ships with an exceptionally rich set of built-in data types. Beyond standard SQL types, it includes:
+</p>
+
+<ul>
+  <li><strong>JSONB</strong> — binary JSON with indexing, containment operators, and path queries</li>
+  <li><strong>Arrays</strong> — native array columns with indexing and operators</li>
+  <li><strong>hstore</strong> — key-value pairs stored in a single column</li>
+  <li><strong>Range types</strong> — <code>int4range</code>, <code>tsrange</code>, <code>daterange</code> with overlap and containment operators</li>
+  <li><strong>Network types</strong> — <code>inet</code>, <code>cidr</code>, <code>macaddr</code> with subnet operators</li>
+  <li><strong>Geometric types</strong> — <code>point</code>, <code>line</code>, <code>circle</code>, <code>polygon</code></li>
+  <li><strong>UUID</strong> — native UUID type with generation functions</li>
+  <li><strong>tsvector / tsquery</strong> — built-in full-text search types</li>
+  <li><strong>Custom types</strong> — you can define entirely new types with <code>CREATE TYPE</code></li>
+</ul>
+
+<h3>MySQL's Type System</h3>
+
+<p>
+  MySQL 8.x supports standard SQL types plus a <code>JSON</code> column type. While MySQL's JSON support has improved significantly, it remains less powerful than PostgreSQL's JSONB. MySQL does not have native array columns, range types, or network types. You can work around these limitations with JSON columns or application-level logic, but it adds complexity.
+</p>
+
+<h3>JSON Comparison in Practice</h3>
+
+<pre><code set:html=&#123;codeBlock&#125;></code></pre>
+
+<pre><code>-- MySQL: Create a table with JSON
+CREATE TABLE products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  metadata JSON NOT NULL
+);
+
+-- MySQL 8.x: Multi-valued index on JSON array
+CREATE INDEX idx_products_color
+  ON products ((CAST(metadata-&gt;&gt;'$.tags' AS CHAR(50) ARRAY)));
+
+-- Query: extract a value using JSON path
+SELECT JSON_EXTRACT(metadata, '$.brand') AS brand FROM products;
+
+-- Shorthand extraction
+SELECT metadata-&gt;&gt;'$.brand' AS brand FROM products;
+
+-- Query: find products with a specific value
+SELECT * FROM products
+WHERE JSON_CONTAINS(metadata, '"red"', '$.color');</code></pre>
+
+<p>
+  The key difference is that PostgreSQL's JSONB is a first-class indexed binary format with rich operators (<code>@&gt;</code>, <code>?</code>, <code>?|</code>, <code>?&amp;</code>, <code>#&gt;</code>), while MySQL's JSON is stored as text internally and requires function calls for most operations. PostgreSQL's GIN indexes on JSONB are significantly faster for containment and existence queries.
+</p>
+
+<h2>Performance Benchmarks</h2>
+
+<p>
+  Performance comparisons between PostgreSQL and MySQL are nuanced. Neither database is universally faster. The winner depends on the workload type, configuration, and hardware.
+</p>
+
+<h3>Read-Heavy OLTP Workloads</h3>
+
+<p>
+  MySQL with InnoDB has historically been faster for simple primary-key lookups and read-heavy web workloads. Its query parser and optimizer are lighter-weight, and the InnoDB buffer pool is extremely efficient at caching frequently accessed pages. For a WordPress-style workload — mostly <code>SELECT</code> by primary key with occasional writes — MySQL typically delivers higher throughput per dollar.
+</p>
+
+<h3>Complex Queries and Analytics</h3>
+
+<p>
+  PostgreSQL excels at complex queries. Its query planner is more sophisticated, supporting hash joins, merge joins, parallel query execution, and advanced statistics (including multi-column statistics and extended statistics on expressions). For queries involving multiple joins, subqueries, window functions, CTEs, or aggregations, PostgreSQL consistently outperforms MySQL.
+</p>
+
+<pre><code>-- PostgreSQL: Parallel query execution on a large scan
+SET max_parallel_workers_per_gather = 4;
+
+EXPLAIN ANALYZE
+SELECT department, AVG(salary), PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) AS median
+FROM employees
+WHERE hire_date &gt;= '2024-01-01'
+GROUP BY department
+ORDER BY AVG(salary) DESC;</code></pre>
+
+<pre><code>-- MySQL: Window functions (supported since 8.0)
+SELECT
+  department,
+  AVG(salary) AS avg_salary,
+  -- MySQL does not have PERCENTILE_CONT; workaround required
+  salary AS median_approx
+FROM (
+  SELECT
+    department,
+    salary,
+    ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary) AS rn,
+    COUNT(*) OVER (PARTITION BY department) AS cnt
+  FROM employees
+  WHERE hire_date &gt;= '2024-01-01'
+) sub
+WHERE rn = FLOOR((cnt + 1) / 2)
+GROUP BY department, salary
+ORDER BY avg_salary DESC;</code></pre>
+
+<h3>Write-Heavy Workloads</h3>
+
+<p>
+  MySQL's InnoDB uses a write-ahead log with undo segments, which makes write operations relatively efficient. PostgreSQL's tuple-versioning MVCC means updates create new tuple versions, which increases write amplification and demands regular vacuuming. However, PostgreSQL 15+ introduced significant improvements to VACUUM performance and HOT (Heap-Only Tuple) updates. For write-heavy workloads, both databases are competitive when properly tuned. See our <a href="/blog/postgres-performance-tuning-checklist">PostgreSQL Performance Tuning</a> guide for specific configuration recommendations.
+</p>
+
+<h3>Benchmark Summary</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Workload Type</th>
+      <th>PostgreSQL</th>
+      <th>MySQL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Simple PK lookups</td>
+      <td>Fast</td>
+      <td>Slightly faster</td>
+    </tr>
+    <tr>
+      <td>Complex joins and analytics</td>
+      <td>Significantly faster</td>
+      <td>Adequate</td>
+    </tr>
+    <tr>
+      <td>Write-heavy OLTP</td>
+      <td>Competitive (tune VACUUM)</td>
+      <td>Competitive</td>
+    </tr>
+    <tr>
+      <td>JSON queries</td>
+      <td>Much faster with GIN indexes</td>
+      <td>Improving but slower</td>
+    </tr>
+    <tr>
+      <td>Full-text search</td>
+      <td>Good built-in</td>
+      <td>Adequate built-in</td>
+    </tr>
+    <tr>
+      <td>Concurrent connections (&gt;500)</td>
+      <td>Needs PgBouncer</td>
+      <td>Thread-per-connection, lighter</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Full-Text Search</h2>
+
+<h3>PostgreSQL: Built-In and Powerful</h3>
+
+<p>
+  PostgreSQL ships with a robust full-text search engine. It uses <code>tsvector</code> (document representation) and <code>tsquery</code> (query representation) types with GIN or GiST indexes. Features include stemming, ranking, highlighting, phrase search, and multiple language dictionaries.
+</p>
+
+<pre><code>-- PostgreSQL: Full-text search setup
+ALTER TABLE articles ADD COLUMN search_vector tsvector;
+
+UPDATE articles SET search_vector =
+  to_tsvector('english', title || ' ' || body);
+
+CREATE INDEX idx_articles_search ON articles USING GIN (search_vector);
+
+-- Search with ranking
+SELECT title,
+  ts_rank(search_vector, query) AS rank
+FROM articles,
+  to_tsquery('english', 'database &amp; performance') AS query
+WHERE search_vector @@ query
+ORDER BY rank DESC
+LIMIT 20;
+
+-- Phrase search (PostgreSQL 9.6+)
+SELECT title FROM articles
+WHERE search_vector @@ phraseto_tsquery('english', 'database performance tuning');</code></pre>
+
+<h3>MySQL: InnoDB Full-Text Indexes</h3>
+
+<p>
+  MySQL supports <code>FULLTEXT</code> indexes on InnoDB tables (since MySQL 5.6). The syntax is simpler but the feature set is more limited. MySQL supports natural language mode, boolean mode, and query expansion.
+</p>
+
+<pre><code>-- MySQL: Full-text search setup
+ALTER TABLE articles ADD FULLTEXT INDEX ft_articles (title, body);
+
+-- Natural language search
+SELECT title,
+  MATCH(title, body) AGAINST('database performance' IN NATURAL LANGUAGE MODE) AS relevance
+FROM articles
+WHERE MATCH(title, body) AGAINST('database performance' IN NATURAL LANGUAGE MODE)
+ORDER BY relevance DESC
+LIMIT 20;
+
+-- Boolean mode with operators
+SELECT title FROM articles
+WHERE MATCH(title, body) AGAINST('+database +performance -mysql' IN BOOLEAN MODE);</code></pre>
+
+<p>
+  PostgreSQL's full-text search is more flexible — it supports custom dictionaries, synonym mappings, multiple language configurations per query, and ranking algorithms. MySQL's full-text search is simpler to set up but less configurable. Neither replaces a dedicated search engine like Elasticsearch for large-scale search workloads, but PostgreSQL's built-in search is sufficient for many applications.
+</p>
+
+<h2>Replication and Scaling</h2>
+
+<h3>PostgreSQL Replication</h3>
+
+<p>
+  PostgreSQL supports streaming replication (physical replication of WAL records) and logical replication (publication/subscription model). Streaming replication creates an exact byte-for-byte copy of the primary, while logical replication allows selective table replication and cross-version upgrades.
+</p>
+
+<pre><code>-- PostgreSQL: Create a logical replication publication
+CREATE PUBLICATION my_pub FOR TABLE users, orders;
+
+-- On the subscriber (another PostgreSQL instance)
+CREATE SUBSCRIPTION my_sub
+  CONNECTION 'host=primary dbname=myapp user=replicator'
+  PUBLICATION my_pub;</code></pre>
+
+<p>
+  PostgreSQL does not natively support multi-primary replication. For multi-primary setups, you need extensions like BDR (Bi-Directional Replication) from EDB or Citus for distributed horizontally-sharded deployments. Read replicas are straightforward and well-supported.
+</p>
+
+<h3>MySQL Replication</h3>
+
+<p>
+  MySQL has a more mature replication ecosystem. It supports asynchronous replication, semi-synchronous replication, and MySQL Group Replication (multi-primary with automatic conflict resolution). InnoDB Cluster and InnoDB ClusterSet provide high-availability and disaster-recovery topologies out of the box.
+</p>
+
+<pre><code>-- MySQL: Check replication status on a replica
+SHOW REPLICA STATUS\G
+
+-- MySQL Group Replication: Check group members
+SELECT * FROM performance_schema.replication_group_members;</code></pre>
+
+<p>
+  MySQL's replication is binary-log-based, which supports both row-based and statement-based replication. The Group Replication and InnoDB Cluster features make MySQL easier to deploy in high-availability configurations without third-party tools.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Replication Feature</th>
+      <th>PostgreSQL</th>
+      <th>MySQL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Streaming / physical replication</td>
+      <td>Yes (WAL-based)</td>
+      <td>Yes (binlog-based)</td>
+    </tr>
+    <tr>
+      <td>Logical replication</td>
+      <td>Yes (pub/sub)</td>
+      <td>Yes (binlog + GTIDs)</td>
+    </tr>
+    <tr>
+      <td>Multi-primary</td>
+      <td>Extension required (BDR)</td>
+      <td>Built-in (Group Replication)</td>
+    </tr>
+    <tr>
+      <td>Automatic failover</td>
+      <td>Patroni / pg_auto_failover</td>
+      <td>InnoDB Cluster / Orchestrator</td>
+    </tr>
+    <tr>
+      <td>Cross-version replication</td>
+      <td>Logical replication only</td>
+      <td>Yes (with caveats)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Cloud Hosting Options</h2>
+
+<p>
+  Both databases have first-class managed offerings from every major cloud provider. Your choice of database will not limit your hosting options.
+</p>
+
+<h3>PostgreSQL Managed Services</h3>
+
+<ul>
+  <li><strong>AWS RDS for PostgreSQL</strong> and <strong>Amazon Aurora PostgreSQL</strong> — Aurora provides up to 5x throughput improvement over standard PostgreSQL with distributed storage.</li>
+  <li><strong>Google Cloud SQL for PostgreSQL</strong> and <strong>AlloyDB</strong> — AlloyDB is Google's PostgreSQL-compatible database with columnar processing for analytics.</li>
+  <li><strong>Azure Database for PostgreSQL</strong> — Flexible server with built-in high availability and intelligent performance tuning.</li>
+  <li><strong>Supabase</strong> — PostgreSQL with a real-time API, auth, and storage layer. Popular for full-stack applications.</li>
+  <li><strong>Neon</strong> — Serverless PostgreSQL with branching, scale-to-zero, and per-query billing.</li>
+  <li><strong>Crunchy Bridge</strong> — Managed PostgreSQL with strong focus on DBA-level control and PostgreSQL expertise.</li>
+</ul>
+
+<h3>MySQL Managed Services</h3>
+
+<ul>
+  <li><strong>AWS RDS for MySQL</strong> and <strong>Amazon Aurora MySQL</strong> — Aurora MySQL is one of the most popular managed database offerings globally.</li>
+  <li><strong>Google Cloud SQL for MySQL</strong> — fully managed with automatic backups, replication, and patching.</li>
+  <li><strong>Azure Database for MySQL</strong> — Flexible server deployment option with zone-redundant HA.</li>
+  <li><strong>PlanetScale</strong> — serverless MySQL built on Vitess with branching, non-blocking schema changes, and horizontal sharding.</li>
+  <li><strong>TiDB Cloud</strong> — MySQL-compatible distributed SQL database for hybrid transactional and analytical workloads.</li>
+</ul>
+
+<p>
+  A notable trend in 2026 is the rise of PostgreSQL-compatible serverless databases (Neon, Supabase, AlloyDB) and MySQL-compatible distributed databases (PlanetScale, TiDB). The ecosystem for both is thriving.
+</p>
+
+<h2>ORM Compatibility</h2>
+
+<p>
+  Every major ORM supports both PostgreSQL and MySQL. However, PostgreSQL-specific features often have better ORM support because ORMs can expose richer functionality.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>ORM / Query Builder</th>
+      <th>PostgreSQL Support</th>
+      <th>MySQL Support</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Prisma (Node.js)</td>
+      <td>Full — JSON, arrays, enums</td>
+      <td>Full — JSON, enums</td>
+    </tr>
+    <tr>
+      <td>Drizzle ORM (Node.js)</td>
+      <td>Full — native types</td>
+      <td>Full</td>
+    </tr>
+    <tr>
+      <td>SQLAlchemy (Python)</td>
+      <td>Full — JSONB, arrays, ranges, custom types</td>
+      <td>Full — JSON, standard types</td>
+    </tr>
+    <tr>
+      <td>Django ORM (Python)</td>
+      <td>Full — ArrayField, JSONField, range fields, full-text search</td>
+      <td>Full — JSONField (MySQL 5.7+)</td>
+    </tr>
+    <tr>
+      <td>ActiveRecord (Ruby)</td>
+      <td>Full — JSONB, arrays, hstore, UUID</td>
+      <td>Full — JSON, standard types</td>
+    </tr>
+    <tr>
+      <td>Hibernate (Java)</td>
+      <td>Full with Hibernate Types</td>
+      <td>Full</td>
+    </tr>
+    <tr>
+      <td>GORM (Go)</td>
+      <td>Full</td>
+      <td>Full</td>
+    </tr>
+    <tr>
+      <td>Entity Framework (.NET)</td>
+      <td>Full via Npgsql</td>
+      <td>Full via Pomelo.EntityFrameworkCore.MySql</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  If you are using Django or Rails and need array columns, range types, or advanced JSONB queries, PostgreSQL gives you richer ORM-level abstractions. If you are building a standard CRUD application, both databases work equally well with any ORM.
+</p>
+
+<h2>When to Choose PostgreSQL</h2>
+
+<p>
+  PostgreSQL is the stronger choice when your project has one or more of these characteristics:
+</p>
+
+<ul>
+  <li><strong>Complex queries and analytics</strong> — if your application runs queries with multiple joins, CTEs, window functions, or lateral joins, PostgreSQL's query planner will serve you better.</li>
+  <li><strong>JSON-heavy workloads</strong> — when you need to store, index, and query semi-structured data alongside relational data, JSONB is significantly more powerful than MySQL's JSON.</li>
+  <li><strong>Geospatial data</strong> — PostGIS is the gold standard for spatial databases. MySQL has spatial support, but PostGIS is more feature-complete and better supported by GIS tools.</li>
+  <li><strong>Data integrity is paramount</strong> — PostgreSQL enforces constraints more strictly. Deferred constraints, exclusion constraints, and partial indexes give you tools that MySQL does not have.</li>
+  <li><strong>Custom data types</strong> — if you need range types, network types, array columns, or custom composite types, PostgreSQL is the only choice.</li>
+  <li><strong>Standards compliance</strong> — PostgreSQL adheres more closely to the SQL standard, which reduces surprises when porting queries or switching databases.</li>
+  <li><strong>Extensions ecosystem</strong> — PostGIS, pg_trgm, TimescaleDB, pgvector (for AI embeddings), Citus (distributed), and hundreds more.</li>
+</ul>
+
+<pre><code>-- PostgreSQL strengths: Exclusion constraint (no overlapping bookings)
+CREATE TABLE room_bookings (
+  room_id INT NOT NULL,
+  during TSRANGE NOT NULL,
+  EXCLUDE USING GIST (room_id WITH =, during WITH &amp;&amp;)
+);
+
+-- This INSERT succeeds
+INSERT INTO room_bookings (room_id, during)
+VALUES (1, '[2026-03-20 10:00, 2026-03-20 12:00)');
+
+-- This INSERT fails: overlapping time range for the same room
+INSERT INTO room_bookings (room_id, during)
+VALUES (1, '[2026-03-20 11:00, 2026-03-20 13:00)');</code></pre>
+
+<h2>When to Choose MySQL</h2>
+
+<p>
+  MySQL is the stronger choice in these scenarios:
+</p>
+
+<ul>
+  <li><strong>Simple read-heavy web applications</strong> — for WordPress, Drupal, or custom CMS-style applications with mostly primary-key lookups and simple queries, MySQL's lightweight query processing and efficient buffer pool make it fast and economical.</li>
+  <li><strong>Existing ecosystem lock-in</strong> — if you are using WordPress, Magento, Joomla, or other PHP applications that are built for MySQL, switching to PostgreSQL adds complexity with no clear benefit.</li>
+  <li><strong>Multi-primary replication</strong> — if you need built-in multi-primary replication with automatic conflict resolution, MySQL Group Replication is easier to set up than PostgreSQL's BDR.</li>
+  <li><strong>Team familiarity</strong> — if your team has deep MySQL expertise and limited PostgreSQL experience, the operational knowledge advantage is real. Database expertise matters more than database features for most applications.</li>
+  <li><strong>Horizontal sharding with Vitess</strong> — Vitess, originally built by YouTube, provides transparent horizontal sharding for MySQL. PlanetScale makes it available as a managed service. PostgreSQL has Citus, but Vitess is more battle-tested at extreme scale.</li>
+  <li><strong>Managed MySQL compatibility</strong> — Aurora MySQL, PlanetScale, and TiDB provide MySQL-compatible interfaces with distributed storage and compute separation. The MySQL compatibility layer is broader than the PostgreSQL one.</li>
+  <li><strong>Embedded or resource-constrained environments</strong> — MySQL's memory footprint is typically smaller than PostgreSQL's process-per-connection model, making it more suitable for small VPS instances or containerized microservices with connection limits.</li>
+</ul>
+
+<pre><code>-- MySQL strength: Easy replication monitoring
+SHOW REPLICA STATUS\G
+-- Key fields to check:
+--   Replica_IO_Running: Yes
+--   Replica_SQL_Running: Yes
+--   Seconds_Behind_Source: 0
+
+-- MySQL strength: Simple user-friendly syntax for common operations
+CREATE TABLE users (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Insert with ON DUPLICATE KEY UPDATE (MySQL-specific, very convenient)
+INSERT INTO users (email) VALUES ('alice@example.com')
+ON DUPLICATE KEY UPDATE email = VALUES(email);</code></pre>
+
+<h2>Decision Matrix</h2>
+
+<p>
+  Use this matrix to score each database for your specific project. Rate each criterion from 1 to 5 based on how important it is to your project, then check which database better serves that criterion.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Criterion</th>
+      <th>Favors PostgreSQL</th>
+      <th>Favors MySQL</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Complex SQL queries</td>
+      <td>Yes</td>
+      <td></td>
+      <td>CTEs, window functions, lateral joins, parallel queries</td>
+    </tr>
+    <tr>
+      <td>Simple CRUD / read-heavy</td>
+      <td></td>
+      <td>Yes</td>
+      <td>MySQL is lighter for basic web workloads</td>
+    </tr>
+    <tr>
+      <td>JSON storage and querying</td>
+      <td>Yes</td>
+      <td></td>
+      <td>JSONB with GIN indexes is unmatched</td>
+    </tr>
+    <tr>
+      <td>Geospatial (PostGIS)</td>
+      <td>Yes</td>
+      <td></td>
+      <td>PostGIS is the industry standard</td>
+    </tr>
+    <tr>
+      <td>Full-text search</td>
+      <td>Yes</td>
+      <td></td>
+      <td>More configurable; both are adequate for basic needs</td>
+    </tr>
+    <tr>
+      <td>Multi-primary replication</td>
+      <td></td>
+      <td>Yes</td>
+      <td>MySQL Group Replication is built-in</td>
+    </tr>
+    <tr>
+      <td>Horizontal sharding</td>
+      <td></td>
+      <td>Yes</td>
+      <td>Vitess / PlanetScale for MySQL; Citus for PostgreSQL</td>
+    </tr>
+    <tr>
+      <td>Extensions ecosystem</td>
+      <td>Yes</td>
+      <td></td>
+      <td>PostGIS, pgvector, TimescaleDB, pg_trgm, etc.</td>
+    </tr>
+    <tr>
+      <td>Data integrity / constraints</td>
+      <td>Yes</td>
+      <td></td>
+      <td>Exclusion constraints, deferred constraints, partial indexes</td>
+    </tr>
+    <tr>
+      <td>CMS / PHP ecosystem</td>
+      <td></td>
+      <td>Yes</td>
+      <td>WordPress, Drupal, Magento, Laravel defaults</td>
+    </tr>
+    <tr>
+      <td>Serverless / scale-to-zero</td>
+      <td>Tie</td>
+      <td>Tie</td>
+      <td>Neon (PG) and PlanetScale (MySQL) both offer this</td>
+    </tr>
+    <tr>
+      <td>AI / vector embeddings</td>
+      <td>Yes</td>
+      <td></td>
+      <td>pgvector is mature; MySQL lacks a comparable extension</td>
+    </tr>
+    <tr>
+      <td>Operational simplicity</td>
+      <td></td>
+      <td>Yes</td>
+      <td>No VACUUM, simpler connection model</td>
+    </tr>
+    <tr>
+      <td>SQL standards compliance</td>
+      <td>Yes</td>
+      <td></td>
+      <td>PostgreSQL implements more of the SQL standard</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Feature-by-Feature Quick Reference</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>PostgreSQL</th>
+      <th>MySQL 8.x</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>MVCC implementation</td>
+      <td>Tuple versioning</td>
+      <td>Undo logs (InnoDB)</td>
+    </tr>
+    <tr>
+      <td>Default isolation level</td>
+      <td>Read Committed</td>
+      <td>Repeatable Read</td>
+    </tr>
+    <tr>
+      <td>Window functions</td>
+      <td>Full (since 8.4)</td>
+      <td>Full (since 8.0)</td>
+    </tr>
+    <tr>
+      <td>CTEs (WITH clauses)</td>
+      <td>Full (recursive, materialized hints)</td>
+      <td>Full (since 8.0)</td>
+    </tr>
+    <tr>
+      <td>Generated columns</td>
+      <td>Stored only</td>
+      <td>Stored and virtual</td>
+    </tr>
+    <tr>
+      <td>Partial indexes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Expression indexes</td>
+      <td>Yes</td>
+      <td>Functional indexes (since 8.0)</td>
+    </tr>
+    <tr>
+      <td>UPSERT syntax</td>
+      <td><code>INSERT ... ON CONFLICT</code></td>
+      <td><code>INSERT ... ON DUPLICATE KEY UPDATE</code></td>
+    </tr>
+    <tr>
+      <td>RETURNING clause</td>
+      <td>Yes</td>
+      <td>No (use <code>LAST_INSERT_ID()</code>)</td>
+    </tr>
+    <tr>
+      <td>Table inheritance</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Foreign data wrappers</td>
+      <td>Yes (query external sources as tables)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Materialized views</td>
+      <td>Yes</td>
+      <td>No (use tables + triggers)</td>
+    </tr>
+    <tr>
+      <td>Parallel query</td>
+      <td>Yes (configurable workers)</td>
+      <td>Limited</td>
+    </tr>
+    <tr>
+      <td>Connection model</td>
+      <td>Process-per-connection</td>
+      <td>Thread-per-connection</td>
+    </tr>
+    <tr>
+      <td>Connection pooling</td>
+      <td>PgBouncer / pgpool-II (external)</td>
+      <td>ProxySQL / MySQL Router / built-in thread pool (Enterprise)</td>
+    </tr>
+    <tr>
+      <td>License</td>
+      <td>PostgreSQL License (MIT-like)</td>
+      <td>GPL v2 (Community) / Commercial (Enterprise)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Migration Considerations</h2>
+
+<p>
+  If you are already running one database and considering a switch, here are the practical realities:
+</p>
+
+<ul>
+  <li><strong>MySQL to PostgreSQL</strong> — tools like <code>pgloader</code> handle schema and data migration. The biggest challenges are SQL syntax differences (<code>AUTO_INCREMENT</code> vs <code>SERIAL</code>/<code>GENERATED</code>, backtick quoting vs double-quote quoting, <code>LIMIT</code> syntax variations) and stored procedure rewrites.</li>
+  <li><strong>PostgreSQL to MySQL</strong> — less common and more difficult because you may be using PostgreSQL-specific features (arrays, ranges, JSONB operators, CTEs with materialization hints) that have no MySQL equivalent.</li>
+  <li><strong>ORM-based applications</strong> — if your application uses an ORM and avoids raw SQL, migration is significantly easier. The ORM abstracts most dialect differences.</li>
+</ul>
+
+<pre><code>-- Syntax differences to be aware of:
+
+-- Auto-increment
+-- PostgreSQL:
+CREATE TABLE users (id SERIAL PRIMARY KEY);
+-- Or (modern):
+CREATE TABLE users (id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY);
+
+-- MySQL:
+CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY);
+
+-- String quoting
+-- PostgreSQL: 'single quotes' for strings, "double quotes" for identifiers
+-- MySQL: 'single quotes' for strings, `backticks` for identifiers
+
+-- UPSERT
+-- PostgreSQL:
+INSERT INTO users (email, name) VALUES ('a@b.com', 'Alice')
+ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name;
+
+-- MySQL:
+INSERT INTO users (email, name) VALUES ('a@b.com', 'Alice')
+ON DUPLICATE KEY UPDATE name = VALUES(name);</code></pre>
+
+<h2>Conclusion</h2>
+
+<p>
+  In 2026, both PostgreSQL and MySQL are excellent databases that can handle the vast majority of application workloads. The historical narrative that "PostgreSQL is for enterprises, MySQL is for web apps" is outdated. MySQL 8.x has added window functions, CTEs, JSON support, and other features that once only PostgreSQL offered. PostgreSQL has improved its performance, reduced its operational overhead, and gained a thriving cloud ecosystem.
+</p>
+
+<p>
+  That said, meaningful differences remain. PostgreSQL offers deeper SQL compliance, richer data types, more powerful JSON handling, a stronger extension ecosystem (especially PostGIS and pgvector), and a more sophisticated query planner. MySQL offers simpler operations (no VACUUM), built-in multi-primary replication, a lighter-weight connection model, a massive PHP ecosystem, and battle-tested horizontal sharding through Vitess.
+</p>
+
+<p>
+  Our recommendation: <strong>default to PostgreSQL</strong> for new projects unless you have a specific reason to choose MySQL. PostgreSQL's feature depth gives you more room to grow without hitting limitations. The exceptions are clear — WordPress and PHP CMS platforms, existing MySQL infrastructure with deep team expertise, or workloads that specifically benefit from MySQL Group Replication or Vitess sharding.
+</p>
+
+<p>
+  Whichever database you choose, invest in proper performance tuning, monitoring, and backup strategies from day one. A well-tuned MySQL instance will always outperform a neglected PostgreSQL instance, and vice versa. The database you know well is usually the database that performs best for your team.
+</p>
+
+<p>
+  Format your SQL queries consistently with our <a href="/tools/sql-formatter">SQL Formatter</a>, and if you go with PostgreSQL, check out our <a href="/blog/postgres-performance-tuning-checklist">PostgreSQL Performance Tuning</a> checklist to ensure your deployment is production-ready from the start.
+</p>
+
+</BlogLayout>

@@ -136,13 +136,13 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
 </p>
 
 <pre><code># Backup database every night at 2 AM
-0 2 * * * /usr/local/bin/backup-db.sh >> /var/log/backup.log 2>&1
+0 2 * * * /usr/local/bin/backup-db.sh &gt;&gt; /var/log/backup.log 2&gt;&amp;1
 
 # Clean temp files every Sunday at 3 AM
 0 3 * * 0 find /tmp -mtime +7 -delete
 
 # Health check every 5 minutes
-*/5 * * * * curl -fsS https://hc-ping.com/your-uuid > /dev/null</code></pre>
+*/5 * * * * curl -fsS https://hc-ping.com/your-uuid &gt; /dev/null</code></pre>
 
 <p>
   Key crontab tips:
@@ -234,7 +234,7 @@ rate(5 minutes)               # Alternative: every 5 minutes (simpler)</code></p
 </p>
 
 <pre><code># Run on the last day of every month (Linux)
-0 0 28-31 * * [ "$(date -d tomorrow +\%d)" = "01" ] && /path/to/script.sh</code></pre>
+0 0 28-31 * * [ "$(date -d tomorrow +\%d)" = "01" ] &amp;&amp; /path/to/script.sh</code></pre>
 
 <p>
   In Quartz/Spring, use the <code>L</code> modifier: <code>0 0 0 L * ?</code>
@@ -247,7 +247,7 @@ rate(5 minutes)               # Alternative: every 5 minutes (simpler)</code></p
 </p>
 
 <pre><code># Every other Monday (even weeks)
-0 9 * * 1 [ $(($(date +\%V) \% 2)) -eq 0 ] && /path/to/script.sh</code></pre>
+0 9 * * 1 [ $(($(date +\%V) \% 2)) -eq 0 ] &amp;&amp; /path/to/script.sh</code></pre>
 
 <h3>Random Delay (Jitter)</h3>
 
@@ -256,7 +256,7 @@ rate(5 minutes)               # Alternative: every 5 minutes (simpler)</code></p
 </p>
 
 <pre><code># Sleep 0-300 seconds before running
-*/5 * * * * sleep $((RANDOM \% 300)) && /path/to/health-check.sh</code></pre>
+*/5 * * * * sleep $((RANDOM \% 300)) &amp;&amp; /path/to/health-check.sh</code></pre>
 
 <h2>Cron vs. Alternatives</h2>
 

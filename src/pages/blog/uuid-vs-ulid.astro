@@ -1,5 +1,41 @@
 ---
 import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeBlock = [
+  '// UUID v4 — built into modern runtimes',
+  'const uuidV4 = crypto.randomUUID();',
+  '// "f47ac10b-58cc-4372-a567-0e02b2c3d479"',
+  '',
+  "// UUID v7 — use the 'uuid' npm package (v10+)",
+  "import {'{'} v7 as uuidv7 {'}'} from 'uuid';",
+  'const uuidV7 = uuidv7();',
+  '// "019640ab-c2f1-7000-8000-1e8f3c2d5b6a"',
+  '',
+  "// ULID — use the 'ulid' npm package",
+  "import {'{'} ulid {'}'} from 'ulid';",
+  'const id = ulid();',
+  '// "01ARZ3NDEKTSV4RRFFQ69G5FAV"',
+  '',
+  '// ULID with a specific timestamp (deterministic prefix)',
+  'const idAt = ulid(1711497600000);',
+  '',
+  '// Extract timestamp from a ULID',
+  "import {'{'} decodeTime {'}'} from 'ulid';",
+  "const ts = decodeTime('01ARZ3NDEKTSV4RRFFQ69G5FAV');",
+  '// returns Unix ms timestamp as a number'
+].join('\n');
+
+const codeBlock2 = [
+  "import {'{'} monotonicFactory {'}'} from 'ulid';",
+  'const ulid = monotonicFactory();',
+  '',
+  '// These are generated in the same millisecond',
+  '// but are guaranteed to sort in generation order',
+  'const id1 = ulid();',
+  'const id2 = ulid();',
+  'const id3 = ulid();',
+  '// id1 &lt; id2 &lt; id3 always holds'
+].join('\n');
 ---
 
 <BlogLayout
@@ -94,27 +130,7 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
 
 <h3>JavaScript</h3>
 
-<pre><code>// UUID v4 — built into modern runtimes
-const uuidV4 = crypto.randomUUID();
-// "f47ac10b-58cc-4372-a567-0e02b2c3d479"
-
-// UUID v7 — use the 'uuid' npm package (v10+)
-import {'{'} v7 as uuidv7 {'}'} from 'uuid';
-const uuidV7 = uuidv7();
-// "019640ab-c2f1-7000-8000-1e8f3c2d5b6a"
-
-// ULID — use the 'ulid' npm package
-import {'{'} ulid {'}'} from 'ulid';
-const id = ulid();
-// "01ARZ3NDEKTSV4RRFFQ69G5FAV"
-
-// ULID with a specific timestamp (deterministic prefix)
-const idAt = ulid(1711497600000);
-
-// Extract timestamp from a ULID
-import {'{'} decodeTime {'}'} from 'ulid';
-const ts = decodeTime('01ARZ3NDEKTSV4RRFFQ69G5FAV');
-// returns Unix ms timestamp as a number</code></pre>
+<pre><code set:html=&#123;codeBlock&#125;></code></pre>
 
 <h3>Python</h3>
 
@@ -308,15 +324,7 @@ Monotonicity option   Optional (sub-ms)    Yes (monotonic mode)</code></pre>
   ULID's specification includes a <strong>monotonic mode</strong> that increments the random component by 1 for each ID generated within the same millisecond, guaranteeing strict ordering even at very high generation rates:
 </p>
 
-<pre><code>import {'{'} monotonicFactory {'}'} from 'ulid';
-const ulid = monotonicFactory();
-
-// These are generated in the same millisecond
-// but are guaranteed to sort in generation order
-const id1 = ulid();
-const id2 = ulid();
-const id3 = ulid();
-// id1 &lt; id2 &lt; id3 always holds</code></pre>
+<pre><code set:html=&#123;codeBlock2&#125;></code></pre>
 
 <p>
   UUID v7 has a similar optional sub-millisecond precision mechanism where additional random bits can be used as a monotonic counter, though implementation varies by library.

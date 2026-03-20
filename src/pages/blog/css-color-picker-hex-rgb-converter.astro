@@ -191,7 +191,7 @@ hexToRgb('#3b82f6'); // &#123; r: 59, g: 130, b: 246 &#123;</code></pre>
 
 <pre><code>function rgbToHex(r, g, b) &#123;
   return '#' + [r, g, b]
-    .map(x => x.toString(16).padStart(2, '0'))
+    .map(x =&gt; x.toString(16).padStart(2, '0'))
     .join('');
 &#123;
 
@@ -214,9 +214,9 @@ rgbToHex(59, 130, 246); // '#3b82f6'</code></pre>
     h = s = 0; // achromatic (gray)
   &#123; else &#123;
     const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    s = l &gt; 0.5 ? d / (2 - max - min) : d / (max + min);
     switch (max) &#123;
-      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case r: h = ((g - b) / d + (g &lt; b ? 6 : 0)) / 6; break;
       case g: h = ((b - r) / d + 2) / 6; break;
       case b: h = ((r - g) / d + 4) / 6; break;
     &#123;
@@ -456,9 +456,9 @@ background: #ffffff;
 </p>
 
 <pre><code>function getRelativeLuminance(r, g, b) &#123;
-  const [rs, gs, bs] = [r, g, b].map(c => &#123;
+  const [rs, gs, bs] = [r, g, b].map(c =&gt; &#123;
     c /= 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    return c &lt;= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   &#123;);
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 &#123;

@@ -1,5 +1,100 @@
 ---
 import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeBlock = [
+  '/* Before minification — 847 bytes */',
+  '',
+  '/* Navigation styles */',
+  ".navbar {'{'}",
+  '  display: flex;',
+  '  align-items: center;',
+  '  justify-content: space-between;',
+  '  padding: 16px 24px;',
+  '  background-color: #ffffff;',
+  '  border-bottom: 1px solid #e5e7eb;',
+  '  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.1);',
+  "{'}'}",
+  '',
+  ".navbar .logo {'{'}",
+  '  font-size: 20px;',
+  '  font-weight: bold;',
+  '  color: #111827;',
+  '  text-decoration: none;',
+  "{'}'}",
+  '',
+  ".navbar .nav-links {'{'}",
+  '  display: flex;',
+  '  gap: 24px;',
+  '  list-style: none;',
+  '  margin: 0px;',
+  '  padding: 0px;',
+  "{'}'}",
+  '',
+  ".navbar .nav-links a {'{'}",
+  '  color: #6b7280;',
+  '  text-decoration: none;',
+  '  font-weight: 500;',
+  '  transition: color 0.2s ease-in-out;',
+  "{'}'}",
+  '',
+  ".navbar .nav-links a:hover {'{'}",
+  '  color: #2563eb;',
+  "{'}'}"
+].join('\n');
+
+const codeBlock2 = [
+  '/* After minification — googltag bytes */',
+  ".navbar{'{'}display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background-color:#fff;border-bottom:1px solid #e5e7eb;box-shadow:0 1px 3px 0 rgba(0,0,0,.1){'}'}.navbar .logo{'{'}font-size:20px;font-weight:700;color:#111827;text-decoration:none{'}'}.navbar .nav-links{'{'}display:flex;gap:24px;list-style:none;margin:0;padding:0{'}'}.navbar .nav-links a{'{'}color:#6b7280;text-decoration:none;font-weight:500;transition:color .2s ease-in-out{'}'}.navbar .nav-links a:hover{'{'}color:#2563eb{'}'}"
+].join('\n');
+
+const codeBlock3 = [
+  'npm install cssnano postcss-cli --save-dev',
+  '',
+  '# Command line',
+  'npx postcss input.css -o output.css --use cssnano',
+  '',
+  '# postcss.config.js',
+  "module.exports = {'{'}",
+  "  plugins: {'{'}",
+  "    cssnano: {'{'}",
+  "      preset: ['default', {'{'}",
+  "        discardComments: {'{'} removeAll: true {'}'},",
+  '        normalizeWhitespace: true,',
+  '        minifySelectors: true,',
+  '        minifyParams: true,',
+  "      {'}'}]",
+  "    {'}'}",
+  "  {'}'}",
+  "{'}'};"
+].join('\n');
+
+const codeBlock4 = [
+  'npm install @fullhuman/postcss-purgecss --save-dev',
+  '',
+  '// postcss.config.js',
+  "module.exports = {'{'}",
+  "  plugins: {'{'}",
+  "    '@fullhuman/postcss-purgecss': {'{'}",
+  "      content: ['./src/**/*.html', './src/**/*.jsx', './src/**/*.tsx'],",
+  '      defaultExtractor: content => content.match(/[\\w-/:]+(?&lt;!:)/g) || [],',
+  "    {'}'},",
+  "    cssnano: {'{'}{'}'},",
+  "  {'}'}",
+  "{'}'};"
+].join('\n');
+
+const codeBlock5 = [
+  '&lt;head&gt;',
+  '  &lt;!-- Critical CSS inlined --&gt;',
+  '  &lt;style&gt;',
+  "    .header{'{'}display:flex;padding:16px{'}'}.hero{'{'}font-size:48px;margin-top:80px{'}'}",
+  '  &lt;/style&gt;',
+  '',
+  '  &lt;!-- Full CSS loaded asynchronously --&gt;',
+  '  &lt;link rel="preload" href="/styles.css" as="style" onload="this.rel=\'stylesheet\'"&gt;',
+  '  &lt;noscript&gt;&lt;link rel="stylesheet" href="/styles.css"&gt;&lt;/noscript&gt;',
+  '&lt;/head&gt;'
+].join('\n');
 ---
 
 <BlogLayout
@@ -39,47 +134,9 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
   Here's a real-world example showing the transformation:
 </p>
 
-<pre><code>/* Before minification — 847 bytes */
+<pre><code set:html=&#123;codeBlock&#125;></code></pre>
 
-/* Navigation styles */
-.navbar {'{'}
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.1);
-{'}'}
-
-.navbar .logo {'{'}
-  font-size: 20px;
-  font-weight: bold;
-  color: #111827;
-  text-decoration: none;
-{'}'}
-
-.navbar .nav-links {'{'}
-  display: flex;
-  gap: 24px;
-  list-style: none;
-  margin: 0px;
-  padding: 0px;
-{'}'}
-
-.navbar .nav-links a {'{'}
-  color: #6b7280;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease-in-out;
-{'}'}
-
-.navbar .nav-links a:hover {'{'}
-  color: #2563eb;
-{'}'}</code></pre>
-
-<pre><code>/* After minification — googltag bytes */
-.navbar{'{'}display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background-color:#fff;border-bottom:1px solid #e5e7eb;box-shadow:0 1px 3px 0 rgba(0,0,0,.1){'}'}.navbar .logo{'{'}font-size:20px;font-weight:700;color:#111827;text-decoration:none{'}'}.navbar .nav-links{'{'}display:flex;gap:24px;list-style:none;margin:0;padding:0{'}'}.navbar .nav-links a{'{'}color:#6b7280;text-decoration:none;font-weight:500;transition:color .2s ease-in-out{'}'}.navbar .nav-links a:hover{'{'}color:#2563eb{'}'}</code></pre>
+<pre><code set:html=&#123;codeBlock2&#125;></code></pre>
 
 <p>
   The minified version is roughly 40% smaller. Notice: <code>#ffffff</code> → <code>#fff</code>, <code>0px</code> → <code>0</code>, <code>bold</code> → <code>700</code>, <code>0.2s</code> → <code>.2s</code>, and all whitespace and comments are gone.
@@ -203,24 +260,7 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
 
 <p><strong>PostCSS + cssnano</strong> (most popular):</p>
 
-<pre><code>npm install cssnano postcss-cli --save-dev
-
-# Command line
-npx postcss input.css -o output.css --use cssnano
-
-# postcss.config.js
-module.exports = {'{'}
-  plugins: {'{'}
-    cssnano: {'{'}
-      preset: ['default', {'{'}
-        discardComments: {'{'} removeAll: true {'}'},
-        normalizeWhitespace: true,
-        minifySelectors: true,
-        minifyParams: true,
-      {'}'}]
-    {'}'}
-  {'}'}
-{'}'};</code></pre>
+<pre><code set:html=&#123;codeBlock3&#125;></code></pre>
 
 <p>
   cssnano is built on PostCSS and applies 30+ optimizations. It's battle-tested and used by millions of projects.
@@ -234,7 +274,7 @@ module.exports = {'{'}
 npx lightningcss --minify input.css -o output.css
 
 # With targets (auto-prefixing + minification)
-npx lightningcss --minify --targets '>= 0.25%' input.css -o output.css</code></pre>
+npx lightningcss --minify --targets '&gt;= 0.25%' input.css -o output.css</code></pre>
 
 <p>
   Lightning CSS is 100x faster than cssnano and also handles vendor prefixing, CSS nesting, and modern syntax transpilation. It's the best choice for new projects.
@@ -297,18 +337,7 @@ npx lightningcss --minify --targets '>= 0.25%' input.css -o output.css</code></p
   Tools like PurgeCSS scan your HTML and JavaScript to find which CSS selectors are actually used, then remove everything else. This can reduce CSS by 80-95% on sites using utility frameworks like Tailwind or Bootstrap.
 </p>
 
-<pre><code>npm install @fullhuman/postcss-purgecss --save-dev
-
-// postcss.config.js
-module.exports = {'{'}
-  plugins: {'{'}
-    '@fullhuman/postcss-purgecss': {'{'}
-      content: ['./src/**/*.html', './src/**/*.jsx', './src/**/*.tsx'],
-      defaultExtractor: content => content.match(/[\w-/:]+(?&lt;!:)/g) || [],
-    {'}'},
-    cssnano: {'{'}{'}'},
-  {'}'}
-{'}'};</code></pre>
+<pre><code set:html=&#123;codeBlock4&#125;></code></pre>
 
 <h3>Critical CSS (Inline Above-the-Fold Styles)</h3>
 
@@ -316,16 +345,7 @@ module.exports = {'{'}
   Extract the CSS needed for above-the-fold content and inline it directly in the HTML <code>&lt;head&gt;</code>. Load the rest asynchronously. This eliminates the render-blocking CSS download for the initial viewport.
 </p>
 
-<pre><code>&lt;head&gt;
-  &lt;!-- Critical CSS inlined --&gt;
-  &lt;style&gt;
-    .header{'{'}display:flex;padding:16px{'}'}.hero{'{'}font-size:48px;margin-top:80px{'}'}
-  &lt;/style&gt;
-
-  &lt;!-- Full CSS loaded asynchronously --&gt;
-  &lt;link rel="preload" href="/styles.css" as="style" onload="this.rel='stylesheet'"&gt;
-  &lt;noscript&gt;&lt;link rel="stylesheet" href="/styles.css"&gt;&lt;/noscript&gt;
-&lt;/head&gt;</code></pre>
+<pre><code set:html=&#123;codeBlock5&#125;></code></pre>
 
 <p>
   Tools like <code>critical</code> (npm package) and <code>critters</code> (used by Angular) automate this extraction.

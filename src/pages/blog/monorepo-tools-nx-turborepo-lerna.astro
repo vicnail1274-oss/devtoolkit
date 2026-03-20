@@ -1,0 +1,365 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="Nx vs Turborepo vs Lerna: Choosing Your Monorepo Tool in 2026"
+  description="Compare Nx, Turborepo, and Lerna for JavaScript monorepo management. Understand caching, task orchestration, and which tool fits your team's scale and workflow."
+  slug="monorepo-tools-nx-turborepo-lerna"
+  publishDate="2026-03-20"
+  readTime="13 min read"
+>
+
+<p>
+  Monorepos — single Git repositories containing multiple projects or packages — have become the default architecture at companies like Google, Meta, and Microsoft. In the JavaScript ecosystem, the rise of monorepos has spawned a competitive tooling landscape: <strong>Nx</strong>, <strong>Turborepo</strong>, and <strong>Lerna</strong> are the three most prominent options, each taking a different philosophy to solving the same core problem: making large codebases fast and maintainable.
+</p>
+
+<p>
+  This guide compares all three in depth — their architecture, caching strategies, task orchestration, ecosystem integrations, and the scenarios where each shines.
+</p>
+
+<h2>Why Monorepos? The Problem They Solve</h2>
+
+<p>
+  Before comparing tools, it's worth understanding what problem they solve. A monorepo containing 20 packages has 20 sets of dependencies, 20 build pipelines, and 20 test suites. Without tooling, <code>npm install</code> in the root, then building every package in sequence, would take 30+ minutes on any non-trivial codebase.
+</p>
+
+<p>
+  Monorepo tools solve this with three mechanisms:
+</p>
+
+<ul>
+  <li><strong>Dependency graph analysis:</strong> Understand which packages depend on which, so changes are only propagated where needed</li>
+  <li><strong>Intelligent task scheduling:</strong> Run independent tasks in parallel, dependent tasks in sequence</li>
+  <li><strong>Caching:</strong> Skip tasks whose inputs haven't changed — build once, reuse everywhere</li>
+</ul>
+
+<h2>Lerna: The Pioneer</h2>
+
+<p>
+  Lerna was the first major JavaScript monorepo tool, released in 2015. It pioneered the concept of managing multiple npm packages in a single repository and automating versioning and publishing. For years, "monorepo" and "Lerna" were nearly synonymous in the JS community.
+</p>
+
+<h3>How Lerna Works</h3>
+
+<p>
+  Lerna works on top of a package manager's workspace protocol (npm workspaces, yarn workspaces, or pnpm workspaces). It provides two key capabilities:
+</p>
+
+<ul>
+  <li><strong>Task running:</strong> Run scripts across all packages, with change detection to skip unchanged ones</li>
+  <li><strong>Publishing:</strong> Version bumping (fixed or independent versioning) and npm publish automation across all packages</li>
+</ul>
+
+<pre><code># lerna.json
+&#123;
+  "version": "independent",
+  "npmClient": "pnpm",
+  "useWorkspaces": true,
+  "packages": ["packages/*", "apps/*"],
+  "command": &#123;
+    "publish": &#123;
+      "conventionalCommits": true,
+      "message": "chore(release): publish"
+    &#125;
+  &#125;
+&#125;
+
+# Run build across all changed packages
+npx lerna run build --since origin/main
+
+# Publish all changed packages
+npx lerna publish --conventional-commits</code></pre>
+
+<h3>Lerna + Nx Power Mode</h3>
+
+<p>
+  In 2022, Nrwl (the company behind Nx) took over Lerna's maintenance and integrated Nx's task runner as Lerna's default engine. Modern Lerna (v6+) uses Nx under the hood for caching and task orchestration, meaning you get Lerna's publishing automation with Nx's performance.
+</p>
+
+<pre><code># lerna.json — enable Nx integration
+&#123;
+  "version": "independent",
+  "useWorkspaces": true,
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "useNx": true,  // Enable Nx task runner
+  "npmClient": "npm"
+&#125;</code></pre>
+
+<h3>When to Use Lerna</h3>
+
+<p>
+  Lerna's sweet spot is <strong>open-source libraries that publish multiple packages to npm</strong>. If your primary concern is versioning coordination and publishing automation across packages (e.g., a component library shipping 20 independent packages), Lerna's conventional commits integration and changelog generation are best-in-class. For pure task running and caching, Turborepo or Nx are stronger.
+</p>
+
+<h2>Turborepo: Speed-First Simplicity</h2>
+
+<p>
+  Turborepo was built by Jared Palmer and acquired by Vercel in 2021. Its philosophy is radical simplicity: a minimal configuration file, zero opinions about your project structure, and an obsessive focus on making builds fast through caching.
+</p>
+
+<h3>How Turborepo Works</h3>
+
+<p>
+  Turborepo reads your <code>turbo.json</code> to understand task dependencies and caching rules, then orchestrates task execution with maximum parallelism:
+</p>
+
+<pre><code>// turbo.json
+&#123;
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": &#123;
+    "build": &#123;
+      "dependsOn": ["^build"],  // ^ means "all dependencies' build first"
+      "inputs": ["src/**", "package.json", "tsconfig.json"],
+      "outputs": ["dist/**", ".next/**"]
+    &#125;,
+    "test": &#123;
+      "dependsOn": ["build"],
+      "inputs": ["src/**", "tests/**"],
+      "outputs": []
+    &#125;,
+    "lint": &#123;
+      "inputs": ["src/**", ".eslintrc*"],
+      "outputs": []
+    &#125;,
+    "dev": &#123;
+      "persistent": true,
+      "cache": false  // Never cache dev servers
+    &#125;
+  &#125;
+&#125;</code></pre>
+
+<p>
+  With this config, <code>turbo build</code> will:
+</p>
+
+<ol>
+  <li>Build all packages in dependency order (topological sort)</li>
+  <li>Parallelize independent packages</li>
+  <li>Skip packages whose inputs (files) haven't changed (hash-based cache)</li>
+  <li>On cache hit: restore outputs from cache without re-running (milliseconds vs minutes)</li>
+</ol>
+
+<h3>Remote Caching with Vercel</h3>
+
+<p>
+  Turborepo's killer feature is remote caching — sharing the build cache across your entire team and CI/CD pipeline. When developer A builds <code>@acme/ui</code>, the result is pushed to Vercel's remote cache. When developer B runs the same build with identical inputs, they get a cache hit and skip the build entirely.
+</p>
+
+<pre><code># Link to Vercel remote cache
+npx turbo login
+npx turbo link
+
+# Now every turbo run is potentially a cache hit from any team member's build
+turbo build
+
+# Output:
+# @acme/ui:build: cache hit, replaying output...
+# @acme/utils:build: cache hit, replaying output...
+# @acme/web:build: &gt;&gt;&gt; FULL TURBO  (all dependencies were cached)
+# Tasks: 12 successful, 12 total
+# Cached: 12 cached, 12 total
+# Time: 847ms &gt;&gt;&gt; FULL TURBO</code></pre>
+
+<p>
+  You can also self-host the remote cache using open-source alternatives like <code>ducktape-cache</code> or <code>turborepo-remote-cache</code>.
+</p>
+
+<h3>Turborepo Codebase Structure</h3>
+
+<pre><code>my-monorepo/
+├── apps/
+│   ├── web/          # Next.js app
+│   └── docs/         # Docusaurus site
+├── packages/
+│   ├── ui/           # Shared React components
+│   ├── config/       # Shared configs (eslint, tsconfig)
+│   └── utils/        # Shared utilities
+├── turbo.json
+└── package.json      # Workspace root with workspaces field</code></pre>
+
+<h3>When to Use Turborepo</h3>
+
+<p>
+  Turborepo is ideal for <strong>application-focused monorepos where speed and simplicity are the priorities</strong>. If you're building a suite of Next.js apps with shared packages and want to set up a monorepo in 30 minutes with excellent Vercel deployment integration, Turborepo is the natural choice. Its minimal configuration surface means less to learn and maintain.
+</p>
+
+<h2>Nx: The Full-Featured Platform</h2>
+
+<p>
+  Nx, developed by Nrwl, is the most feature-rich of the three tools. It goes well beyond task running to provide a full development platform: code generation, project graph visualization, automated migrations, and first-class integrations for React, Angular, Node.js, Next.js, and dozens of other frameworks.
+</p>
+
+<h3>How Nx Works</h3>
+
+<p>
+  Nx builds a <strong>project graph</strong> by analyzing your source code — not just <code>package.json</code> imports, but actual TypeScript/JavaScript import statements. This means it understands dependencies even in non-npm-linked scenarios:
+</p>
+
+<pre><code># nx.json
+&#123;
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": &#123;
+    "default": ["&#123;projectRoot&#125;/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!&#123;projectRoot&#125;/**/*.spec.ts",
+      "!&#123;projectRoot&#125;/jest.config.ts"
+    ]
+  &#125;,
+  "targetDefaults": &#123;
+    "build": &#123;
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
+    &#125;,
+    "test": &#123;
+      "inputs": ["default", "^production", "&#123;workspaceRoot&#125;/jest.preset.js"],
+      "cache": true
+    &#125;
+  &#125;
+&#125;</code></pre>
+
+<h3>The Project Graph</h3>
+
+<p>
+  Run <code>npx nx graph</code> to open an interactive visualization of your entire monorepo's dependency graph. This is invaluable for understanding impact of changes:
+</p>
+
+<pre><code># Show what's affected by changes since main branch
+npx nx affected:graph
+
+# Run only tests for affected projects
+npx nx affected --target=test --base=main
+
+# Run specific project's build
+npx nx build my-app
+
+# Run with task runner parallelism
+npx nx run-many --target=build --all --parallel=4</code></pre>
+
+<h3>Nx Generators (Code Generation)</h3>
+
+<p>
+  Nx's code generators (formerly called "schematics") are one of its most powerful differentiators. They automate creating consistent new apps, libraries, and components:
+</p>
+
+<pre><code># Add a new React app to the monorepo
+npx nx g @nx/react:app my-new-app
+
+# Add a shared library
+npx nx g @nx/react:lib ui-components --directory=shared
+
+# Add a component to a library
+npx nx g @nx/react:component Button --project=shared-ui-components
+
+# Generate a Node.js API
+npx nx g @nx/node:app my-api --framework=express</code></pre>
+
+<p>
+  Each generator creates files, updates imports, and registers the project in the workspace — ensuring consistent structure across your entire codebase without manual copy-pasting.
+</p>
+
+<h3>Nx Cloud: Remote Caching and Distributed Task Execution</h3>
+
+<p>
+  Nx Cloud (the paid cloud offering) provides remote caching similar to Turborepo, plus <strong>Distributed Task Execution (DTE)</strong> — a unique feature that distributes CI tasks across multiple agents in parallel:
+</p>
+
+<pre><code>// In CI: distribute 50 test suites across 10 agents
+npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js"
+npx nx affected --target=test
+npx nx-cloud stop-all-agents</code></pre>
+
+<p>
+  This can reduce a 30-minute CI run to 5 minutes by running tasks on 6 parallel agents. The free tier of Nx Cloud covers most small-to-medium teams.
+</p>
+
+<h3>When to Use Nx</h3>
+
+<p>
+  Nx is best for <strong>large enterprise monorepos, teams that want strong conventions enforced by tooling, and mixed-technology workspaces</strong> (e.g., Angular frontends + Node.js backends + shared TypeScript libraries). Its generator ecosystem and migration tools ("Nx migrate") make upgrading framework versions (React 18 → 19, Next.js 14 → 15) much less painful.
+</p>
+
+<h2>Head-to-Head Comparison</h2>
+
+<h3>Configuration Complexity</h3>
+<ul>
+  <li><strong>Turborepo:</strong> Minimal — one <code>turbo.json</code> with task definitions. New developers are productive in an hour.</li>
+  <li><strong>Lerna:</strong> Minimal for publishing workflows, moderate for task orchestration.</li>
+  <li><strong>Nx:</strong> High initial learning curve, but the investment pays off at scale. Deep configuration options for fine-grained control.</li>
+</ul>
+
+<h3>Caching</h3>
+<ul>
+  <li><strong>Turborepo:</strong> Excellent. Hash-based local + remote caching (Vercel or self-hosted). Dead simple to configure.</li>
+  <li><strong>Lerna:</strong> Delegates to Nx when <code>useNx: true</code>. Standalone Lerna has basic task hashing.</li>
+  <li><strong>Nx:</strong> Excellent. Sophisticated input/output tracking, remote caching via Nx Cloud, distributed execution.</li>
+</ul>
+
+<h3>Ecosystem and Framework Support</h3>
+<ul>
+  <li><strong>Turborepo:</strong> Framework-agnostic. Works with any build system. No code generation.</li>
+  <li><strong>Lerna:</strong> Framework-agnostic. Publishing-focused.</li>
+  <li><strong>Nx:</strong> Deep integrations for React, Angular, Vue, Next.js, Nest.js, Express, Fastify, Storybook, Cypress, Jest, Vite, and more.</li>
+</ul>
+
+<h3>Scalability</h3>
+<ul>
+  <li><strong>Turborepo:</strong> Scales well to hundreds of packages. Simpler mental model may become a limitation at Google/Meta scale.</li>
+  <li><strong>Lerna:</strong> Scales to hundreds of packages for publishing; leans on Nx for performance at scale.</li>
+  <li><strong>Nx:</strong> Battle-tested at thousands of packages. Distributed task execution handles the most extreme CI scenarios.</li>
+</ul>
+
+<h2>Migration Considerations</h2>
+
+<p>
+  If you're converting an existing multi-repo setup to a monorepo, or migrating between tools:
+</p>
+
+<ul>
+  <li><strong>To Turborepo:</strong> Add <code>turbo.json</code>, define task pipeline, run <code>turbo build</code>. Usually done in an afternoon.</li>
+  <li><strong>To Nx:</strong> Run <code>npx nx@latest init</code> in an existing monorepo — Nx's init command auto-detects projects and generates configuration. Full migration can take days for large repos.</li>
+  <li><strong>To Lerna:</strong> <code>npx lerna init</code> in a workspace root. Primary migration concern is configuring your versioning/publishing strategy.</li>
+</ul>
+
+<h2>Decision Guide</h2>
+
+<p>Choose <strong>Turborepo</strong> if:</p>
+<ul>
+  <li>You want to get started quickly with minimal configuration</li>
+  <li>You're deploying primarily to Vercel and want native integration</li>
+  <li>Your team is small to medium and prefers simplicity over features</li>
+  <li>You have application packages rather than published libraries</li>
+</ul>
+
+<p>Choose <strong>Nx</strong> if:</p>
+<ul>
+  <li>You have a large team with diverse technology stacks</li>
+  <li>You want enforced conventions and code generation</li>
+  <li>CI times are a serious bottleneck and you need distributed execution</li>
+  <li>You're building on Angular, or a mix of Angular + React + Node</li>
+</ul>
+
+<p>Choose <strong>Lerna</strong> if:</p>
+<ul>
+  <li>You're building an open-source library that publishes multiple npm packages</li>
+  <li>Conventional commits + automated changelog generation is a priority</li>
+  <li>You want Lerna's publishing workflow with Nx's performance under the hood</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>
+  The monorepo tooling ecosystem has matured rapidly. Turborepo wins on simplicity and developer experience for application monorepos. Nx wins on features, scalability, and enterprise-grade tooling. Lerna wins specifically for publishing-focused open-source library repositories.
+</p>
+
+<p>
+  Notably, these tools aren't mutually exclusive — modern Lerna uses Nx internally, and you can run Turborepo alongside other tools. The most important choice is picking one and using it consistently across your team.
+</p>
+
+<p>
+  For more on JavaScript tooling decisions, see our comparisons of <a href="/blog/npm-vs-pnpm-vs-yarn-package-manager-showdown">npm vs pnpm vs yarn</a> and <a href="/blog/vite-vs-webpack-build-tool-comparison">Vite vs Webpack</a>.
+</p>
+
+</BlogLayout>

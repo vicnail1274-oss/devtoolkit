@@ -1,0 +1,391 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="ESLint + Prettier Setup: The Complete Developer Configuration Guide (2026)"
+  description="Set up ESLint and Prettier together without conflicts. Covers flat config, TypeScript integration, React plugins, pre-commit hooks with Husky, and VS Code configuration."
+  slug="eslint-prettier-setup-guide"
+  publishDate="2026-03-20"
+  readTime="12 min read"
+>
+
+<p>
+  ESLint and Prettier solve different problems: ESLint catches code quality issues (unused variables, suspicious patterns, potential bugs), while Prettier enforces consistent formatting (indentation, line length, quote style). Together, they eliminate entire categories of code review friction — reviewers focus on logic, not style. But getting them to work together without conflicts has historically been painful.
+</p>
+
+<p>
+  This guide sets up a modern, conflict-free ESLint + Prettier configuration using ESLint's new flat config format, TypeScript support, React plugins, and automated enforcement with Husky and lint-staged pre-commit hooks.
+</p>
+
+<h2>Understanding the Division of Labor</h2>
+
+<p>
+  Before configuring anything, understand what each tool does:
+</p>
+
+<ul>
+  <li><strong>Prettier:</strong> Format-only. It reformats your code into a consistent style. It is intentionally opinionated with few options. It does <em>not</em> catch bugs or enforce best practices.</li>
+  <li><strong>ESLint:</strong> Linting + optional formatting. By default, some ESLint rules conflict with Prettier (e.g., both want to manage semicolons). The solution is <code>eslint-config-prettier</code>, which disables all ESLint formatting rules, leaving that entirely to Prettier.</li>
+</ul>
+
+<p>
+  The old pattern of using <code>eslint-plugin-prettier</code> to run Prettier as an ESLint rule is now <strong>discouraged</strong> — it slows down ESLint and produces confusing error messages. The modern approach: run ESLint and Prettier as separate tools, with Prettier's formatting rules disabled in ESLint.
+</p>
+
+<h2>Installation</h2>
+
+<pre><code># Core tools
+npm install -D eslint prettier
+
+# Prettier integration — disables ESLint's formatting rules
+npm install -D eslint-config-prettier
+
+# TypeScript support
+npm install -D @typescript-eslint/eslint-plugin @typescript-eslint/parser typescript-eslint
+
+# React support (skip if not using React)
+npm install -D eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y
+
+# Import organization
+npm install -D eslint-plugin-import eslint-plugin-simple-import-sort
+
+# Pre-commit automation
+npm install -D husky lint-staged</code></pre>
+
+<h2>Prettier Configuration</h2>
+
+<p>
+  Create a minimal <code>.prettierrc</code> — resist over-configuring, Prettier's defaults are well-chosen:
+</p>
+
+<pre><code>// .prettierrc
+&#123;
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "arrowParens": "always"
+&#125;</code></pre>
+
+<pre><code># .prettierignore
+node_modules
+dist
+build
+.next
+coverage
+*.min.js
+*.min.css
+package-lock.json
+pnpm-lock.yaml
+yarn.lock</code></pre>
+
+<h2>ESLint Flat Config (Modern Format)</h2>
+
+<p>
+  ESLint 9 introduced the "flat config" system using <code>eslint.config.js</code> (or <code>.mjs</code>). The old <code>.eslintrc.json</code> format is deprecated. Here's a complete flat config for a TypeScript + React project:
+</p>
+
+<pre><code>// eslint.config.mjs
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import reactPlugin from 'eslint-plugin-react';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import importPlugin from 'eslint-plugin-import';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import prettier from 'eslint-config-prettier';
+
+export default tseslint.config(
+  // Base JavaScript rules
+  js.configs.recommended,
+
+  // TypeScript rules
+  ...tseslint.configs.recommendedTypeChecked,
+  &#123;
+    languageOptions: &#123;
+      parserOptions: &#123;
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      &#125;,
+    &#125;,
+  &#125;,
+
+  // React rules
+  &#123;
+    files: ['**/*.&#123;jsx,tsx&#125;'],
+    plugins: &#123;
+      react: reactPlugin,
+      'react-hooks': reactHooksPlugin,
+      'jsx-a11y': jsxA11y,
+    &#125;,
+    rules: &#123;
+      ...reactPlugin.configs.recommended.rules,
+      ...reactPlugin.configs['jsx-runtime'].rules, // For React 17+ JSX transform
+      ...reactHooksPlugin.configs.recommended.rules,
+      ...jsxA11y.configs.recommended.rules,
+    &#125;,
+    settings: &#123;
+      react: &#123; version: 'detect' &#125;,
+    &#125;,
+  &#125;,
+
+  // Import organization
+  &#123;
+    plugins: &#123;
+      import: importPlugin,
+      'simple-import-sort': simpleImportSort,
+    &#125;,
+    rules: &#123;
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+      'import/first': 'error',
+      'import/newline-after-import': 'error',
+      'import/no-duplicates': 'error',
+    &#125;,
+  &#125;,
+
+  // Custom project rules
+  &#123;
+    rules: &#123;
+      // TypeScript-specific
+      '@typescript-eslint/no-unused-vars': ['error', &#123; argsIgnorePattern: '^_' &#125;],
+      '@typescript-eslint/consistent-type-imports': ['error', &#123; prefer: 'type-imports' &#125;],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+
+      // General
+      'no-console': ['warn', &#123; allow: ['warn', 'error'] &#125;],
+      'prefer-const': 'error',
+      'no-var': 'error',
+    &#125;,
+  &#125;,
+
+  // Disable all formatting rules — Prettier handles these
+  prettier,
+
+  // Ignore patterns
+  &#123;
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'build/**',
+      '.next/**',
+      'coverage/**',
+      '*.config.js',
+      '*.config.mjs',
+    ],
+  &#125;
+);</code></pre>
+
+<h3>Node.js / Backend Config (No React)</h3>
+
+<pre><code>// eslint.config.mjs — Node.js only
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import prettier from 'eslint-config-prettier';
+
+export default tseslint.config(
+  js.configs.recommended,
+  ...tseslint.configs.strictTypeChecked,
+  &#123;
+    languageOptions: &#123;
+      parserOptions: &#123;
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      &#125;,
+    &#125;,
+  &#125;,
+  &#123;
+    rules: &#123;
+      '@typescript-eslint/no-unused-vars': ['error', &#123; argsIgnorePattern: '^_' &#125;],
+      '@typescript-eslint/consistent-type-imports': ['error', &#123; prefer: 'type-imports' &#125;],
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      'no-console': ['warn', &#123; allow: ['warn', 'error'] &#125;],
+      'prefer-const': 'error',
+    &#125;,
+  &#125;,
+  prettier,
+  &#123; ignores: ['node_modules/**', 'dist/**', 'coverage/**'] &#125;
+);</code></pre>
+
+<h2>Package.json Scripts</h2>
+
+<pre><code>// package.json
+&#123;
+  "scripts": &#123;
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint &amp;&amp; npm run format:check"
+  &#125;
+&#125;</code></pre>
+
+<h2>VS Code Integration</h2>
+
+<p>
+  Install the ESLint and Prettier extensions, then configure VS Code to auto-format on save:
+</p>
+
+<pre><code>// .vscode/settings.json
+&#123;
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": &#123;
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"  // Let simple-import-sort handle this
+  &#125;,
+
+  // Language-specific overrides
+  "[javascript]": &#123;
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  &#125;,
+  "[typescript]": &#123;
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  &#125;,
+  "[json]": &#123;
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  &#125;,
+
+  // ESLint settings
+  "eslint.useFlatConfig": true,
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+&#125;</code></pre>
+
+<pre><code>// .vscode/extensions.json — recommend to all team members
+&#123;
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss"  // If using Tailwind
+  ]
+&#125;</code></pre>
+
+<h2>Pre-Commit Hooks with Husky and lint-staged</h2>
+
+<p>
+  Pre-commit hooks ensure code is always linted and formatted before it reaches the repository — regardless of editor settings:
+</p>
+
+<pre><code># Initialize Husky
+npx husky init
+
+# This creates .husky/pre-commit with npx lint-staged</code></pre>
+
+<pre><code>// package.json — add lint-staged config
+&#123;
+  "lint-staged": &#123;
+    "*.&#123;js,jsx,ts,tsx&#125;": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.&#123;json,md,css,scss,html,yaml,yml&#125;": [
+      "prettier --write"
+    ]
+  &#125;
+&#125;</code></pre>
+
+<pre><code># .husky/pre-commit (created by husky init)
+npx lint-staged</code></pre>
+
+<p>
+  With this setup, every <code>git commit</code> automatically:
+</p>
+<ol>
+  <li>Runs ESLint with auto-fix on staged JS/TS files</li>
+  <li>Runs Prettier on staged files</li>
+  <li>Adds the fixed files back to staging</li>
+  <li>Aborts the commit if ESLint reports unfixable errors</li>
+</ol>
+
+<h2>CI/CD Integration</h2>
+
+<pre><code>// .github/workflows/lint.yml
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check</code></pre>
+
+<h2>Resolving Common Conflicts</h2>
+
+<h3>"Prettier and ESLint disagree on formatting"</h3>
+
+<p>
+  If you see ESLint errors about formatting after running Prettier, a formatting rule is not disabled. Check:
+</p>
+
+<pre><code># Identify which ESLint rules conflict with Prettier
+npx eslint-config-prettier path/to/file.ts
+
+# You should see: "No rules that are unnecessary or conflict with Prettier were found."
+# If conflicts are found, ensure prettier is LAST in your config extends</code></pre>
+
+<h3>"TypeScript ESLint rules require type information"</h3>
+
+<p>
+  Rules like <code>@typescript-eslint/no-floating-promises</code> require <code>parserOptions.projectService: true</code>. Without it, you get:
+</p>
+
+<pre><code>// Error: "Parsing error: parserOptions.project has been set..."
+// Fix: Add to your eslint.config.mjs:
+&#123;
+  languageOptions: &#123;
+    parserOptions: &#123;
+      projectService: true,
+      tsconfigRootDir: import.meta.dirname,
+    &#125;,
+  &#125;,
+&#125;</code></pre>
+
+<h3>"ESLint is slow on large projects"</h3>
+
+<p>
+  Type-aware rules (anything using <code>recommendedTypeChecked</code>) are slower because they run the TypeScript compiler. Solutions:
+</p>
+
+<ul>
+  <li>Use <code>eslint --cache</code> — caches results per file, only re-lints changed files</li>
+  <li>Add <code>"ESLINT_USE_FLAT_CONFIG": "true"</code> if you have a mix of configs</li>
+  <li>Profile with <code>TIMING=1 eslint .</code> to see which rules are slowest</li>
+</ul>
+
+<h2>The Complete Workflow</h2>
+
+<p>With this setup, your daily workflow looks like:</p>
+
+<ol>
+  <li><strong>Write code</strong> — VS Code shows ESLint errors inline as you type</li>
+  <li><strong>Save file</strong> — Prettier formats automatically, ESLint auto-fixes safe issues</li>
+  <li><strong>Git commit</strong> — lint-staged runs ESLint + Prettier on staged files</li>
+  <li><strong>Pull request</strong> — CI runs <code>npm run lint</code> and <code>format:check</code>, fails on issues</li>
+</ol>
+
+<p>
+  The result: consistent code style across your entire team, zero formatting debates in code review, and a codebase that catches common mistakes automatically.
+</p>
+
+<p>
+  For more on TypeScript configuration, see our guide on <a href="/blog/typescript-vs-javascript-should-you-switch">TypeScript vs JavaScript</a> and <a href="/blog/prettier-vs-eslint-formatting-vs-linting">Prettier vs ESLint — when to use which</a>.
+</p>
+
+</BlogLayout>

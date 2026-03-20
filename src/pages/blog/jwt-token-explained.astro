@@ -38,10 +38,10 @@ const content = `
   The header typically contains two fields:
 </p>
 
-<pre><code>{
+<pre><code>&#123;
   "alg": "HS256",
   "typ": "JWT"
-}</code></pre>
+&#125;</code></pre>
 
 <ul>
   <li><code>alg</code> — The signing algorithm (HS256, RS256, ES256, etc.)</li>
@@ -60,7 +60,7 @@ const content = `
 
 <p><strong>Registered claims</strong> (standardized, optional but recommended):</p>
 
-<pre><code>{
+<pre><code>&#123;
   "iss": "https://auth.example.com",     // Issuer
   "sub": "user-123",                     // Subject (user ID)
   "aud": "https://api.example.com",      // Audience
@@ -68,22 +68,22 @@ const content = `
   "nbf": 1748419200,                     // Not Before
   "iat": 1748419200,                     // Issued At
   "jti": "unique-token-id"              // JWT ID (for revocation)
-}</code></pre>
+&#125;</code></pre>
 
 <p><strong>Public claims</strong> (custom, registered in the IANA JWT Claims Registry):</p>
 
-<pre><code>{
+<pre><code>&#123;
   "name": "John Doe",
   "email": "john@example.com"
-}</code></pre>
+&#125;</code></pre>
 
 <p><strong>Private claims</strong> (custom, agreed between parties):</p>
 
-<pre><code>{
+<pre><code>&#123;
   "role": "admin",
   "permissions": ["read", "write", "delete"],
   "tenant_id": "acme-corp"
-}</code></pre>
+&#125;</code></pre>
 
 <p>
   Important: the payload is <strong>not encrypted</strong>. Anyone who has the token can decode and read the payload. Never put sensitive data (passwords, API keys, PII) in a JWT payload. The signature only ensures the data hasn't been <em>tampered with</em>, not that it's <em>secret</em>.
@@ -137,7 +137,7 @@ const content = `
 
 <pre><code>// Node.js example
 const jwt = require('jsonwebtoken');
-const token = jwt.sign({ userId: '123' }, 'your-secret-key', { expiresIn: '1h' });
+const token = jwt.sign(&#123; userId: '123' &#125;, 'your-secret-key', &#123; expiresIn: '1h' &#125;);
 const decoded = jwt.verify(token, 'your-secret-key');</code></pre>
 
 <p>
@@ -151,10 +151,10 @@ const decoded = jwt.verify(token, 'your-secret-key');</code></pre>
 </p>
 
 <pre><code>// Sign with private key
-const token = jwt.sign({ userId: '123' }, privateKey, { algorithm: 'RS256' });
+const token = jwt.sign(&#123; userId: '123' &#125;, privateKey, &#123; algorithm: 'RS256' &#125;);
 
 // Verify with public key (any service can do this)
-const decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] });</code></pre>
+const decoded = jwt.verify(token, publicKey, &#123; algorithms: ['RS256'] &#125;);</code></pre>
 
 <p>
   Best for: microservices, multi-service architectures, OAuth 2.0 providers.
@@ -198,19 +198,19 @@ echo "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" | base64 -d
 echo "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0" | base64 -d
 
 # Full decode with jq
-echo "$TOKEN" | cut -d. -f2 | base64 -d 2>/dev/null | jq .</code></pre>
+echo "$TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq .</code></pre>
 
 <h3>Using JavaScript</h3>
 
-<pre><code>function decodeJwt(token) {
+<pre><code>function decodeJwt(token) &#123;
   const parts = token.split('.');
-  return {
+  return &#123;
     header: JSON.parse(atob(parts[0])),
     payload: JSON.parse(atob(parts[1])),
-  };
-}
+  &#125;;
+&#125;
 
-const { header, payload } = decodeJwt(token);
+const &#123; header, payload &#125; = decodeJwt(token);
 console.log('Expires:', new Date(payload.exp * 1000));</code></pre>
 
 <p>
@@ -230,7 +230,7 @@ console.log('Expires:', new Date(payload.exp * 1000));</code></pre>
 </p>
 
 <pre><code>// GOOD: specify expected algorithm
-jwt.verify(token, secret, { algorithms: ['HS256'] });
+jwt.verify(token, secret, &#123; algorithms: ['HS256'] &#125;);
 
 // BAD: accept any algorithm (vulnerable to alg:none attack)
 jwt.verify(token, secret);</code></pre>
@@ -319,7 +319,7 @@ Best for          SPAs, APIs,     Traditional      Server-to-server,
   Some libraries accept tokens with <code>"alg": "none"</code>, which means no signature verification. Always whitelist allowed algorithms:
 </p>
 
-<pre><code>jwt.verify(token, secret, { algorithms: ['HS256'] });</code></pre>
+<pre><code>jwt.verify(token, secret, &#123; algorithms: ['HS256'] &#125;);</code></pre>
 
 <h3>Key Confusion (RS256 to HS256)</h3>
 
@@ -347,34 +347,34 @@ Best for          SPAs, APIs,     Traditional      Server-to-server,
 const SECRET = process.env.JWT_SECRET; // 256-bit random secret
 
 // Issue token
-app.post('/auth/login', async (req, res) =&gt; {
+app.post('/auth/login', async (req, res) =&gt; &#123;
   const user = await authenticateUser(req.body.email, req.body.password);
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+  if (!user) return res.status(401).json(&#123; error: 'Invalid credentials' &#125;);
 
   const token = jwt.sign(
-    { sub: user.id, role: user.role },
+    &#123; sub: user.id, role: user.role &#125;,
     SECRET,
-    { expiresIn: '1h', issuer: 'https://api.example.com' }
+    &#123; expiresIn: '1h', issuer: 'https://api.example.com' &#125;
   );
 
-  res.cookie('token', token, {
+  res.cookie('token', token, &#123;
     httpOnly: true, secure: true, sameSite: 'strict', maxAge: 3600000
-  });
-  res.json({ success: true });
-});
+  &#125;);
+  res.json(&#123; success: true &#125;);
+&#125;);
 
 // Verify middleware
-function authMiddleware(req, res, next) {
+function authMiddleware(req, res, next) &#123;
   const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'No token' });
+  if (!token) return res.status(401).json(&#123; error: 'No token' &#125;);
 
-  try {
-    req.user = jwt.verify(token, SECRET, { algorithms: ['HS256'] });
+  try &#123;
+    req.user = jwt.verify(token, SECRET, &#123; algorithms: ['HS256'] &#125;);
     next();
-  } catch (err) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
-}</code></pre>
+  &#125; catch (err) &#123;
+    res.status(401).json(&#123; error: 'Invalid token' &#125;);
+  &#125;
+&#125;</code></pre>
 
 <h3>Python (FastAPI)</h3>
 
@@ -385,12 +385,12 @@ SECRET_KEY = os.environ["JWT_SECRET"]
 ALGORITHM = "HS256"
 
 def create_token(user_id: str, role: str) -&gt; str:
-    payload = {
+    payload = &#123;
         "sub": user_id,
         "role": role,
         "exp": datetime.utcnow() + timedelta(hours=1),
         "iss": "https://api.example.com",
-    }
+    &#125;
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 def verify_token(token: str) -&gt; dict:
@@ -530,8 +530,140 @@ Authorization: Bearer 7f3c8a2b-4d1e-9f6c-a5b0-3e8d7c2f1a4b</code></pre>
   Ready to inspect your own tokens? Head over to our <a href="/tools/jwt-decoder">JWT Decoder</a> to paste and decode any JWT instantly — everything runs in your browser, so your tokens stay private.
 </p>
 `;
----
 
+const codeBlock = [
+  '{',
+  '  "alg": "HS256",',
+  '  "typ": "JWT"',
+  '}'
+].join('\n');
+
+const codeBlock2 = [
+  '{',
+  '  "iss": "https://auth.example.com",     // Issuer',
+  '  "sub": "user-123",                     // Subject (user ID)',
+  '  "aud": "https://api.example.com",      // Audience',
+  '  "exp": 1748505600,                     // Expiration (Unix timestamp)',
+  '  "nbf": 1748419200,                     // Not Before',
+  '  "iat": 1748419200,                     // Issued At',
+  '  "jti": "unique-token-id"              // JWT ID (for revocation)',
+  '}'
+].join('\n');
+
+const codeBlock3 = [
+  '{',
+  '  "name": "John Doe",',
+  '  "email": "john@example.com"',
+  '}'
+].join('\n');
+
+const codeBlock4 = [
+  '{',
+  '  "role": "admin",',
+  '  "permissions": ["read", "write", "delete"],',
+  '  "tenant_id": "acme-corp"',
+  '}'
+].join('\n');
+
+const codeBlock5 = [
+  '// Node.js example',
+  "const jwt = require('jsonwebtoken');",
+  "const token = jwt.sign({ userId: '123' }, 'your-secret-key', { expiresIn: '1h' });",
+  "const decoded = jwt.verify(token, 'your-secret-key');"
+].join('\n');
+
+const codeBlock6 = [
+  '// Sign with private key',
+  "const token = jwt.sign({ userId: '123' }, privateKey, { algorithm: 'RS256' });",
+  '',
+  '// Verify with public key (any service can do this)',
+  "const decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] });"
+].join('\n');
+
+const codeBlock7 = [
+  'function decodeJwt(token) {',
+  "  const parts = token.split('.');",
+  '  return {',
+  '    header: JSON.parse(atob(parts[0])),',
+  '    payload: JSON.parse(atob(parts[1])),',
+  '  };',
+  '}',
+  '',
+  'const { header, payload } = decodeJwt(token);',
+  "console.log('Expires:', new Date(payload.exp * 1000));"
+].join('\n');
+
+const codeBlock8 = [
+  '// GOOD: specify expected algorithm',
+  "jwt.verify(token, secret, { algorithms: ['HS256'] });",
+  '',
+  '// BAD: accept any algorithm (vulnerable to alg:none attack)',
+  'jwt.verify(token, secret);'
+].join('\n');
+
+const codeBlock9 = [
+  "jwt.verify(token, secret, { algorithms: ['HS256'] });"
+].join('\n');
+
+const codeBlock10 = [
+  "const jwt = require('jsonwebtoken');",
+  'const SECRET = process.env.JWT_SECRET; // 256-bit random secret',
+  '',
+  '// Issue token',
+  "app.post('/auth/login', async (req, res) =&gt; {",
+  '  const user = await authenticateUser(req.body.email, req.body.password);',
+  "  if (!user) return res.status(401).json({ error: 'Invalid credentials' });",
+  '',
+  '  const token = jwt.sign(',
+  '    { sub: user.id, role: user.role },',
+  '    SECRET,',
+  "    { expiresIn: '1h', issuer: 'https://api.example.com' }",
+  '  );',
+  '',
+  "  res.cookie('token', token, {",
+  "    httpOnly: true, secure: true, sameSite: 'strict', maxAge: 3600000",
+  '  });',
+  '  res.json({ success: true });',
+  '});',
+  '',
+  '// Verify middleware',
+  'function authMiddleware(req, res, next) {',
+  "  const token = req.cookies.token || req.headers.authorization?.split(' ')[1];",
+  "  if (!token) return res.status(401).json({ error: 'No token' });",
+  '',
+  '  try {',
+  "    req.user = jwt.verify(token, SECRET, { algorithms: ['HS256'] });",
+  '    next();',
+  '  } catch (err) {',
+  "    res.status(401).json({ error: 'Invalid token' });",
+  '  }',
+  '}'
+].join('\n');
+
+const codeBlock11 = [
+  'from jose import jwt, JWTError',
+  'from datetime import datetime, timedelta',
+  '',
+  'SECRET_KEY = os.environ["JWT_SECRET"]',
+  'ALGORITHM = "HS256"',
+  '',
+  'def create_token(user_id: str, role: str) -&gt; str:',
+  '    payload = {',
+  '        "sub": user_id,',
+  '        "role": role,',
+  '        "exp": datetime.utcnow() + timedelta(hours=1),',
+  '        "iss": "https://api.example.com",',
+  '    }',
+  '    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)',
+  '',
+  'def verify_token(token: str) -&gt; dict:',
+  '    try:',
+  '        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])',
+  '    except JWTError:',
+  '        raise HTTPException(status_code=401, detail="Invalid token")'
+].join('\n');
+---
+<pre><code set:html=&#123;codeBlock&#125;></code></pre><pre><code set:html=&#123;codeBlock2&#125;></code></pre><pre><code set:html=&#123;codeBlock3&#125;></code></pre><pre><code set:html=&#123;codeBlock4&#125;></code></pre><pre><code set:html=&#123;codeBlock5&#125;></code></pre><pre><code set:html=&#123;codeBlock6&#125;></code></pre><pre><code set:html=&#123;codeBlock7&#125;></code></pre><pre><code set:html=&#123;codeBlock8&#125;></code></pre><pre><code set:html=&#123;codeBlock9&#125;></code></pre><pre><code set:html=&#123;codeBlock10&#125;></code></pre><pre><code set:html=&#123;codeBlock11&#125;></code></pre>
 <BlogLayout
   title="JWT Token Explained: How to Decode, Debug, and Secure Your Tokens"
   description="Understand JSON Web Tokens from the ground up. Learn JWT structure, signing algorithms, common vulnerabilities, and how to decode and debug tokens with free tools."

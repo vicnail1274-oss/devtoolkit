@@ -1,0 +1,531 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="Redis Caching Patterns: Strategies for Scalable Node.js Applications"
+  description="Master Redis caching patterns for Node.js: cache-aside, write-through, cache stampede prevention, TTL strategies, and invalidation techniques for production systems."
+  slug="redis-caching-patterns"
+  publishDate="2026-03-20"
+  readTime="15 min read"
+>
+
+<p>
+  Redis is the de facto standard for application-layer caching, used by companies from startups to hyperscalers to reduce database load, cut API response times from hundreds of milliseconds to single digits, and absorb traffic spikes that would otherwise overwhelm backend infrastructure. But caching is deceptively subtle — the wrong strategy leads to stale data, cache stampedes, or a cache that provides no benefit at all.
+</p>
+
+<p>
+  This guide covers the essential Redis caching patterns for Node.js applications: when to use each one, how to implement it correctly, and how to avoid the common pitfalls that cause production incidents.
+</p>
+
+<h2>Redis Fundamentals for Caching</h2>
+
+<p>
+  Redis is an in-memory data structure store. Its primary caching advantage over Memcached is richer data types (strings, hashes, lists, sets, sorted sets) and atomic operations. For caching in Node.js, the most important client is <code>ioredis</code>:
+</p>
+
+<pre><code>npm install ioredis
+npm install -D @types/ioredis  # For older versions; ioredis v5+ ships types</code></pre>
+
+<pre><code>// src/lib/redis.ts
+import Redis from 'ioredis';
+import &#123; env &#125; from '../config/env';
+
+// Singleton pattern — reuse connections
+let redis: Redis | null = null;
+
+export function getRedis(): Redis &#123;
+  if (!redis) &#123;
+    redis = new Redis(&#123;
+      host: env.REDIS_HOST,
+      port: env.REDIS_PORT,
+      password: env.REDIS_PASSWORD,
+      db: env.REDIS_DB,
+
+      // Connection resilience
+      retryStrategy: (times) =&gt; Math.min(times * 100, 3000),
+      maxRetriesPerRequest: 3,
+      enableReadyCheck: true,
+      lazyConnect: true,
+
+      // Prevent memory leaks from EventEmitter
+      maxListeners: 20,
+    &#125;);
+
+    redis.on('error', (err) =&gt; logger.error(&#123; msg: 'Redis error', err &#125;));
+    redis.on('connect', () =&gt; logger.info('Redis connected'));
+  &#125;
+  return redis;
+&#125;</code></pre>
+
+<h2>Pattern 1: Cache-Aside (Lazy Loading)</h2>
+
+<p>
+  Cache-aside (also called lazy loading) is the most common caching pattern. The application code manages the cache explicitly: check the cache first, if miss fetch from the database and populate the cache, then return the result.
+</p>
+
+<pre><code>// The cache-aside pattern
+async function getUserById(userId: string): Promise&lt;User&gt; &#123;
+  const cacheKey = `user:$&#123;userId&#125;`;
+  const redis = getRedis();
+
+  // 1. Check cache
+  const cached = await redis.get(cacheKey);
+  if (cached) &#123;
+    return JSON.parse(cached) as User;
+  &#125;
+
+  // 2. Cache miss — fetch from DB
+  const user = await db.user.findUnique(&#123; where: &#123; id: userId &#125; &#125;);
+  if (!user) throw new NotFoundError('User', userId);
+
+  // 3. Populate cache with TTL
+  await redis.setex(cacheKey, 3600, JSON.stringify(user)); // TTL: 1 hour
+
+  return user;
+&#125;</code></pre>
+
+<h3>Cache Key Design</h3>
+
+<p>
+  Cache keys should be deterministic, descriptive, and namespaced to avoid collisions:
+</p>
+
+<pre><code>// Good key patterns:
+'user:abc123'                    // Single resource
+'user:abc123:profile'            // Sub-resource
+'posts:list:page:2:limit:20'     // Paginated list
+'posts:list:userId:abc123:page:1' // Filtered list
+'search:query:hashofparams'      // Search results (hash the params)
+
+// Cache key builder helper
+function cacheKey(...parts: (string | number)[]): string &#123;
+  return parts.join(':');
+&#125;
+
+// Version prefix — lets you invalidate all cache by incrementing version
+const CACHE_VERSION = 'v1';
+function versionedKey(...parts: (string | number)[]): string &#123;
+  return `$&#123;CACHE_VERSION&#125;:$&#123;parts.join(':')&#125;`;
+&#125;</code></pre>
+
+<h3>Abstracting with a Cache Service</h3>
+
+<pre><code>// src/lib/cache.ts
+import &#123; getRedis &#125; from './redis';
+
+export class CacheService &#123;
+  private redis = getRedis();
+
+  async get&lt;T&gt;(key: string): Promise&lt;T | null&gt; &#123;
+    const value = await this.redis.get(key);
+    return value ? (JSON.parse(value) as T) : null;
+  &#125;
+
+  async set&lt;T&gt;(key: string, value: T, ttlSeconds: number): Promise&lt;void&gt; &#123;
+    await this.redis.setex(key, ttlSeconds, JSON.stringify(value));
+  &#125;
+
+  async del(key: string): Promise&lt;void&gt; &#123;
+    await this.redis.del(key);
+  &#125;
+
+  async getOrSet&lt;T&gt;(
+    key: string,
+    fetcher: () =&gt; Promise&lt;T&gt;,
+    ttlSeconds: number
+  ): Promise&lt;T&gt; &#123;
+    const cached = await this.get&lt;T&gt;(key);
+    if (cached !== null) return cached;
+
+    const value = await fetcher();
+    await this.set(key, value, ttlSeconds);
+    return value;
+  &#125;
+
+  // Delete all keys matching a pattern (use carefully — scans whole keyspace)
+  async delByPattern(pattern: string): Promise&lt;number&gt; &#123;
+    const keys = await this.redis.keys(pattern);
+    if (keys.length === 0) return 0;
+    return this.redis.del(...keys);
+  &#125;
+&#125;
+
+export const cache = new CacheService();
+
+// Usage:
+const user = await cache.getOrSet(
+  `user:$&#123;userId&#125;`,
+  () =&gt; db.user.findUniqueOrThrow(&#123; where: &#123; id: userId &#125; &#125;),
+  3600
+);</code></pre>
+
+<h2>Pattern 2: Write-Through Cache</h2>
+
+<p>
+  In write-through caching, every write to the database also updates the cache. This keeps the cache always consistent with the database, at the cost of write latency.
+</p>
+
+<pre><code>async function updateUser(userId: string, data: UpdateUserInput): Promise&lt;User&gt; &#123;
+  // Write to DB
+  const user = await db.user.update(&#123;
+    where: &#123; id: userId &#125;,
+    data,
+    omit: &#123; password: true &#125;,
+  &#125;);
+
+  // Immediately update cache (write-through)
+  await cache.set(`user:$&#123;userId&#125;`, user, 3600);
+
+  // Invalidate any list caches that included this user
+  await cache.del(`users:list`);
+
+  return user;
+&#125;
+
+async function deleteUser(userId: string): Promise&lt;void&gt; &#123;
+  await db.user.delete(&#123; where: &#123; id: userId &#125; &#125;);
+
+  // Invalidate cache entry
+  await cache.del(`user:$&#123;userId&#125;`);
+  await cache.del(`users:list`);
+&#125;</code></pre>
+
+<p>
+  Write-through is better than cache-aside when you have multiple readers of a resource and need consistency. The trade-off: writes are slower because they must update both the database and the cache atomically (or accept brief inconsistency).
+</p>
+
+<h2>Pattern 3: Preventing Cache Stampedes</h2>
+
+<p>
+  A cache stampede (also called "thundering herd") happens when a popular cache key expires and many concurrent requests simultaneously find a cache miss — all of them hit the database at once. On high-traffic sites, this can bring down your database.
+</p>
+
+<h3>Solution 1: Mutex Lock (Single Refill)</h3>
+
+<pre><code>import &#123; Mutex &#125; from 'async-mutex'; // npm install async-mutex
+
+const mutexMap = new Map&lt;string, Mutex&gt;();
+
+function getMutex(key: string): Mutex &#123;
+  if (!mutexMap.has(key)) &#123;
+    mutexMap.set(key, new Mutex());
+  &#125;
+  return mutexMap.get(key)!;
+&#125;
+
+async function getWithStampedeProtection&lt;T&gt;(
+  key: string,
+  fetcher: () =&gt; Promise&lt;T&gt;,
+  ttlSeconds: number
+): Promise&lt;T&gt; &#123;
+  // First check — no lock needed
+  const cached = await cache.get&lt;T&gt;(key);
+  if (cached !== null) return cached;
+
+  // Acquire mutex for this cache key
+  const mutex = getMutex(key);
+  const release = await mutex.acquire();
+
+  try &#123;
+    // Double-check after acquiring lock (another request may have filled the cache)
+    const cachedAfterLock = await cache.get&lt;T&gt;(key);
+    if (cachedAfterLock !== null) return cachedAfterLock;
+
+    // We're the "winner" — fetch from DB and populate cache
+    const value = await fetcher();
+    await cache.set(key, value, ttlSeconds);
+    return value;
+  &#125; finally &#123;
+    release();
+  &#125;
+&#125;</code></pre>
+
+<h3>Solution 2: Probabilistic Early Expiration (XFetch)</h3>
+
+<p>
+  The XFetch algorithm proactively refreshes cache entries slightly before they expire, avoiding the stampede window entirely:
+</p>
+
+<pre><code>interface CacheEntry&lt;T&gt; &#123;
+  value: T;
+  expiresAt: number; // Unix timestamp
+  delta: number;     // Time it took to compute (ms)
+&#125;
+
+async function xfetchGet&lt;T&gt;(
+  key: string,
+  fetcher: () =&gt; Promise&lt;T&gt;,
+  ttlSeconds: number,
+  beta = 1.0  // Higher = more eager recomputation
+): Promise&lt;T&gt; &#123;
+  const redis = getRedis();
+  const raw = await redis.get(key);
+
+  if (raw) &#123;
+    const entry = JSON.parse(raw) as CacheEntry&lt;T&gt;;
+    const now = Date.now() / 1000;
+    const remaining = entry.expiresAt - now;
+
+    // Early recomputation probability increases as TTL decreases
+    const shouldRecompute = -entry.delta * beta * Math.log(Math.random()) &gt;= remaining;
+
+    if (!shouldRecompute) return entry.value;
+  &#125;
+
+  // Fetch and store with metadata
+  const start = Date.now();
+  const value = await fetcher();
+  const delta = (Date.now() - start) / 1000;
+
+  const entry: CacheEntry&lt;T&gt; = &#123;
+    value,
+    expiresAt: Date.now() / 1000 + ttlSeconds,
+    delta,
+  &#125;;
+
+  await redis.setex(key, ttlSeconds + Math.ceil(delta * 5), JSON.stringify(entry));
+  return value;
+&#125;</code></pre>
+
+<h2>Pattern 4: Cache Invalidation Strategies</h2>
+
+<p>
+  "There are only two hard things in computer science: cache invalidation and naming things." — Phil Karlton
+</p>
+
+<h3>TTL-Based Expiration</h3>
+
+<p>
+  The simplest strategy: cache entries expire after a fixed time. Use when some staleness is acceptable:
+</p>
+
+<pre><code>// Product catalog: update every hour (acceptable staleness)
+await cache.set(`product:$&#123;id&#125;`, product, 3600);
+
+// Stock prices: update every second (very low tolerance for staleness)
+await cache.set(`price:$&#123;symbol&#125;`, price, 1);
+
+// User session: extend TTL on each access (sliding expiration)
+async function getUserSession(sessionId: string) &#123;
+  const redis = getRedis();
+  const key = `session:$&#123;sessionId&#125;`;
+
+  const session = await cache.get(key);
+  if (session) &#123;
+    await redis.expire(key, 1800); // Extend TTL on access
+    return session;
+  &#125;
+  return null;
+&#125;</code></pre>
+
+<h3>Event-Driven Invalidation</h3>
+
+<p>
+  Invalidate cache entries when the underlying data changes, rather than waiting for TTL:
+</p>
+
+<pre><code>// After any write operation, invalidate related cache keys
+class UserService &#123;
+  async update(id: string, data: UpdateUserInput): Promise&lt;User&gt; &#123;
+    const user = await db.user.update(&#123; where: &#123; id &#125;, data &#125;);
+    await this.invalidateUserCache(id);
+    return user;
+  &#125;
+
+  async invalidateUserCache(id: string): Promise&lt;void&gt; &#123;
+    await Promise.all([
+      cache.del(`user:$&#123;id&#125;`),
+      cache.del(`user:$&#123;id&#125;:profile`),
+      cache.del(`user:$&#123;id&#125;:posts`),
+      // Wildcard invalidation for list caches
+      cache.delByPattern(`users:list:*`),
+    ]);
+  &#125;
+&#125;
+</code></pre>
+
+<h3>Cache Tags (Dependency Tracking)</h3>
+
+<p>
+  Tag-based invalidation lets you invalidate all cache entries associated with a resource:
+</p>
+
+<pre><code>async function setWithTags&lt;T&gt;(
+  key: string,
+  value: T,
+  ttl: number,
+  tags: string[]
+): Promise&lt;void&gt; &#123;
+  const redis = getRedis();
+  const pipeline = redis.pipeline();
+
+  // Store the value
+  pipeline.setex(key, ttl, JSON.stringify(value));
+
+  // Add the key to each tag set
+  tags.forEach((tag) =&gt; &#123;
+    pipeline.sadd(`tag:$&#123;tag&#125;`, key);
+    pipeline.expire(`tag:$&#123;tag&#125;`, ttl + 60); // Tag lives slightly longer
+  &#125;);
+
+  await pipeline.exec();
+&#125;
+
+async function invalidateTag(tag: string): Promise&lt;void&gt; &#123;
+  const redis = getRedis();
+  const tagKey = `tag:$&#123;tag&#125;`;
+
+  // Get all cache keys for this tag
+  const keys = await redis.smembers(tagKey);
+  if (keys.length === 0) return;
+
+  // Delete all tagged keys and the tag itself
+  await redis.del(...keys, tagKey);
+&#125;
+
+// Usage:
+await setWithTags(`post:$&#123;postId&#125;`, post, 3600, [`post:$&#123;postId&#125;`, `user:$&#123;post.userId&#125;:posts`]);
+
+// Invalidate all of a user's post caches at once
+await invalidateTag(`user:$&#123;userId&#125;:posts`);</code></pre>
+
+<h2>Pattern 5: Caching at Different Layers</h2>
+
+<h3>Full Response Caching (HTTP Layer)</h3>
+
+<pre><code>// Cache complete HTTP responses for public, read-heavy endpoints
+import &#123; Request, Response, NextFunction &#125; from 'express';
+
+export function httpCache(ttlSeconds: number) &#123;
+  return async (req: Request, res: Response, next: NextFunction) =&gt; &#123;
+    // Only cache GET requests
+    if (req.method !== 'GET') return next();
+
+    const key = `http:$&#123;req.originalUrl&#125;`;
+    const cached = await cache.get&lt;&#123; body: unknown; headers: Record&lt;string, string&gt; &#125;&gt;(key);
+
+    if (cached) &#123;
+      res.set(cached.headers);
+      res.set('X-Cache', 'HIT');
+      return res.json(cached.body);
+    &#125;
+
+    // Intercept the response
+    const originalJson = res.json.bind(res);
+    res.json = (body: unknown) =&gt; &#123;
+      res.set('X-Cache', 'MISS');
+      const headers = &#123; 'Content-Type': 'application/json' &#125;;
+      cache.set(key, &#123; body, headers &#125;, ttlSeconds).catch(console.error);
+      return originalJson(body);
+    &#125;;
+
+    next();
+  &#125;;
+&#125;
+
+// Apply to specific routes
+router.get('/products', httpCache(300), productsController.list);</code></pre>
+
+<h3>Database Query Result Caching</h3>
+
+<pre><code>// Cache expensive aggregations
+async function getDashboardStats(userId: string) &#123;
+  const key = `dashboard:$&#123;userId&#125;:stats`;
+
+  return cache.getOrSet(key, async () =&gt; &#123;
+    // Expensive multi-table aggregation
+    const [postCount, commentCount, viewTotal] = await Promise.all([
+      db.post.count(&#123; where: &#123; authorId: userId &#125; &#125;),
+      db.comment.count(&#123; where: &#123; authorId: userId &#125; &#125;),
+      db.post.aggregate(&#123;
+        where: &#123; authorId: userId &#125;,
+        _sum: &#123; viewCount: true &#125;,
+      &#125;),
+    ]);
+
+    return &#123;
+      postCount,
+      commentCount,
+      totalViews: viewTotal._sum.viewCount ?? 0,
+    &#125;;
+  &#125;, 300); // 5-minute cache for dashboard stats
+&#125;</code></pre>
+
+<h2>Monitoring Cache Performance</h2>
+
+<p>
+  Track hit rate, latency, and memory usage to ensure your cache is actually helping:
+</p>
+
+<pre><code>// Wrap cache operations to emit metrics
+class InstrumentedCache extends CacheService &#123;
+  private hits = 0;
+  private misses = 0;
+
+  async get&lt;T&gt;(key: string): Promise&lt;T | null&gt; &#123;
+    const value = await super.get&lt;T&gt;(key);
+    if (value !== null) &#123;
+      this.hits++;
+    &#125; else &#123;
+      this.misses++;
+    &#125;
+    return value;
+  &#125;
+
+  getHitRate(): number &#123;
+    const total = this.hits + this.misses;
+    return total === 0 ? 0 : this.hits / total;
+  &#125;
+&#125;
+
+// Log Redis INFO STATS periodically
+async function logRedisMetrics() &#123;
+  const redis = getRedis();
+  const info = await redis.info('stats');
+  // Parse keyspace_hits, keyspace_misses, instantaneous_ops_per_sec
+  logger.info(&#123; type: 'redis_metrics', info &#125;);
+&#125;</code></pre>
+
+<h2>Common Mistakes to Avoid</h2>
+
+<ul>
+  <li><strong>Not setting TTLs:</strong> Always set TTLs. Eternal cache entries fill memory and serve stale data forever.</li>
+  <li><strong>Caching everything:</strong> Cache selectively — only expensive operations that are read frequently. Caching rarely-read data wastes memory with no benefit.</li>
+  <li><strong>Using KEYS in production:</strong> <code>KEYS pattern</code> scans the entire keyspace and blocks Redis. Use <code>SCAN</code> instead for production key pattern scanning.</li>
+  <li><strong>Not handling cache failures gracefully:</strong> If Redis is unavailable, fall through to the database rather than failing the entire request.</li>
+  <li><strong>Serializing non-serializable objects:</strong> Functions, circular references, and class instances don't serialize. Always test your JSON serialization of cached objects.</li>
+</ul>
+
+<pre><code>// Graceful degradation when Redis is unavailable
+async function getWithFallback&lt;T&gt;(
+  key: string,
+  fetcher: () =&gt; Promise&lt;T&gt;,
+  ttl: number
+): Promise&lt;T&gt; &#123;
+  try &#123;
+    return await cache.getOrSet(key, fetcher, ttl);
+  &#125; catch (redisError) &#123;
+    logger.warn(&#123; msg: 'Cache unavailable, falling through to DB', key, err: redisError &#125;);
+    return fetcher(); // Always returns data, just slower
+  &#125;
+&#125;</code></pre>
+
+<h2>Conclusion</h2>
+
+<p>
+  Effective Redis caching can reduce database load by 90%+ and cut response times from hundreds of milliseconds to single digits. The key patterns to master are:
+</p>
+
+<ul>
+  <li><strong>Cache-aside:</strong> The default. Check cache → on miss, fetch DB → populate cache.</li>
+  <li><strong>Write-through:</strong> Consistency-first. Update cache on every write.</li>
+  <li><strong>Stampede prevention:</strong> Use mutex locks or probabilistic early expiration for popular keys.</li>
+  <li><strong>Smart invalidation:</strong> TTL for tolerable staleness, event-driven for critical consistency, cache tags for bulk invalidation.</li>
+</ul>
+
+<p>
+  For more on backend performance, see our <a href="/blog/postgres-performance-tuning-checklist">PostgreSQL performance tuning checklist</a> and <a href="/blog/rest-api-testing-guide">REST API testing guide</a>.
+</p>
+
+</BlogLayout>

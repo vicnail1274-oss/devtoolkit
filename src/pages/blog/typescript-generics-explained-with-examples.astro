@@ -1,0 +1,1633 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const content = `
+<p>
+  TypeScript generics are one of the most powerful features in the language, yet many developers find them intimidating at first glance. Those angle brackets and type parameters can look like hieroglyphics if you have never encountered them before. But once you understand the underlying concept, generics become an indispensable tool for writing type-safe, reusable, and maintainable code.
+</p>
+
+<p>
+  In this comprehensive guide, we will walk through TypeScript generics from the absolute basics to advanced patterns used in production codebases. Every concept comes with practical code examples you can copy, modify, and use in your own projects. If you are working with JSON data structures while learning, our <a href="/tools/json-formatter">JSON Formatter</a> can help you visualize complex nested types.
+</p>
+
+<h2>What Are Generics?</h2>
+
+<p>
+  Generics allow you to write code that works with <strong>multiple types</strong> while still preserving type safety. Instead of writing separate functions for strings, numbers, and objects, you write one function that accepts a <em>type parameter</em> — a placeholder that gets filled in when the function is called.
+</p>
+
+<p>
+  Think of generics like function parameters, but for types. Just as a function parameter lets you pass different values, a type parameter lets you pass different types.
+</p>
+
+<pre><code>// Without generics: you lose type information
+function identity(value: any): any &#123;
+  return value;
+&#125;
+
+const result = identity("hello"); // type is 'any' — not useful
+
+// With generics: type information is preserved
+function identity&lt;T&gt;(value: T): T &#123;
+  return value;
+&#125;
+
+const result = identity("hello"); // type is 'string' — perfect
+const num = identity(42);         // type is 'number'</code></pre>
+
+<p>
+  The <code>&lt;T&gt;</code> after the function name declares a type parameter called <code>T</code>. When you call <code>identity("hello")</code>, TypeScript infers that <code>T</code> is <code>string</code>, so the return type is also <code>string</code>. No type information is lost, and no type assertions are needed.
+</p>
+
+<h2>Why Use Generics?</h2>
+
+<p>
+  Generics solve a fundamental tension in typed languages: the desire for both <strong>reusability</strong> and <strong>type safety</strong>. Without generics, you face an unpleasant choice:
+</p>
+
+<ul>
+  <li><strong>Use <code>any</code></strong> — Flexible but destroys type safety. Bugs slip through at compile time and surface at runtime.</li>
+  <li><strong>Write duplicate code</strong> — Type-safe but violates DRY (Don't Repeat Yourself). Maintaining multiple versions of the same logic is error-prone.</li>
+  <li><strong>Use union types</strong> — A middle ground, but it gets unwieldy with many types and forces you to narrow types everywhere you use the result.</li>
+</ul>
+
+<p>
+  Generics give you the best of both worlds: write the logic once, and let the type system enforce correctness for every usage.
+</p>
+
+<h2>Basic Generic Syntax</h2>
+
+<p>
+  The fundamental syntax is straightforward. You declare type parameters inside angle brackets <code>&lt; &gt;</code> immediately after the function, interface, class, or type alias name.
+</p>
+
+<pre><code>// Single type parameter
+function wrap&lt;T&gt;(value: T): &#123; wrapped: T &#125; &#123;
+  return &#123; wrapped: value &#125;;
+&#125;
+
+// Multiple type parameters
+function pair&lt;A, B&gt;(first: A, second: B): [A, B] &#123;
+  return [first, second];
+&#125;
+
+const p = pair("hello", 42); // type is [string, number]</code></pre>
+
+<p>
+  By convention, single uppercase letters are used for type parameters: <code>T</code> for "Type," <code>K</code> for "Key," <code>V</code> for "Value," <code>E</code> for "Element," and <code>R</code> for "Return." For clarity in complex generics, descriptive names like <code>TInput</code> or <code>TResponse</code> are perfectly acceptable and often preferred.
+</p>
+
+<h2>Generic Functions</h2>
+
+<p>
+  Generic functions are the most common use case. They let you write utility functions that work with any type while maintaining full type inference.
+</p>
+
+<h3>Array Utilities</h3>
+
+<pre><code>function firstElement&lt;T&gt;(arr: T[]): T | undefined &#123;
+  return arr[0];
+&#125;
+
+const first = firstElement([1, 2, 3]);       // number | undefined
+const firstStr = firstElement(["a", "b"]);   // string | undefined
+
+function reverseArray&lt;T&gt;(arr: T[]): T[] &#123;
+  return [...arr].reverse();
+&#125;
+
+const reversed = reverseArray([1, 2, 3]); // number[]</code></pre>
+
+<h3>Map and Transform</h3>
+
+<pre><code>function mapArray&lt;T, U&gt;(arr: T[], fn: (item: T) =&gt; U): U[] &#123;
+  return arr.map(fn);
+&#125;
+
+const lengths = mapArray(["hello", "world"], (s) =&gt; s.length);
+// type is number[]
+
+const doubled = mapArray([1, 2, 3], (n) =&gt; n * 2);
+// type is number[]</code></pre>
+
+<h3>Generic Arrow Functions</h3>
+
+<pre><code>// Regular arrow function syntax
+const toArray = &lt;T&gt;(value: T): T[] =&gt; [value];
+
+// In TSX files, add a trailing comma to avoid JSX ambiguity
+const toArray = &lt;T,&gt;(value: T): T[] =&gt; [value];</code></pre>
+
+<h2>Generic Interfaces</h2>
+
+<p>
+  Interfaces with type parameters let you define reusable shapes for data structures. This is extremely common when modeling API responses, collections, or any data container.
+</p>
+
+<pre><code>interface ApiResponse&lt;T&gt; &#123;
+  data: T;
+  status: number;
+  message: string;
+  timestamp: string;
+&#125;
+
+interface User &#123;
+  id: string;
+  name: string;
+  email: string;
+&#125;
+
+interface Product &#123;
+  id: string;
+  title: string;
+  price: number;
+&#125;
+
+// Usage: the response is fully typed
+const userResponse: ApiResponse&lt;User&gt; = &#123;
+  data: &#123; id: "1", name: "Alice", email: "alice@example.com" &#125;,
+  status: 200,
+  message: "Success",
+  timestamp: "2026-03-20T10:00:00Z",
+&#125;;
+
+const productResponse: ApiResponse&lt;Product&gt; = &#123;
+  data: &#123; id: "2", title: "Widget", price: 29.99 &#125;,
+  status: 200,
+  message: "Success",
+  timestamp: "2026-03-20T10:00:00Z",
+&#125;;</code></pre>
+
+<p>
+  Notice how the <code>ApiResponse&lt;T&gt;</code> interface is defined once but produces completely different — and completely type-safe — objects depending on the type argument you pass.
+</p>
+
+<h3>Generic Interface for Collections</h3>
+
+<pre><code>interface Collection&lt;T&gt; &#123;
+  items: T[];
+  total: number;
+  page: number;
+  perPage: number;
+  hasNextPage: boolean;
+&#125;
+
+interface PaginatedResponse&lt;T&gt; &#123;
+  collection: Collection&lt;T&gt;;
+  meta: &#123;
+    requestId: string;
+    duration: number;
+  &#125;;
+&#125;
+
+// Now any entity type plugs in seamlessly
+type UserList = PaginatedResponse&lt;User&gt;;
+type ProductCatalog = PaginatedResponse&lt;Product&gt;;</code></pre>
+
+<h2>Generic Classes</h2>
+
+<p>
+  Generic classes are essential for building type-safe data structures, repositories, and service layers.
+</p>
+
+<pre><code>class Stack&lt;T&gt; &#123;
+  private items: T[] = [];
+
+  push(item: T): void &#123;
+    this.items.push(item);
+  &#125;
+
+  pop(): T | undefined &#123;
+    return this.items.pop();
+  &#125;
+
+  peek(): T | undefined &#123;
+    return this.items[this.items.length - 1];
+  &#125;
+
+  get size(): number &#123;
+    return this.items.length;
+  &#125;
+&#125;
+
+const numberStack = new Stack&lt;number&gt;();
+numberStack.push(1);
+numberStack.push(2);
+const top = numberStack.pop(); // type is number | undefined
+
+const stringStack = new Stack&lt;string&gt;();
+stringStack.push("hello");
+// stringStack.push(42); // Error: Argument of type 'number' is not assignable</code></pre>
+
+<h3>Generic Repository Pattern</h3>
+
+<pre><code>interface Entity &#123;
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+&#125;
+
+class Repository&lt;T extends Entity&gt; &#123;
+  private store = new Map&lt;string, T&gt;();
+
+  save(entity: T): T &#123;
+    entity.updatedAt = new Date();
+    this.store.set(entity.id, entity);
+    return entity;
+  &#125;
+
+  findById(id: string): T | undefined &#123;
+    return this.store.get(id);
+  &#125;
+
+  findAll(): T[] &#123;
+    return Array.from(this.store.values());
+  &#125;
+
+  delete(id: string): boolean &#123;
+    return this.store.delete(id);
+  &#125;
+&#125;
+
+interface UserEntity extends Entity &#123;
+  name: string;
+  email: string;
+&#125;
+
+const userRepo = new Repository&lt;UserEntity&gt;();
+const saved = userRepo.save(&#123;
+  id: "1",
+  name: "Alice",
+  email: "alice@example.com",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+&#125;);
+// saved is fully typed as UserEntity</code></pre>
+
+<h2>Generic Constraints with <code>extends</code></h2>
+
+<p>
+  Constraints limit which types a generic parameter accepts. Without constraints, TypeScript treats <code>T</code> as <code>unknown</code>, meaning you cannot access any properties on it. Constraints tell the compiler "T must at least have these properties."
+</p>
+
+<pre><code>// Without constraint: this fails
+function getLength&lt;T&gt;(value: T): number &#123;
+  return value.length; // Error: Property 'length' does not exist on type 'T'
+&#125;
+
+// With constraint: T must have a length property
+function getLength&lt;T extends &#123; length: number &#125;&gt;(value: T): number &#123;
+  return value.length; // Works!
+&#125;
+
+getLength("hello");       // OK: string has length
+getLength([1, 2, 3]);     // OK: array has length
+getLength(&#123; length: 10 &#125;); // OK: object has length property
+// getLength(42);          // Error: number has no length property</code></pre>
+
+<h3>Constraining with Interfaces</h3>
+
+<pre><code>interface Printable &#123;
+  toString(): string;
+&#125;
+
+function print&lt;T extends Printable&gt;(value: T): string &#123;
+  return value.toString();
+&#125;
+
+// keyof constraint: T must be a key of the object
+function getProperty&lt;T, K extends keyof T&gt;(obj: T, key: K): T[K] &#123;
+  return obj[key];
+&#125;
+
+const user = &#123; name: "Alice", age: 30, email: "alice@example.com" &#125;;
+const name = getProperty(user, "name");  // type is string
+const age = getProperty(user, "age");    // type is number
+// getProperty(user, "phone");            // Error: "phone" is not a key of user</code></pre>
+
+<p>
+  The <code>keyof</code> constraint is remarkably powerful. It ensures that you can only access properties that actually exist on the object, catching typos and incorrect property names at compile time rather than runtime.
+</p>
+
+<h2>Default Type Parameters</h2>
+
+<p>
+  Like function parameters, type parameters can have default values. This makes generics more ergonomic when one type is used far more often than others.
+</p>
+
+<pre><code>interface RequestOptions&lt;TBody = undefined, TParams = Record&lt;string, string&gt;&gt; &#123;
+  url: string;
+  method: "GET" | "POST" | "PUT" | "DELETE";
+  body?: TBody;
+  params?: TParams;
+  headers?: Record&lt;string, string&gt;;
+&#125;
+
+// No type arguments needed for simple GET requests
+const getRequest: RequestOptions = &#123;
+  url: "/api/users",
+  method: "GET",
+&#125;;
+
+// Specify body type for POST requests
+const postRequest: RequestOptions&lt;&#123; name: string; email: string &#125;&gt; = &#123;
+  url: "/api/users",
+  method: "POST",
+  body: &#123; name: "Alice", email: "alice@example.com" &#125;,
+&#125;;</code></pre>
+
+<h2>Built-in Utility Types</h2>
+
+<p>
+  TypeScript ships with a rich set of generic utility types. Understanding these is essential — they appear everywhere in production codebases and library definitions.
+</p>
+
+<h3>Partial&lt;T&gt;</h3>
+
+<p>
+  Makes all properties of <code>T</code> optional. Commonly used for update operations where you only send changed fields.
+</p>
+
+<pre><code>interface User &#123;
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "user";
+&#125;
+
+function updateUser(id: string, updates: Partial&lt;User&gt;): User &#123;
+  const existing = findUser(id);
+  return &#123; ...existing, ...updates &#125;;
+&#125;
+
+// Only update what changed
+updateUser("1", &#123; name: "Bob" &#125;);         // OK
+updateUser("1", &#123; email: "b@test.com" &#125;); // OK
+updateUser("1", &#123;&#125;);                       // OK — nothing changes</code></pre>
+
+<h3>Required&lt;T&gt;</h3>
+
+<p>
+  The opposite of Partial — makes all properties required. Useful when you have a config object with optional fields but need a "resolved" version with all defaults filled in.
+</p>
+
+<pre><code>interface Config &#123;
+  host?: string;
+  port?: number;
+  debug?: boolean;
+&#125;
+
+function resolveConfig(partial: Config): Required&lt;Config&gt; &#123;
+  return &#123;
+    host: partial.host ?? "localhost",
+    port: partial.port ?? 3000,
+    debug: partial.debug ?? false,
+  &#125;;
+&#125;</code></pre>
+
+<h3>Pick&lt;T, K&gt;</h3>
+
+<p>
+  Creates a type with only the specified properties from <code>T</code>. Use it when a function only needs a subset of a larger interface.
+</p>
+
+<pre><code>type UserPreview = Pick&lt;User, "id" | "name"&gt;;
+// Equivalent to: &#123; id: string; name: string &#125;
+
+function renderUserCard(user: UserPreview): string &#123;
+  return \`&lt;div&gt;\$&#123;user.name&#125; (#\$&#123;user.id&#125;)&lt;/div&gt;\`;
+&#125;</code></pre>
+
+<h3>Omit&lt;T, K&gt;</h3>
+
+<p>
+  Creates a type with all properties of <code>T</code> except the specified ones. Commonly used for "create" operations where the ID is auto-generated.
+</p>
+
+<pre><code>type CreateUserInput = Omit&lt;User, "id"&gt;;
+// &#123; name: string; email: string; role: "admin" | "user" &#125;
+
+function createUser(input: CreateUserInput): User &#123;
+  return &#123;
+    id: generateUUID(),
+    ...input,
+  &#125;;
+&#125;</code></pre>
+
+<h3>Record&lt;K, V&gt;</h3>
+
+<p>
+  Creates a type with keys of type <code>K</code> and values of type <code>V</code>. Perfect for dictionaries, lookup tables, and indexed collections. When working with JSON objects that serve as dictionaries, tools like our <a href="/tools/json-formatter">JSON Formatter</a> help you inspect the structure quickly.
+</p>
+
+<pre><code>type UserRoles = "admin" | "editor" | "viewer";
+
+const rolePermissions: Record&lt;UserRoles, string[]&gt; = &#123;
+  admin: ["read", "write", "delete", "manage"],
+  editor: ["read", "write"],
+  viewer: ["read"],
+&#125;;
+
+// Dynamic string keys
+type ErrorMap = Record&lt;string, &#123; message: string; code: number &#125;&gt;;
+
+const errors: ErrorMap = &#123;
+  NOT_FOUND: &#123; message: "Resource not found", code: 404 &#125;,
+  UNAUTHORIZED: &#123; message: "Not authorized", code: 401 &#125;,
+&#125;;</code></pre>
+
+<h2>Advanced Patterns: Conditional Types</h2>
+
+<p>
+  Conditional types let you express type-level "if-else" logic. The syntax mirrors the JavaScript ternary operator: <code>T extends U ? X : Y</code>.
+</p>
+
+<pre><code>// Basic conditional type
+type IsString&lt;T&gt; = T extends string ? true : false;
+
+type A = IsString&lt;string&gt;;  // true
+type B = IsString&lt;number&gt;;  // false
+
+// Practical example: extract array element type
+type ElementOf&lt;T&gt; = T extends (infer E)[] ? E : never;
+
+type NumElement = ElementOf&lt;number[]&gt;;   // number
+type StrElement = ElementOf&lt;string[]&gt;;   // string
+type NotArray = ElementOf&lt;string&gt;;       // never
+
+// Flatten nested arrays
+type Flatten&lt;T&gt; = T extends (infer E)[] ? Flatten&lt;E&gt; : T;
+
+type Deep = Flatten&lt;number[][][]&gt;;  // number</code></pre>
+
+<h3>Distributive Conditional Types</h3>
+
+<pre><code>// When T is a union, the conditional distributes over each member
+type NonNullable&lt;T&gt; = T extends null | undefined ? never : T;
+
+type Result = NonNullable&lt;string | null | undefined&gt;;
+// Distributes as:
+//   (string extends null | undefined ? never : string)
+// | (null extends null | undefined ? never : null)
+// | (undefined extends null | undefined ? never : undefined)
+// = string | never | never
+// = string</code></pre>
+
+<h2>Advanced Patterns: Mapped Types</h2>
+
+<p>
+  Mapped types let you transform every property in an existing type. They are the mechanism behind <code>Partial</code>, <code>Required</code>, <code>Readonly</code>, and many other utility types.
+</p>
+
+<pre><code>// How Partial works internally
+type MyPartial&lt;T&gt; = &#123;
+  [K in keyof T]?: T[K];
+&#125;;
+
+// How Readonly works internally
+type MyReadonly&lt;T&gt; = &#123;
+  readonly [K in keyof T]: T[K];
+&#125;;
+
+// Custom: make all properties nullable
+type Nullable&lt;T&gt; = &#123;
+  [K in keyof T]: T[K] | null;
+&#125;;
+
+interface User &#123;
+  name: string;
+  age: number;
+&#125;
+
+type NullableUser = Nullable&lt;User&gt;;
+// &#123; name: string | null; age: number | null &#125;</code></pre>
+
+<h3>Key Remapping with <code>as</code></h3>
+
+<pre><code>// Create getter functions for every property
+type Getters&lt;T&gt; = &#123;
+  [K in keyof T as \`get\$&#123;Capitalize&lt;string &amp; K&gt;&#125;\`]: () =&gt; T[K];
+&#125;;
+
+type UserGetters = Getters&lt;User&gt;;
+// &#123;
+//   getName: () =&gt; string;
+//   getAge: () =&gt; number;
+// &#125;
+
+// Filter properties by type
+type StringKeysOnly&lt;T&gt; = &#123;
+  [K in keyof T as T[K] extends string ? K : never]: T[K];
+&#125;;
+
+type UserStrings = StringKeysOnly&lt;User&gt;;
+// &#123; name: string &#125;</code></pre>
+
+<h2>Advanced Patterns: The <code>infer</code> Keyword</h2>
+
+<p>
+  The <code>infer</code> keyword lets you extract types from within other types inside conditional type expressions. It is the mechanism behind utility types like <code>ReturnType</code> and <code>Parameters</code>.
+</p>
+
+<pre><code>// Extract function return type
+type MyReturnType&lt;T&gt; = T extends (...args: any[]) =&gt; infer R ? R : never;
+
+type Num = MyReturnType&lt;() =&gt; number&gt;;           // number
+type Str = MyReturnType&lt;(x: string) =&gt; string&gt;;  // string
+
+// Extract function parameters
+type MyParameters&lt;T&gt; = T extends (...args: infer P) =&gt; any ? P : never;
+
+type Params = MyParameters&lt;(a: string, b: number) =&gt; void&gt;;
+// [a: string, b: number]
+
+// Extract promise resolved type
+type Awaited&lt;T&gt; = T extends Promise&lt;infer U&gt; ? Awaited&lt;U&gt; : T;
+
+type Resolved = Awaited&lt;Promise&lt;Promise&lt;string&gt;&gt;&gt;; // string
+
+// Extract object value types
+type ValueOf&lt;T&gt; = T[keyof T];
+
+type UserValues = ValueOf&lt;User&gt;; // string | number</code></pre>
+
+<h2>Real-World Example: Type-Safe API Client</h2>
+
+<p>
+  Here is a practical example that combines multiple generic patterns into a fully type-safe API client. This pattern is used in many production applications.
+</p>
+
+<pre><code>// Define your API endpoints as a type map
+interface ApiEndpoints &#123;
+  "/users": &#123;
+    GET: &#123; response: User[]; params: &#123; page?: number; limit?: number &#125; &#125;;
+    POST: &#123; response: User; body: Omit&lt;User, "id"&gt; &#125;;
+  &#125;;
+  "/users/:id": &#123;
+    GET: &#123; response: User; params: &#123; id: string &#125; &#125;;
+    PUT: &#123; response: User; body: Partial&lt;User&gt; &#125;;
+    DELETE: &#123; response: &#123; success: boolean &#125; &#125;;
+  &#125;;
+  "/products": &#123;
+    GET: &#123; response: Product[]; params: &#123; category?: string &#125; &#125;;
+  &#125;;
+&#125;
+
+// Extract types based on endpoint and method
+type Endpoint = keyof ApiEndpoints;
+type Method&lt;E extends Endpoint&gt; = keyof ApiEndpoints[E];
+
+type ResponseType&lt;
+  E extends Endpoint,
+  M extends Method&lt;E&gt;
+&gt; = ApiEndpoints[E][M] extends &#123; response: infer R &#125; ? R : never;
+
+type RequestBody&lt;
+  E extends Endpoint,
+  M extends Method&lt;E&gt;
+&gt; = ApiEndpoints[E][M] extends &#123; body: infer B &#125; ? B : never;
+
+// Type-safe fetch wrapper
+async function apiClient&lt;
+  E extends Endpoint,
+  M extends Method&lt;E&gt;
+&gt;(
+  endpoint: E,
+  method: M,
+  options?: &#123;
+    body?: RequestBody&lt;E, M&gt;;
+    params?: Record&lt;string, string | number&gt;;
+  &#125;
+): Promise&lt;ResponseType&lt;E, M&gt;&gt; &#123;
+  const response = await fetch(endpoint as string, &#123;
+    method: method as string,
+    body: options?.body ? JSON.stringify(options.body) : undefined,
+    headers: &#123; "Content-Type": "application/json" &#125;,
+  &#125;);
+  return response.json();
+&#125;
+
+// Usage: fully type-safe!
+const users = await apiClient("/users", "GET");
+// type: User[]
+
+const newUser = await apiClient("/users", "POST", &#123;
+  body: &#123; name: "Alice", email: "alice@example.com", role: "user" &#125;,
+&#125;);
+// type: User</code></pre>
+
+<h2>Real-World Example: Type-Safe State Management</h2>
+
+<p>
+  Generics are at the heart of modern state management libraries. Here is a simplified but fully typed store implementation.
+</p>
+
+<pre><code>type Listener&lt;T&gt; = (state: T) =&gt; void;
+
+class Store&lt;T extends Record&lt;string, unknown&gt;&gt; &#123;
+  private state: T;
+  private listeners: Set&lt;Listener&lt;T&gt;&gt; = new Set();
+
+  constructor(initialState: T) &#123;
+    this.state = &#123; ...initialState &#125;;
+  &#125;
+
+  getState(): Readonly&lt;T&gt; &#123;
+    return Object.freeze(&#123; ...this.state &#125;);
+  &#125;
+
+  setState(updater: Partial&lt;T&gt; | ((prev: T) =&gt; Partial&lt;T&gt;)): void &#123;
+    const updates = typeof updater === "function"
+      ? updater(this.state)
+      : updater;
+    this.state = &#123; ...this.state, ...updates &#125;;
+    this.listeners.forEach((listener) =&gt; listener(this.state));
+  &#125;
+
+  select&lt;K extends keyof T&gt;(key: K): T[K] &#123;
+    return this.state[key];
+  &#125;
+
+  subscribe(listener: Listener&lt;T&gt;): () =&gt; void &#123;
+    this.listeners.add(listener);
+    return () =&gt; this.listeners.delete(listener);
+  &#125;
+&#125;
+
+// Usage
+interface AppState &#123;
+  user: User | null;
+  theme: "light" | "dark";
+  notifications: string[];
+&#125;
+
+const store = new Store&lt;AppState&gt;(&#123;
+  user: null,
+  theme: "light",
+  notifications: [],
+&#125;);
+
+store.setState(&#123; theme: "dark" &#125;);          // OK
+store.setState((prev) =&gt; (&#123;
+  notifications: [...prev.notifications, "New message"],
+&#125;));
+
+const theme = store.select("theme"); // type: "light" | "dark"
+// store.setState(&#123; theme: "blue" &#125;); // Error: "blue" is not assignable</code></pre>
+
+<h2>Real-World Example: Type-Safe Form Validation</h2>
+
+<p>
+  Form validation is another area where generics shine. You can build a validation system that is tied directly to your form data types, ensuring validators match the fields they validate.
+</p>
+
+<pre><code>type ValidationRule&lt;T&gt; = &#123;
+  validate: (value: T) =&gt; boolean;
+  message: string;
+&#125;;
+
+type FormValidator&lt;T&gt; = &#123;
+  [K in keyof T]?: ValidationRule&lt;T[K]&gt;[];
+&#125;;
+
+type ValidationErrors&lt;T&gt; = &#123;
+  [K in keyof T]?: string[];
+&#125;;
+
+function validateForm&lt;T extends Record&lt;string, unknown&gt;&gt;(
+  data: T,
+  validators: FormValidator&lt;T&gt;
+): &#123; valid: boolean; errors: ValidationErrors&lt;T&gt; &#125; &#123;
+  const errors: ValidationErrors&lt;T&gt; = &#123;&#125;;
+  let valid = true;
+
+  for (const key in validators) &#123;
+    const rules = validators[key];
+    if (!rules) continue;
+
+    const fieldErrors: string[] = [];
+    for (const rule of rules) &#123;
+      if (!rule.validate(data[key] as any)) &#123;
+        fieldErrors.push(rule.message);
+        valid = false;
+      &#125;
+    &#125;
+
+    if (fieldErrors.length &gt; 0) &#123;
+      errors[key] = fieldErrors;
+    &#125;
+  &#125;
+
+  return &#123; valid, errors &#125;;
+&#125;
+
+// Usage
+interface SignupForm &#123;
+  username: string;
+  email: string;
+  age: number;
+&#125;
+
+const signupValidators: FormValidator&lt;SignupForm&gt; = &#123;
+  username: [
+    &#123; validate: (v) =&gt; v.length &gt;= 3, message: "Min 3 characters" &#125;,
+    &#123; validate: (v) =&gt; /^[a-zA-Z0-9_]+$/.test(v), message: "Alphanumeric only" &#125;,
+  ],
+  email: [
+    &#123; validate: (v) =&gt; v.includes("@"), message: "Must contain @" &#125;,
+  ],
+  age: [
+    &#123; validate: (v) =&gt; v &gt;= 18, message: "Must be 18 or older" &#125;,
+  ],
+&#125;;
+
+const result = validateForm(
+  &#123; username: "ab", email: "invalid", age: 16 &#125;,
+  signupValidators
+);
+// result.errors.username = ["Min 3 characters"]
+// result.errors.email = ["Must contain @"]
+// result.errors.age = ["Must be 18 or older"]</code></pre>
+
+<h2>Best Practices</h2>
+
+<p>
+  After years of TypeScript development, the community has converged on several best practices for writing and using generics effectively.
+</p>
+
+<h3>1. Let TypeScript Infer When Possible</h3>
+
+<p>
+  Do not specify type arguments manually when TypeScript can infer them. Explicit type arguments add visual noise without adding safety.
+</p>
+
+<pre><code>// Unnecessary — TypeScript infers T as string
+const result = identity&lt;string&gt;("hello");
+
+// Better — let inference do the work
+const result = identity("hello");</code></pre>
+
+<h3>2. Use Meaningful Names for Complex Generics</h3>
+
+<pre><code>// Hard to read
+function process&lt;T, U, V&gt;(input: T, transform: (x: T) =&gt; U, format: (x: U) =&gt; V): V &#123; ... &#125;
+
+// Easier to understand
+function process&lt;TInput, TIntermediate, TOutput&gt;(
+  input: TInput,
+  transform: (x: TInput) =&gt; TIntermediate,
+  format: (x: TIntermediate) =&gt; TOutput
+): TOutput &#123; ... &#125;</code></pre>
+
+<h3>3. Constrain Generics to the Minimum Needed</h3>
+
+<pre><code>// Too broad — T could be anything
+function processItems&lt;T&gt;(items: T[]): void &#123;
+  items.forEach((item) =&gt; console.log(item.toString()));
+&#125;
+
+// Just right — only requires what we actually use
+function processItems&lt;T extends &#123; toString(): string &#125;&gt;(items: T[]): void &#123;
+  items.forEach((item) =&gt; console.log(item.toString()));
+&#125;</code></pre>
+
+<h3>4. Avoid Unnecessary Generics</h3>
+
+<p>
+  If a type parameter appears only once in the function signature, it is probably unnecessary. A generic type parameter should relate at least two values (input to output, or one parameter to another).
+</p>
+
+<pre><code>// Unnecessary generic — T appears only once
+function greet&lt;T extends string&gt;(name: T): void &#123;
+  console.log(\`Hello, \$&#123;name&#125;\`);
+&#125;
+
+// Better — just use the concrete type
+function greet(name: string): void &#123;
+  console.log(\`Hello, \$&#123;name&#125;\`);
+&#125;</code></pre>
+
+<h3>5. Prefer Interfaces for Object Types</h3>
+
+<pre><code>// Prefer interface for generic object shapes
+interface Result&lt;T&gt; &#123;
+  data: T;
+  error: string | null;
+&#125;
+
+// Use type alias for unions, intersections, and computed types
+type Either&lt;L, R&gt; = &#123; tag: "left"; value: L &#125; | &#123; tag: "right"; value: R &#125;;</code></pre>
+
+<h2>Common Pitfalls</h2>
+
+<p>
+  Even experienced TypeScript developers stumble on these issues. Being aware of them saves hours of debugging.
+</p>
+
+<h3>Pitfall 1: Generic Type Erasure in Runtime</h3>
+
+<pre><code>// This does NOT work — types are erased at runtime
+function createInstance&lt;T&gt;(): T &#123;
+  return new T(); // Error: 'T' only refers to a type, but is used as a value
+&#125;
+
+// Solution: pass the constructor as a parameter
+function createInstance&lt;T&gt;(ctor: new () =&gt; T): T &#123;
+  return new ctor();
+&#125;
+
+class MyClass &#123;
+  value = 42;
+&#125;
+
+const instance = createInstance(MyClass); // type is MyClass</code></pre>
+
+<h3>Pitfall 2: Overly Complex Generic Signatures</h3>
+
+<p>
+  If your generic type has five or more type parameters, step back and consider whether you can simplify. Break complex generics into smaller, composable pieces.
+</p>
+
+<pre><code>// Too complex
+type Query&lt;T, K, F, S, P&gt; = ...
+
+// Better: compose smaller types
+type FilterConfig&lt;T&gt; = &#123; field: keyof T; value: T[keyof T] &#125;;
+type SortConfig&lt;T&gt; = &#123; field: keyof T; direction: "asc" | "desc" &#125;;
+type QueryConfig&lt;T&gt; = &#123;
+  filters: FilterConfig&lt;T&gt;[];
+  sort: SortConfig&lt;T&gt;;
+  page: number;
+  limit: number;
+&#125;;</code></pre>
+
+<h3>Pitfall 3: Forgetting That Generics Distribute Over Unions</h3>
+
+<pre><code>type ToArray&lt;T&gt; = T extends any ? T[] : never;
+
+// This distributes!
+type Result = ToArray&lt;string | number&gt;;
+// = string[] | number[]  (NOT (string | number)[])
+
+// To prevent distribution, wrap both sides in a tuple
+type ToArrayNonDistributive&lt;T&gt; = [T] extends [any] ? T[] : never;
+
+type Result2 = ToArrayNonDistributive&lt;string | number&gt;;
+// = (string | number)[]</code></pre>
+
+<h3>Pitfall 4: Comparing Generic Types</h3>
+
+<pre><code>// This does not work as expected
+function isString&lt;T&gt;(value: T): value is T &amp; string &#123;
+  return typeof value === "string";
+&#125;
+
+// TypeScript cannot narrow generic types easily in some contexts.
+// When in doubt, use explicit type guards outside of generic functions.</code></pre>
+
+<h2>Generics with React (Bonus)</h2>
+
+<p>
+  If you work with React, generics are essential for building reusable components. Here is a generic list component pattern.
+</p>
+
+<pre><code>interface ListProps&lt;T&gt; &#123;
+  items: T[];
+  renderItem: (item: T, index: number) =&gt; React.ReactNode;
+  keyExtractor: (item: T) =&gt; string;
+  emptyMessage?: string;
+&#125;
+
+function List&lt;T&gt;(&#123; items, renderItem, keyExtractor, emptyMessage &#125;: ListProps&lt;T&gt;) &#123;
+  if (items.length === 0) &#123;
+    return &lt;p&gt;&#123;emptyMessage ?? "No items"&#125;&lt;/p&gt;;
+  &#125;
+
+  return (
+    &lt;ul&gt;
+      &#123;items.map((item, i) =&gt; (
+        &lt;li key=&#123;keyExtractor(item)&#125;&gt;&#123;renderItem(item, i)&#125;&lt;/li&gt;
+      ))&#125;
+    &lt;/ul&gt;
+  );
+&#125;
+
+// Usage: T is inferred as User
+&lt;List
+  items=&#123;users&#125;
+  renderItem=&#123;(user) =&gt; &lt;span&gt;&#123;user.name&#125;&lt;/span&gt;&#125;
+  keyExtractor=&#123;(user) =&gt; user.id&#125;
+/&gt;</code></pre>
+
+<h2>Summary</h2>
+
+<p>
+  TypeScript generics transform your code from rigid and repetitive to flexible and type-safe. Here is what we covered:
+</p>
+
+<ul>
+  <li><strong>Basics:</strong> Type parameters let you write functions, interfaces, and classes that work with any type while preserving type information.</li>
+  <li><strong>Constraints:</strong> The <code>extends</code> keyword limits generic parameters to types that meet specific requirements, unlocking property access and method calls.</li>
+  <li><strong>Utility types:</strong> <code>Partial</code>, <code>Required</code>, <code>Pick</code>, <code>Omit</code>, and <code>Record</code> are built-in generics you will use daily.</li>
+  <li><strong>Advanced patterns:</strong> Conditional types, mapped types, and <code>infer</code> let you build sophisticated type-level logic for real-world applications.</li>
+  <li><strong>Real-world usage:</strong> API clients, state management, and form validation all benefit enormously from generic typing.</li>
+  <li><strong>Best practices:</strong> Let TypeScript infer, constrain to the minimum, use meaningful names, and keep generics simple.</li>
+</ul>
+
+<p>
+  The best way to internalize generics is to use them in your own projects. Start by typing your API responses with <code>ApiResponse&lt;T&gt;</code>, then build up to more complex patterns. If you are debugging JSON payloads from your APIs, try our <a href="/tools/json-formatter">JSON Formatter</a> to inspect the data, or use the <a href="/tools/base64">Base64 Encoder</a> to decode any base64-encoded strings in your responses.
+</p>
+
+<p>
+  For more developer guides and free tools, check out our <a href="/blog/best-free-developer-tools-2026">Best Free Developer Tools</a> roundup or browse the full <a href="/tools/">tools directory</a>.
+</p>
+`;
+
+const codeBlock = [
+  '// Without generics: you lose type information',
+  'function identity(value: any): any {',
+  '  return value;',
+  '}',
+  '',
+  'const result = identity("hello"); // type is \'any\' — not useful',
+  '',
+  '// With generics: type information is preserved',
+  'function identity&lt;T&gt;(value: T): T {',
+  '  return value;',
+  '}',
+  '',
+  'const result = identity("hello"); // type is \'string\' — perfect',
+  "const num = identity(42);         // type is 'number'"
+].join('\n');
+
+const codeBlock2 = [
+  '// Single type parameter',
+  'function wrap&lt;T&gt;(value: T): { wrapped: T } {',
+  '  return { wrapped: value };',
+  '}',
+  '',
+  '// Multiple type parameters',
+  'function pair&lt;A, B&gt;(first: A, second: B): [A, B] {',
+  '  return [first, second];',
+  '}',
+  '',
+  'const p = pair("hello", 42); // type is [string, number]'
+].join('\n');
+
+const codeBlock3 = [
+  'function firstElement&lt;T&gt;(arr: T[]): T | undefined {',
+  '  return arr[0];',
+  '}',
+  '',
+  'const first = firstElement([1, 2, 3]);       // number | undefined',
+  'const firstStr = firstElement(["a", "b"]);   // string | undefined',
+  '',
+  'function reverseArray&lt;T&gt;(arr: T[]): T[] {',
+  '  return [...arr].reverse();',
+  '}',
+  '',
+  'const reversed = reverseArray([1, 2, 3]); // number[]'
+].join('\n');
+
+const codeBlock4 = [
+  'function mapArray&lt;T, U&gt;(arr: T[], fn: (item: T) =&gt; U): U[] {',
+  '  return arr.map(fn);',
+  '}',
+  '',
+  'const lengths = mapArray(["hello", "world"], (s) =&gt; s.length);',
+  '// type is number[]',
+  '',
+  'const doubled = mapArray([1, 2, 3], (n) =&gt; n * 2);',
+  '// type is number[]'
+].join('\n');
+
+const codeBlock5 = [
+  'interface ApiResponse&lt;T&gt; {',
+  '  data: T;',
+  '  status: number;',
+  '  message: string;',
+  '  timestamp: string;',
+  '}',
+  '',
+  'interface User {',
+  '  id: string;',
+  '  name: string;',
+  '  email: string;',
+  '}',
+  '',
+  'interface Product {',
+  '  id: string;',
+  '  title: string;',
+  '  price: number;',
+  '}',
+  '',
+  '// Usage: the response is fully typed',
+  'const userResponse: ApiResponse&lt;User&gt; = {',
+  '  data: { id: "1", name: "Alice", email: "alice@example.com" },',
+  '  status: 200,',
+  '  message: "Success",',
+  '  timestamp: "2026-03-20T10:00:00Z",',
+  '};',
+  '',
+  'const productResponse: ApiResponse&lt;Product&gt; = {',
+  '  data: { id: "2", title: "Widget", price: 29.99 },',
+  '  status: 200,',
+  '  message: "Success",',
+  '  timestamp: "2026-03-20T10:00:00Z",',
+  '};'
+].join('\n');
+
+const codeBlock6 = [
+  'interface Collection&lt;T&gt; {',
+  '  items: T[];',
+  '  total: number;',
+  '  page: number;',
+  '  perPage: number;',
+  '  hasNextPage: boolean;',
+  '}',
+  '',
+  'interface PaginatedResponse&lt;T&gt; {',
+  '  collection: Collection&lt;T&gt;;',
+  '  meta: {',
+  '    requestId: string;',
+  '    duration: number;',
+  '  };',
+  '}',
+  '',
+  '// Now any entity type plugs in seamlessly',
+  'type UserList = PaginatedResponse&lt;User&gt;;',
+  'type ProductCatalog = PaginatedResponse&lt;Product&gt;;'
+].join('\n');
+
+const codeBlock7 = [
+  'class Stack&lt;T&gt; {',
+  '  private items: T[] = [];',
+  '',
+  '  push(item: T): void {',
+  '    this.items.push(item);',
+  '  }',
+  '',
+  '  pop(): T | undefined {',
+  '    return this.items.pop();',
+  '  }',
+  '',
+  '  peek(): T | undefined {',
+  '    return this.items[this.items.length - 1];',
+  '  }',
+  '',
+  '  get size(): number {',
+  '    return this.items.length;',
+  '  }',
+  '}',
+  '',
+  'const numberStack = new Stack&lt;number&gt;();',
+  'numberStack.push(1);',
+  'numberStack.push(2);',
+  'const top = numberStack.pop(); // type is number | undefined',
+  '',
+  'const stringStack = new Stack&lt;string&gt;();',
+  'stringStack.push("hello");',
+  "// stringStack.push(42); // Error: Argument of type 'number' is not assignable"
+].join('\n');
+
+const codeBlock8 = [
+  'interface Entity {',
+  '  id: string;',
+  '  createdAt: Date;',
+  '  updatedAt: Date;',
+  '}',
+  '',
+  'class Repository&lt;T extends Entity&gt; {',
+  '  private store = new Map&lt;string, T&gt;();',
+  '',
+  '  save(entity: T): T {',
+  '    entity.updatedAt = new Date();',
+  '    this.store.set(entity.id, entity);',
+  '    return entity;',
+  '  }',
+  '',
+  '  findById(id: string): T | undefined {',
+  '    return this.store.get(id);',
+  '  }',
+  '',
+  '  findAll(): T[] {',
+  '    return Array.from(this.store.values());',
+  '  }',
+  '',
+  '  delete(id: string): boolean {',
+  '    return this.store.delete(id);',
+  '  }',
+  '}',
+  '',
+  'interface UserEntity extends Entity {',
+  '  name: string;',
+  '  email: string;',
+  '}',
+  '',
+  'const userRepo = new Repository&lt;UserEntity&gt;();',
+  'const saved = userRepo.save({',
+  '  id: "1",',
+  '  name: "Alice",',
+  '  email: "alice@example.com",',
+  '  createdAt: new Date(),',
+  '  updatedAt: new Date(),',
+  '});',
+  '// saved is fully typed as UserEntity'
+].join('\n');
+
+const codeBlock9 = [
+  '// Without constraint: this fails',
+  'function getLength&lt;T&gt;(value: T): number {',
+  "  return value.length; // Error: Property 'length' does not exist on type 'T'",
+  '}',
+  '',
+  '// With constraint: T must have a length property',
+  'function getLength&lt;T extends { length: number }&gt;(value: T): number {',
+  '  return value.length; // Works!',
+  '}',
+  '',
+  'getLength("hello");       // OK: string has length',
+  'getLength([1, 2, 3]);     // OK: array has length',
+  'getLength({ length: 10 }); // OK: object has length property',
+  '// getLength(42);          // Error: number has no length property'
+].join('\n');
+
+const codeBlock10 = [
+  'interface Printable {',
+  '  toString(): string;',
+  '}',
+  '',
+  'function print&lt;T extends Printable&gt;(value: T): string {',
+  '  return value.toString();',
+  '}',
+  '',
+  '// keyof constraint: T must be a key of the object',
+  'function getProperty&lt;T, K extends keyof T&gt;(obj: T, key: K): T[K] {',
+  '  return obj[key];',
+  '}',
+  '',
+  'const user = { name: "Alice", age: 30, email: "alice@example.com" };',
+  'const name = getProperty(user, "name");  // type is string',
+  'const age = getProperty(user, "age");    // type is number',
+  '// getProperty(user, "phone");            // Error: "phone" is not a key of user'
+].join('\n');
+
+const codeBlock11 = [
+  'interface RequestOptions&lt;TBody = undefined, TParams = Record&lt;string, string&gt;&gt; {',
+  '  url: string;',
+  '  method: "GET" | "POST" | "PUT" | "DELETE";',
+  '  body?: TBody;',
+  '  params?: TParams;',
+  '  headers?: Record&lt;string, string&gt;;',
+  '}',
+  '',
+  '// No type arguments needed for simple GET requests',
+  'const getRequest: RequestOptions = {',
+  '  url: "/api/users",',
+  '  method: "GET",',
+  '};',
+  '',
+  '// Specify body type for POST requests',
+  'const postRequest: RequestOptions&lt;{ name: string; email: string }&gt; = {',
+  '  url: "/api/users",',
+  '  method: "POST",',
+  '  body: { name: "Alice", email: "alice@example.com" },',
+  '};'
+].join('\n');
+
+const codeBlock12 = [
+  'interface User {',
+  '  id: string;',
+  '  name: string;',
+  '  email: string;',
+  '  role: "admin" | "user";',
+  '}',
+  '',
+  'function updateUser(id: string, updates: Partial&lt;User&gt;): User {',
+  '  const existing = findUser(id);',
+  '  return { ...existing, ...updates };',
+  '}',
+  '',
+  '// Only update what changed',
+  'updateUser("1", { name: "Bob" });         // OK',
+  'updateUser("1", { email: "b@test.com" }); // OK',
+  'updateUser("1", {});                       // OK — nothing changes'
+].join('\n');
+
+const codeBlock13 = [
+  'interface Config {',
+  '  host?: string;',
+  '  port?: number;',
+  '  debug?: boolean;',
+  '}',
+  '',
+  'function resolveConfig(partial: Config): Required&lt;Config&gt; {',
+  '  return {',
+  '    host: partial.host ?? "localhost",',
+  '    port: partial.port ?? 3000,',
+  '    debug: partial.debug ?? false,',
+  '  };',
+  '}'
+].join('\n');
+
+const codeBlock14 = [
+  'type UserPreview = Pick&lt;User, "id" | "name"&gt;;',
+  '// Equivalent to: { id: string; name: string }',
+  '',
+  'function renderUserCard(user: UserPreview): string {',
+  '  return \\`&lt;div&gt;\\${user.name} (#\\${user.id})&lt;/div&gt;\\`;',
+  '}'
+].join('\n');
+
+const codeBlock15 = [
+  'type CreateUserInput = Omit&lt;User, "id"&gt;;',
+  '// { name: string; email: string; role: "admin" | "user" }',
+  '',
+  'function createUser(input: CreateUserInput): User {',
+  '  return {',
+  '    id: generateUUID(),',
+  '    ...input,',
+  '  };',
+  '}'
+].join('\n');
+
+const codeBlock16 = [
+  'type UserRoles = "admin" | "editor" | "viewer";',
+  '',
+  'const rolePermissions: Record&lt;UserRoles, string[]&gt; = {',
+  '  admin: ["read", "write", "delete", "manage"],',
+  '  editor: ["read", "write"],',
+  '  viewer: ["read"],',
+  '};',
+  '',
+  '// Dynamic string keys',
+  'type ErrorMap = Record&lt;string, { message: string; code: number }&gt;;',
+  '',
+  'const errors: ErrorMap = {',
+  '  NOT_FOUND: { message: "Resource not found", code: 404 },',
+  '  UNAUTHORIZED: { message: "Not authorized", code: 401 },',
+  '};'
+].join('\n');
+
+const codeBlock17 = [
+  '// How Partial works internally',
+  'type MyPartial&lt;T&gt; = {',
+  '  [K in keyof T]?: T[K];',
+  '};',
+  '',
+  '// How Readonly works internally',
+  'type MyReadonly&lt;T&gt; = {',
+  '  readonly [K in keyof T]: T[K];',
+  '};',
+  '',
+  '// Custom: make all properties nullable',
+  'type Nullable&lt;T&gt; = {',
+  '  [K in keyof T]: T[K] | null;',
+  '};',
+  '',
+  'interface User {',
+  '  name: string;',
+  '  age: number;',
+  '}',
+  '',
+  'type NullableUser = Nullable&lt;User&gt;;',
+  '// { name: string | null; age: number | null }'
+].join('\n');
+
+const codeBlock18 = [
+  '// Create getter functions for every property',
+  'type Getters&lt;T&gt; = {',
+  '  [K in keyof T as \\`get\\${Capitalize&lt;string &amp; K&gt;}\\`]: () =&gt; T[K];',
+  '};',
+  '',
+  'type UserGetters = Getters&lt;User&gt;;',
+  '// {',
+  '//   getName: () =&gt; string;',
+  '//   getAge: () =&gt; number;',
+  '// }',
+  '',
+  '// Filter properties by type',
+  'type StringKeysOnly&lt;T&gt; = {',
+  '  [K in keyof T as T[K] extends string ? K : never]: T[K];',
+  '};',
+  '',
+  'type UserStrings = StringKeysOnly&lt;User&gt;;',
+  '// { name: string }'
+].join('\n');
+
+const codeBlock19 = [
+  '// Define your API endpoints as a type map',
+  'interface ApiEndpoints {',
+  '  "/users": {',
+  '    GET: { response: User[]; params: { page?: number; limit?: number } };',
+  '    POST: { response: User; body: Omit&lt;User, "id"&gt; };',
+  '  };',
+  '  "/users/:id": {',
+  '    GET: { response: User; params: { id: string } };',
+  '    PUT: { response: User; body: Partial&lt;User&gt; };',
+  '    DELETE: { response: { success: boolean } };',
+  '  };',
+  '  "/products": {',
+  '    GET: { response: Product[]; params: { category?: string } };',
+  '  };',
+  '}',
+  '',
+  '// Extract types based on endpoint and method',
+  'type Endpoint = keyof ApiEndpoints;',
+  'type Method&lt;E extends Endpoint&gt; = keyof ApiEndpoints[E];',
+  '',
+  'type ResponseType&lt;',
+  '  E extends Endpoint,',
+  '  M extends Method&lt;E&gt;',
+  '&gt; = ApiEndpoints[E][M] extends { response: infer R } ? R : never;',
+  '',
+  'type RequestBody&lt;',
+  '  E extends Endpoint,',
+  '  M extends Method&lt;E&gt;',
+  '&gt; = ApiEndpoints[E][M] extends { body: infer B } ? B : never;',
+  '',
+  '// Type-safe fetch wrapper',
+  'async function apiClient&lt;',
+  '  E extends Endpoint,',
+  '  M extends Method&lt;E&gt;',
+  '&gt;(',
+  '  endpoint: E,',
+  '  method: M,',
+  '  options?: {',
+  '    body?: RequestBody&lt;E, M&gt;;',
+  '    params?: Record&lt;string, string | number&gt;;',
+  '  }',
+  '): Promise&lt;ResponseType&lt;E, M&gt;&gt; {',
+  '  const response = await fetch(endpoint as string, {',
+  '    method: method as string,',
+  '    body: options?.body ? JSON.stringify(options.body) : undefined,',
+  '    headers: { "Content-Type": "application/json" },',
+  '  });',
+  '  return response.json();',
+  '}',
+  '',
+  '// Usage: fully type-safe!',
+  'const users = await apiClient("/users", "GET");',
+  '// type: User[]',
+  '',
+  'const newUser = await apiClient("/users", "POST", {',
+  '  body: { name: "Alice", email: "alice@example.com", role: "user" },',
+  '});',
+  '// type: User'
+].join('\n');
+
+const codeBlock20 = [
+  'type Listener&lt;T&gt; = (state: T) =&gt; void;',
+  '',
+  'class Store&lt;T extends Record&lt;string, unknown&gt;&gt; {',
+  '  private state: T;',
+  '  private listeners: Set&lt;Listener&lt;T&gt;&gt; = new Set();',
+  '',
+  '  constructor(initialState: T) {',
+  '    this.state = { ...initialState };',
+  '  }',
+  '',
+  '  getState(): Readonly&lt;T&gt; {',
+  '    return Object.freeze({ ...this.state });',
+  '  }',
+  '',
+  '  setState(updater: Partial&lt;T&gt; | ((prev: T) =&gt; Partial&lt;T&gt;)): void {',
+  '    const updates = typeof updater === "function"',
+  '      ? updater(this.state)',
+  '      : updater;',
+  '    this.state = { ...this.state, ...updates };',
+  '    this.listeners.forEach((listener) =&gt; listener(this.state));',
+  '  }',
+  '',
+  '  select&lt;K extends keyof T&gt;(key: K): T[K] {',
+  '    return this.state[key];',
+  '  }',
+  '',
+  '  subscribe(listener: Listener&lt;T&gt;): () =&gt; void {',
+  '    this.listeners.add(listener);',
+  '    return () =&gt; this.listeners.delete(listener);',
+  '  }',
+  '}',
+  '',
+  '// Usage',
+  'interface AppState {',
+  '  user: User | null;',
+  '  theme: "light" | "dark";',
+  '  notifications: string[];',
+  '}',
+  '',
+  'const store = new Store&lt;AppState&gt;({',
+  '  user: null,',
+  '  theme: "light",',
+  '  notifications: [],',
+  '});',
+  '',
+  'store.setState({ theme: "dark" });          // OK',
+  'store.setState((prev) =&gt; ({',
+  '  notifications: [...prev.notifications, "New message"],',
+  '}));',
+  '',
+  'const theme = store.select("theme"); // type: "light" | "dark"',
+  '// store.setState({ theme: "blue" }); // Error: "blue" is not assignable'
+].join('\n');
+
+const codeBlock21 = [
+  'type ValidationRule&lt;T&gt; = {',
+  '  validate: (value: T) =&gt; boolean;',
+  '  message: string;',
+  '};',
+  '',
+  'type FormValidator&lt;T&gt; = {',
+  '  [K in keyof T]?: ValidationRule&lt;T[K]&gt;[];',
+  '};',
+  '',
+  'type ValidationErrors&lt;T&gt; = {',
+  '  [K in keyof T]?: string[];',
+  '};',
+  '',
+  'function validateForm&lt;T extends Record&lt;string, unknown&gt;&gt;(',
+  '  data: T,',
+  '  validators: FormValidator&lt;T&gt;',
+  '): { valid: boolean; errors: ValidationErrors&lt;T&gt; } {',
+  '  const errors: ValidationErrors&lt;T&gt; = {};',
+  '  let valid = true;',
+  '',
+  '  for (const key in validators) {',
+  '    const rules = validators[key];',
+  '    if (!rules) continue;',
+  '',
+  '    const fieldErrors: string[] = [];',
+  '    for (const rule of rules) {',
+  '      if (!rule.validate(data[key] as any)) {',
+  '        fieldErrors.push(rule.message);',
+  '        valid = false;',
+  '      }',
+  '    }',
+  '',
+  '    if (fieldErrors.length &gt; 0) {',
+  '      errors[key] = fieldErrors;',
+  '    }',
+  '  }',
+  '',
+  '  return { valid, errors };',
+  '}',
+  '',
+  '// Usage',
+  'interface SignupForm {',
+  '  username: string;',
+  '  email: string;',
+  '  age: number;',
+  '}',
+  '',
+  'const signupValidators: FormValidator&lt;SignupForm&gt; = {',
+  '  username: [',
+  '    { validate: (v) =&gt; v.length &gt;= 3, message: "Min 3 characters" },',
+  '    { validate: (v) =&gt; /^[a-zA-Z0-9_]+$/.test(v), message: "Alphanumeric only" },',
+  '  ],',
+  '  email: [',
+  '    { validate: (v) =&gt; v.includes("@"), message: "Must contain @" },',
+  '  ],',
+  '  age: [',
+  '    { validate: (v) =&gt; v &gt;= 18, message: "Must be 18 or older" },',
+  '  ],',
+  '};',
+  '',
+  'const result = validateForm(',
+  '  { username: "ab", email: "invalid", age: 16 },',
+  '  signupValidators',
+  ');',
+  '// result.errors.username = ["Min 3 characters"]',
+  '// result.errors.email = ["Must contain @"]',
+  '// result.errors.age = ["Must be 18 or older"]'
+].join('\n');
+
+const codeBlock22 = [
+  '// Hard to read',
+  'function process&lt;T, U, V&gt;(input: T, transform: (x: T) =&gt; U, format: (x: U) =&gt; V): V { ... }',
+  '',
+  '// Easier to understand',
+  'function process&lt;TInput, TIntermediate, TOutput&gt;(',
+  '  input: TInput,',
+  '  transform: (x: TInput) =&gt; TIntermediate,',
+  '  format: (x: TIntermediate) =&gt; TOutput',
+  '): TOutput { ... }'
+].join('\n');
+
+const codeBlock23 = [
+  '// Too broad — T could be anything',
+  'function processItems&lt;T&gt;(items: T[]): void {',
+  '  items.forEach((item) =&gt; console.log(item.toString()));',
+  '}',
+  '',
+  '// Just right — only requires what we actually use',
+  'function processItems&lt;T extends { toString(): string }&gt;(items: T[]): void {',
+  '  items.forEach((item) =&gt; console.log(item.toString()));',
+  '}'
+].join('\n');
+
+const codeBlock24 = [
+  '// Unnecessary generic — T appears only once',
+  'function greet&lt;T extends string&gt;(name: T): void {',
+  '  console.log(\\`Hello, \\${name}\\`);',
+  '}',
+  '',
+  '// Better — just use the concrete type',
+  'function greet(name: string): void {',
+  '  console.log(\\`Hello, \\${name}\\`);',
+  '}'
+].join('\n');
+
+const codeBlock25 = [
+  '// Prefer interface for generic object shapes',
+  'interface Result&lt;T&gt; {',
+  '  data: T;',
+  '  error: string | null;',
+  '}',
+  '',
+  '// Use type alias for unions, intersections, and computed types',
+  'type Either&lt;L, R&gt; = { tag: "left"; value: L } | { tag: "right"; value: R };'
+].join('\n');
+
+const codeBlock26 = [
+  '// This does NOT work — types are erased at runtime',
+  'function createInstance&lt;T&gt;(): T {',
+  "  return new T(); // Error: 'T' only refers to a type, but is used as a value",
+  '}',
+  '',
+  '// Solution: pass the constructor as a parameter',
+  'function createInstance&lt;T&gt;(ctor: new () =&gt; T): T {',
+  '  return new ctor();',
+  '}',
+  '',
+  'class MyClass {',
+  '  value = 42;',
+  '}',
+  '',
+  'const instance = createInstance(MyClass); // type is MyClass'
+].join('\n');
+
+const codeBlock27 = [
+  '// Too complex',
+  'type Query&lt;T, K, F, S, P&gt; = ...',
+  '',
+  '// Better: compose smaller types',
+  'type FilterConfig&lt;T&gt; = { field: keyof T; value: T[keyof T] };',
+  'type SortConfig&lt;T&gt; = { field: keyof T; direction: "asc" | "desc" };',
+  'type QueryConfig&lt;T&gt; = {',
+  '  filters: FilterConfig&lt;T&gt;[];',
+  '  sort: SortConfig&lt;T&gt;;',
+  '  page: number;',
+  '  limit: number;',
+  '};'
+].join('\n');
+
+const codeBlock28 = [
+  '// This does not work as expected',
+  'function isString&lt;T&gt;(value: T): value is T &amp; string {',
+  '  return typeof value === "string";',
+  '}',
+  '',
+  '// TypeScript cannot narrow generic types easily in some contexts.',
+  '// When in doubt, use explicit type guards outside of generic functions.'
+].join('\n');
+
+const codeBlock29 = [
+  'interface ListProps&lt;T&gt; {',
+  '  items: T[];',
+  '  renderItem: (item: T, index: number) =&gt; React.ReactNode;',
+  '  keyExtractor: (item: T) =&gt; string;',
+  '  emptyMessage?: string;',
+  '}',
+  '',
+  'function List&lt;T&gt;({ items, renderItem, keyExtractor, emptyMessage }: ListProps&lt;T&gt;) {',
+  '  if (items.length === 0) {',
+  '    return &lt;p&gt;{emptyMessage ?? "No items"}&lt;/p&gt;;',
+  '  }',
+  '',
+  '  return (',
+  '    &lt;ul&gt;',
+  '      {items.map((item, i) =&gt; (',
+  '        &lt;li key={keyExtractor(item)}&gt;{renderItem(item, i)}&lt;/li&gt;',
+  '      ))}',
+  '    &lt;/ul&gt;',
+  '  );',
+  '}',
+  '',
+  '// Usage: T is inferred as User',
+  '&lt;List',
+  '  items={users}',
+  '  renderItem={(user) =&gt; &lt;span&gt;{user.name}&lt;/span&gt;}',
+  '  keyExtractor={(user) =&gt; user.id}',
+  '/&gt;'
+].join('\n');
+---
+<pre><code set:html=&#123;codeBlock&#125;></code></pre><pre><code set:html=&#123;codeBlock2&#125;></code></pre><pre><code set:html=&#123;codeBlock3&#125;></code></pre><pre><code set:html=&#123;codeBlock4&#125;></code></pre><pre><code set:html=&#123;codeBlock5&#125;></code></pre><pre><code set:html=&#123;codeBlock6&#125;></code></pre><pre><code set:html=&#123;codeBlock7&#125;></code></pre><pre><code set:html=&#123;codeBlock8&#125;></code></pre><pre><code set:html=&#123;codeBlock9&#125;></code></pre><pre><code set:html=&#123;codeBlock10&#125;></code></pre><pre><code set:html=&#123;codeBlock11&#125;></code></pre><pre><code set:html=&#123;codeBlock12&#125;></code></pre><pre><code set:html=&#123;codeBlock13&#125;></code></pre><pre><code set:html=&#123;codeBlock14&#125;></code></pre><pre><code set:html=&#123;codeBlock15&#125;></code></pre><pre><code set:html=&#123;codeBlock16&#125;></code></pre><pre><code set:html=&#123;codeBlock17&#125;></code></pre><pre><code set:html=&#123;codeBlock18&#125;></code></pre><pre><code set:html=&#123;codeBlock19&#125;></code></pre><pre><code set:html=&#123;codeBlock20&#125;></code></pre><pre><code set:html=&#123;codeBlock21&#125;></code></pre><pre><code set:html=&#123;codeBlock22&#125;></code></pre><pre><code set:html=&#123;codeBlock23&#125;></code></pre><pre><code set:html=&#123;codeBlock24&#125;></code></pre><pre><code set:html=&#123;codeBlock25&#125;></code></pre><pre><code set:html=&#123;codeBlock26&#125;></code></pre><pre><code set:html=&#123;codeBlock27&#125;></code></pre><pre><code set:html=&#123;codeBlock28&#125;></code></pre><pre><code set:html=&#123;codeBlock29&#125;></code></pre>
+<BlogLayout
+  title="TypeScript Generics Explained with Practical Examples"
+  description="Learn TypeScript generics from basics to advanced patterns. Understand generic functions, interfaces, classes, constraints, and real-world use cases with clear code examples."
+  slug="typescript-generics-explained-with-examples"
+  publishDate="2026-03-20"
+  readTime="20 min read"
+>
+  <Fragment set:html={content} />
+</BlogLayout>

@@ -38,7 +38,7 @@ $    End of string (or line with m flag)
 \\    Escape character
 ()   Grouping
 []   Character class
-{}   Quantifier</code></pre>
+&#123;&#125;   Quantifier</code></pre>
 
 <h3>Character Classes</h3>
 
@@ -78,9 +78,9 @@ $    End of string (or line with m flag)
 <pre><code>*       Zero or more           a* matches "", "a", "aaa"
 +       One or more            a+ matches "a", "aaa" but not ""
 ?       Zero or one            a? matches "" or "a"
-{3}     Exactly 3              a{3} matches "aaa"
-{2,5}   Between 2 and 5        a{2,5} matches "aa" to "aaaaa"
-{2,}    2 or more              a{2,} matches "aa", "aaa", "aaaa"...</code></pre>
+&#123;3&#125;     Exactly 3              a&#123;3&#125; matches "aaa"
+&#123;2,5&#125;   Between 2 and 5        a&#123;2,5&#125; matches "aa" to "aaaaa"
+&#123;2,&#125;    2 or more              a&#123;2,&#125; matches "aa", "aaa", "aaaa"...</code></pre>
 
 <h3>Greedy vs Lazy Quantifiers</h3>
 
@@ -115,15 +115,15 @@ $    End of string (or line with m flag)
   To extract year, month, and day from a date string like <code>2026-03-19</code>:
 </p>
 
-<pre><code>(?&lt;year&gt;\\d{4})-(?&lt;month&gt;\\d{2})-(?&lt;day&gt;\\d{2})</code></pre>
+<pre><code>(?&lt;year&gt;\\d&#123;4&#125;)-(?&lt;month&gt;\\d&#123;2&#125;)-(?&lt;day&gt;\\d&#123;2&#125;)</code></pre>
 
 <p>
   In JavaScript:
 </p>
 
-<pre><code>const match = '2026-03-19'.match(/(?&lt;year&gt;\\d{4})-(?&lt;month&gt;\\d{2})-(?&lt;day&gt;\\d{2})/);
+<pre><code>const match = '2026-03-19'.match(/(?&lt;year&gt;\\d&#123;4&#125;)-(?&lt;month&gt;\\d&#123;2&#125;)-(?&lt;day&gt;\\d&#123;2&#125;)/);
 console.log(match.groups);
-// { year: '2026', month: '03', day: '19' }</code></pre>
+// &#123; year: '2026', month: '03', day: '19' &#125;</code></pre>
 
 <p>
   Try this pattern in our <a href="/tools/regex-tester">Regex Tester</a> to see the capture groups highlighted in real time.
@@ -147,13 +147,13 @@ $       End of string
 </p>
 
 <pre><code># Password must have: 8+ chars, uppercase, lowercase, digit
-^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d).{8,}$
+^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d).&#123;8,&#125;$
 
 # Match a number NOT followed by "px"
 \\d+(?!px)
 
 # Match a dollar amount (number preceded by $)
-(?&lt;=\\$)\\d+(\\.\\d{2})?</code></pre>
+(?&lt;=\\$)\\d+(\\.\\d&#123;2&#125;)?</code></pre>
 
 <p>
   Password validation is one of the most common uses of lookaheads. You can test complex password patterns with our <a href="/tools/password-generator">Password Generator</a> to verify your regex catches the right cases.
@@ -184,7 +184,7 @@ y    Sticky — match from lastIndex position only</code></pre>
 
 <h3>Email Validation</h3>
 
-<pre><code>^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$</code></pre>
+<pre><code>^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]&#123;2,&#125;$</code></pre>
 
 <p>
   This covers the vast majority of valid email addresses. For RFC 5322 full compliance you'd need a much more complex pattern, but this works for 99.9% of real-world use cases.
@@ -200,11 +200,11 @@ y    Sticky — match from lastIndex position only</code></pre>
 
 <h3>IPv4 Address</h3>
 
-<pre><code>^(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)$</code></pre>
+<pre><code>^(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.)&#123;3&#125;(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)$</code></pre>
 
 <h3>Phone Number (International)</h3>
 
-<pre><code>^\\+?[1-9]\\d{1,14}$</code></pre>
+<pre><code>^\\+?[1-9]\\d&#123;1,14&#125;$</code></pre>
 
 <p>
   This follows the E.164 standard — up to 15 digits with optional leading <code>+</code>.
@@ -220,7 +220,7 @@ y    Sticky — match from lastIndex position only</code></pre>
 
 <h3>CSS Color (HEX)</h3>
 
-<pre><code>^#(?:[0-9a-fA-F]{3}){1,2}$</code></pre>
+<pre><code>^#(?:[0-9a-fA-F]&#123;3&#125;)&#123;1,2&#125;$</code></pre>
 
 <p>
   Matches both 3-digit (<code>#fff</code>) and 6-digit (<code>#ffffff</code>) hex colors. For color format conversion, use our <a href="/tools/color-converter">Color Converter</a> tool.
@@ -236,7 +236,7 @@ y    Sticky — match from lastIndex position only</code></pre>
 
 <h3>UUID v4</h3>
 
-<pre><code>^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$</code></pre>
+<pre><code>^[0-9a-f]&#123;8&#125;-[0-9a-f]&#123;4&#125;-4[0-9a-f]&#123;3&#125;-[89ab][0-9a-f]&#123;3&#125;-[0-9a-f]&#123;12&#125;$</code></pre>
 
 <p>
   Specifically validates UUID version 4 format. Need to generate UUIDs? Try our <a href="/tools/uuid-generator">UUID Generator</a>.
@@ -277,7 +277,7 @@ y    Sticky — match from lastIndex position only</code></pre>
 
 <h3>Add Thousands Separators</h3>
 
-<pre><code>// Pattern: (\\d)(?=(\\d{3})+$)
+<pre><code>// Pattern: (\\d)(?=(\\d&#123;3&#125;)+$)
 // Replace: $1,
 
 "1234567" → "1,234,567"</code></pre>
@@ -295,8 +295,8 @@ const matches = 'abc 123 def 456'.match(re);
 const re2 = new RegExp('\\\\d+', 'g');
 
 // Named groups
-const dateRe = /(?&lt;year&gt;\\d{4})-(?&lt;month&gt;\\d{2})/;
-const { year, month } = '2026-03'.match(dateRe).groups;</code></pre>
+const dateRe = /(?&lt;year&gt;\\d&#123;4&#125;)-(?&lt;month&gt;\\d&#123;2&#125;)/;
+const &#123; year, month &#125; = '2026-03'.match(dateRe).groups;</code></pre>
 
 <h3>Python</h3>
 
@@ -307,7 +307,7 @@ matches = re.findall(r'\\d+', 'abc 123 def 456')
 # ['123', '456']
 
 # Named groups
-m = re.match(r'(?P&lt;year&gt;\\d{4})-(?P&lt;month&gt;\\d{2})', '2026-03')
+m = re.match(r'(?P&lt;year&gt;\\d&#123;4&#125;)-(?P&lt;month&gt;\\d&#123;2&#125;)', '2026-03')
 print(m.group('year'))  # '2026'
 
 # Compile for reuse
@@ -352,8 +352,8 @@ matches := re.FindAllString("abc 123 def 456", -1)
 .   any char        *    0 or more        ()    capture
 \\d  digit           +    1 or more        (?:)  non-capture
 \\w  word char       ?    0 or 1           (?=)  lookahead
-\\s  whitespace      {n}  exactly n        (?!)  neg lookahead
-\\b  word boundary   {n,m} n to m          (?&lt;=) lookbehind
+\\s  whitespace      &#123;n&#125;  exactly n        (?!)  neg lookahead
+\\b  word boundary   &#123;n,m&#125; n to m          (?&lt;=) lookbehind
 ^   start           *?   lazy             (?&lt;!) neg lookbehind
 $   end
 
@@ -363,11 +363,122 @@ FLAGS: g(lobal) i(case) m(ultiline) s(dotall) u(nicode)</code></pre>
   Bookmark this page for quick reference, and use our <a href="/tools/regex-tester">Regex Tester</a> to experiment with any pattern in real time. Happy pattern matching!
 </p>
 `;
----
 
-<BlogLayout
-  title="Regex Cheat Sheet with Examples: The Complete 2026 Reference"
-  description="Master regular expressions with this comprehensive cheat sheet. Covers syntax, quantifiers, groups, lookaheads, and real-world examples for JavaScript, Python, and more."
+const codeBlock = [
+  '.    Any character except newline',
+  '^    Start of string (or line with m flag)',
+  '$    End of string (or line with m flag)',
+  '*    Zero or more of the preceding element',
+  '+    One or more of the preceding element',
+  '?    Zero or one of the preceding element',
+  '|    Alternation (OR)',
+  '\\\\    Escape character',
+  '()   Grouping',
+  '[]   Character class',
+  '{}   Quantifier'
+].join('\n');
+
+const codeBlock2 = [
+  '*       Zero or more           a* matches "", "a", "aaa"',
+  '+       One or more            a+ matches "a", "aaa" but not ""',
+  '?       Zero or one            a? matches "" or "a"',
+  '{3}     Exactly 3              a{3} matches "aaa"',
+  '{2,5}   Between 2 and 5        a{2,5} matches "aa" to "aaaaa"',
+  '{2,}    2 or more              a{2,} matches "aa", "aaa", "aaaa"...'
+].join('\n');
+
+const codeBlock3 = [
+  '(?&lt;year&gt;\\\\d{4})-(?&lt;month&gt;\\\\d{2})-(?&lt;day&gt;\\\\d{2})'
+].join('\n');
+
+const codeBlock4 = [
+  "const match = '2026-03-19'.match(/(?&lt;year&gt;\\\\d{4})-(?&lt;month&gt;\\\\d{2})-(?&lt;day&gt;\\\\d{2})/);",
+  'console.log(match.groups);',
+  "// { year: '2026', month: '03', day: '19' }"
+].join('\n');
+
+const codeBlock5 = [
+  '# Password must have: 8+ chars, uppercase, lowercase, digit',
+  '^(?=.*[A-Z])(?=.*[a-z])(?=.*\\\\d).{8,}$',
+  '',
+  '# Match a number NOT followed by "px"',
+  '\\\\d+(?!px)',
+  '',
+  '# Match a dollar amount (number preceded by $)',
+  '(?&lt;=\\\\$)\\\\d+(\\\\.\\\\d{2})?'
+].join('\n');
+
+const codeBlock6 = [
+  '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}$'
+].join('\n');
+
+const codeBlock7 = [
+  '^(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)$'
+].join('\n');
+
+const codeBlock8 = [
+  '^\\\\+?[1-9]\\\\d{1,14}$'
+].join('\n');
+
+const codeBlock9 = [
+  '^#(?:[0-9a-fA-F]{3}){1,2}$'
+].join('\n');
+
+const codeBlock10 = [
+  '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+].join('\n');
+
+const codeBlock11 = [
+  '// Pattern: (\\\\d)(?=(\\\\d{3})+$)',
+  '// Replace: $1,',
+  '',
+  '"1234567" → "1,234,567"'
+].join('\n');
+
+const codeBlock12 = [
+  '// Literal syntax',
+  'const re = /\\\\d+/g;',
+  "const matches = 'abc 123 def 456'.match(re);",
+  "// ['123', '456']",
+  '',
+  '// Constructor syntax',
+  "const re2 = new RegExp('\\\\\\\\d+', 'g');",
+  '',
+  '// Named groups',
+  'const dateRe = /(?&lt;year&gt;\\\\d{4})-(?&lt;month&gt;\\\\d{2})/;',
+  "const { year, month } = '2026-03'.match(dateRe).groups;"
+].join('\n');
+
+const codeBlock13 = [
+  'import re',
+  '',
+  '# Find all matches',
+  "matches = re.findall(r'\\\\d+', 'abc 123 def 456')",
+  "# ['123', '456']",
+  '',
+  '# Named groups',
+  "m = re.match(r'(?P&lt;year&gt;\\\\d{4})-(?P&lt;month&gt;\\\\d{2})', '2026-03')",
+  "print(m.group('year'))  # '2026'",
+  '',
+  '# Compile for reuse',
+  "pattern = re.compile(r'\\\\b\\\\w+@\\\\w+\\\\.\\\\w+\\\\b')",
+  'emails = pattern.findall(text)'
+].join('\n');
+
+const codeBlock14 = [
+  'BASICS              QUANTIFIERS           GROUPS',
+  '.   any char        *    0 or more        ()    capture',
+  '\\\\d  digit           +    1 or more        (?:)  non-capture',
+  '\\\\w  word char       ?    0 or 1           (?=)  lookahead',
+  '\\\\s  whitespace      {n}  exactly n        (?!)  neg lookahead',
+  '\\\\b  word boundary   {n,m} n to m          (?&lt;=) lookbehind',
+  '^   start           *?   lazy             (?&lt;!) neg lookbehind',
+  '$   end',
+  '',
+  'FLAGS: g(lobal) i(case) m(ultiline) s(dotall) u(nicode)'
+].join('\n');
+---
+<pre><code set:html=&#123;codeBlock&#125;></code></pre><pre><code set:html=&#123;codeBlock2&#125;></code></pre><pre><code set:html=&#123;codeBlock3&#125;></code></pre><pre><code set:html=&#123;codeBlock4&#125;></code></pre><pre><code set:html=&#123;codeBlock5&#125;></code></pre><pre><code set:html=&#123;codeBlock6&#125;></code></pre><pre><code set:html=&#123;codeBlock7&#125;></code></pre><pre><code set:html=&#123;codeBlock8&#125;></code></pre><pre><code set:html=&#123;codeBlock9&#125;></code></pre><pre><code set:html=&#123;codeBlock10&#125;></code></pre><pre><code set:html=&#123;codeBlock11&#125;></code></pre><pre><code set:html=&#123;codeBlock12&#125;></code></pre><pre><code set:html=&#123;codeBlock13&#125;></code></pre><pre><code set:html=&#123;codeBlock14&#125;></code></pre>and real-world examples for JavaScript, Python, and more."
   slug="regex-cheat-sheet"
   publishDate="2026-03-19"
   readTime="14 min read"
