@@ -49,6 +49,8 @@ const pages = [
   { url: '/tools/qr-code-generator', changefreq: 'monthly', priority: '0.8' },
   { url: '/tools/svg-to-png', changefreq: 'monthly', priority: '0.8' },
   // Pages
+  { url: '/tools', changefreq: 'weekly', priority: '0.9' },
+  { url: '/api-docs', changefreq: 'monthly', priority: '0.6' },
   { url: '/pricing', changefreq: 'monthly', priority: '0.6' },
   { url: '/about', changefreq: 'monthly', priority: '0.5' },
   { url: '/newsletter', changefreq: 'monthly', priority: '0.5' },
@@ -90,6 +92,7 @@ const pages = [
   { url: '/blog/sql-formatting-best-practices', changefreq: 'monthly', priority: '0.7' },
   { url: '/blog/structured-income-research-template-ai-products', changefreq: 'monthly', priority: '0.7' },
   { url: '/blog/uuid-vs-ulid', changefreq: 'monthly', priority: '0.7' },
+  { url: '/blog/best-cloud-developer-services-2026', changefreq: 'monthly', priority: '0.7' },
 ];
 
 const today = new Date().toISOString().split('T')[0];
