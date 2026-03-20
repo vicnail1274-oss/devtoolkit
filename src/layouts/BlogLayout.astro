@@ -1,5 +1,7 @@
 ---
 import BlogRelatedTools from '../components/BlogRelatedTools.astro';
+import NewsletterBanner from '../components/NewsletterBanner.astro';
+import EmailPopup from '../components/EmailPopup';
 
 export interface Props {
   title: string;
@@ -244,6 +246,9 @@ const canonicalURL = `https://devplaybook.cc/blog/${slug}`;
         </div>
       </div>
     </footer>
+
+    <NewsletterBanner />
+    <EmailPopup client:idle />
 
     <!-- Cloudflare Web Analytics (privacy-friendly, no cookies) -->
     <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "CLOUDFLARE_ANALYTICS_TOKEN"}'></script>

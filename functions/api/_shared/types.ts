@@ -1,6 +1,7 @@
 // Cloudflare Pages Functions environment bindings
 export interface Env {
   DB: D1Database;
+  NEWSLETTER_KV: KVNamespace;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   STRIPE_SECRET_KEY: string;

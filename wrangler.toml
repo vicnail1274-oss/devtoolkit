@@ -11,6 +11,13 @@ pages_build_output_dir = "./dist"
 # database_name = "devtoolkit-db"
 # database_id = "TODO_REPLACE_WITH_D1_DATABASE_ID"
 
+# KV Namespace for newsletter subscribers
+# Create with: wrangler kv namespace create NEWSLETTER_KV
+# Then fill in the id below
+[[kv_namespaces]]
+binding = "NEWSLETTER_KV"
+id = "TODO_REPLACE_WITH_NEWSLETTER_KV_ID"
+
 # KV Namespace for analytics tracking
 # Create with: wrangler kv namespace create ANALYTICS
 # Then fill in the id below

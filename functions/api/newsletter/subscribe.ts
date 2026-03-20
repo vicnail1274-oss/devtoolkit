@@ -22,22 +22,24 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       });
     }
 
-    // Create table if not exists (idempotent)
-    await context.env.DB.prepare(`
-      CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE NOT NULL,
-        subscribed_at TEXT DEFAULT (datetime('now')),
-        unsubscribed_at TEXT DEFAULT NULL
-      )
-    `).run();
+    // Store in KV with email as key, metadata as value
+    const existing = await context.env.NEWSLETTER_KV.get(email);
+    const now = new Date().toISOString();
 
-    // Upsert subscriber
-    await context.env.DB.prepare(`
-      INSERT INTO newsletter_subscribers (email)
-      VALUES (?)
-      ON CONFLICT(email) DO UPDATE SET unsubscribed_at = NULL
-    `).bind(email).run();
+    if (existing) {
+      // Re-subscribe: update record, clear unsubscribed flag
+      const data = JSON.parse(existing);
+      data.unsubscribed_at = null;
+      data.resubscribed_at = now;
+      await context.env.NEWSLETTER_KV.put(email, JSON.stringify(data));
+    } else {
+      // New subscriber
+      await context.env.NEWSLETTER_KV.put(email, JSON.stringify({
+        email,
+        subscribed_at: now,
+        unsubscribed_at: null,
+      }));
+    }
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
