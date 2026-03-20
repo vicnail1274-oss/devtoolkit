@@ -1,0 +1,177 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="How to Encode and Decode Base64 in JavaScript"
+  description="Learn how to encode Base64 in JavaScript using btoa/atob, Buffer in Node.js, Base64URL encoding, handling binary data, and Unicode pitfalls."
+  slug="how-to-encode-base64-javascript"
+  publishDate="2026-03-21"
+  readTime="7 min read"
+>
+
+<p>
+  The need to encode Base64 in JavaScript comes up constantly — embedding images in HTML, transmitting binary data over JSON APIs, handling JWTs, or storing binary blobs in text-based formats. JavaScript gives you several ways to do this depending on your environment (browser vs. Node.js) and data type (text vs. binary). This guide covers every method, explains the Unicode pitfall that trips up most developers, and shows when to use Base64URL over standard Base64.
+</p>
+
+<h2>Browser: btoa() and atob()</h2>
+
+<p>All modern browsers provide the built-in <code>btoa()</code> (binary to ASCII) and <code>atob()</code> (ASCII to binary) functions:</p>
+
+<pre><code>// Encode a string to Base64
+const encoded = btoa('Hello, World!');
+console.log(encoded); // "SGVsbG8sIFdvcmxkIQ=="
+
+// Decode Base64 back to string
+const decoded = atob('SGVsbG8sIFdvcmxkIQ==');
+console.log(decoded); // "Hello, World!"</code></pre>
+
+<p>Simple enough — but there is a critical catch.</p>
+
+<h2>The Unicode Pitfall</h2>
+
+<p>
+  <code>btoa()</code> only handles strings where every character has a code point of 255 or lower (Latin-1 / ISO 8859-1). Pass a string with emoji, Chinese characters, or any other non-Latin character and you get a <code>DOMException: The string to be encoded contains characters outside of the Latin1 range</code>:
+</p>
+
+<pre><code>btoa('Hello 🌍'); // ❌ DOMException!</code></pre>
+
+<p>The correct fix is to encode the string as UTF-8 bytes first:</p>
+
+<pre><code>// Encode Unicode string to Base64 (browser)
+function encodeBase64(str) {
+  return btoa(
+    encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+      String.fromCharCode(parseInt(p1, 16))
+    )
+  );
+}
+
+// Decode Base64 back to Unicode string (browser)
+function decodeBase64(b64) {
+  return decodeURIComponent(
+    atob(b64)
+      .split('')
+      .map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
+      .join('')
+  );
+}
+
+console.log(encodeBase64('Hello 🌍')); // "SGVsbG8g8J+MjQ=="
+console.log(decodeBase64('SGVsbG8g8J+MjQ==')); // "Hello 🌍"</code></pre>
+
+<p>Modern browsers also support a cleaner approach using <code>TextEncoder</code>:</p>
+
+<pre><code>function encodeBase64Unicode(str) {
+  const bytes = new TextEncoder().encode(str);
+  const binary = String.fromCharCode(...bytes);
+  return btoa(binary);
+}
+
+function decodeBase64Unicode(b64) {
+  const binary = atob(b64);
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}</code></pre>
+
+<h2>Node.js: Buffer</h2>
+
+<p>In Node.js, the <code>Buffer</code> class is the idiomatic way to handle Base64. It handles Unicode correctly out of the box:</p>
+
+<pre><code>// Encode string to Base64
+const encoded = Buffer.from('Hello 🌍', 'utf8').toString('base64');
+console.log(encoded); // "SGVsbG8g8J+MjQ=="
+
+// Decode Base64 to string
+const decoded = Buffer.from('SGVsbG8g8J+MjQ==', 'base64').toString('utf8');
+console.log(decoded); // "Hello 🌍"</code></pre>
+
+<p>You can also work with raw binary data directly:</p>
+
+<pre><code>// Encode a file to Base64 in Node.js
+const fs = require('fs');
+const fileBuffer = fs.readFileSync('image.png');
+const base64Image = fileBuffer.toString('base64');
+
+// Construct a data URI
+const dataUri = `data:image/png;base64,${base64Image}`;
+
+// Decode Base64 back to binary file
+const imageBuffer = Buffer.from(base64Image, 'base64');
+fs.writeFileSync('image-copy.png', imageBuffer);</code></pre>
+
+<h2>Base64URL Encoding</h2>
+
+<p>
+  Standard Base64 uses <code>+</code>, <code>/</code>, and <code>=</code> characters. These are problematic in URLs and HTTP headers. Base64URL replaces <code>+</code> with <code>-</code>, <code>/</code> with <code>_</code>, and removes padding <code>=</code> signs. This is the format used in JWTs, OAuth tokens, and URL-safe file names.
+</p>
+
+<pre><code>// Standard Base64 to Base64URL
+function toBase64URL(base64) {
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// Base64URL back to standard Base64
+function fromBase64URL(base64url) {
+  const padded = base64url + '==='.slice((base64url.length + 3) % 4);
+  return padded.replace(/-/g, '+').replace(/_/g, '/');
+}
+
+// Node.js shortcut
+const encoded = Buffer.from('Hello!').toString('base64url');
+const decoded = Buffer.from(encoded, 'base64url').toString('utf8');</code></pre>
+
+<h2>Encoding Binary Data (Images, Files)</h2>
+
+<pre><code>// Browser: Encode a File object to Base64
+async function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result); // includes data URI prefix
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Or get just the Base64 data without the prefix
+async function fileToBase64Data(file) {
+  const dataUri = await fileToBase64(file);
+  return dataUri.split(',')[1];
+}
+
+// Usage with an input element
+document.querySelector('input[type=file]').addEventListener('change', async e => {
+  const base64 = await fileToBase64Data(e.target.files[0]);
+  console.log(base64.slice(0, 50) + '...');
+});</code></pre>
+
+<h2>Handling Large Strings with btoa</h2>
+
+<p>Passing a large <code>Uint8Array</code> directly to <code>String.fromCharCode()</code> via spread can overflow the call stack. Use a loop for large arrays:</p>
+
+<pre><code>function uint8ArrayToBase64(bytes) {
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}</code></pre>
+
+<h2>Quick Testing</h2>
+
+<p>For quick encoding and decoding during development, the <a href="/tools/base64">Base64 encoder/decoder tool</a> handles text and file inputs in the browser instantly. For a deeper dive into how Base64 works internally, see <a href="/blog/base64-encoding-explained">Base64 encoding explained</a>.</p>
+
+<h2>Summary</h2>
+
+<ul>
+  <li>Use <code>Buffer.from(str, 'utf8').toString('base64')</code> in Node.js — it handles Unicode correctly</li>
+  <li>Use <code>btoa()</code>/<code>atob()</code> in browsers only for pure ASCII/Latin-1 strings</li>
+  <li>Use <code>TextEncoder</code> + <code>btoa()</code> for Unicode strings in modern browsers</li>
+  <li>Use Base64URL (replace <code>+/=</code>) for tokens, JWTs, and URL parameters</li>
+  <li>Use chunked <code>String.fromCharCode</code> for large binary arrays to avoid stack overflows</li>
+</ul>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+</BlogLayout>

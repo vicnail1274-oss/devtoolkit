@@ -1,0 +1,253 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeIndent = [
+  '# Correct — 2-space indentation',
+  'server:',
+  '  host: localhost',
+  '  port: 8080',
+  '  database:',
+  '    name: myapp',
+  '    pool: 5',
+  '',
+  '# Wrong — mixing tabs and spaces (parse error)',
+  'server:',
+  '\thost: localhost   # tab character — YAML parsers reject this',
+  '  port: 8080        # space — inconsistent'
+].join('\n');
+
+const codeStrings = [
+  '# All four are equivalent strings',
+  'name: Alice',
+  'name: "Alice"',
+  "name: 'Alice'",
+  'name: Alice   # unquoted works for simple strings',
+  '',
+  '# Quote when the value looks like another type',
+  'zipcode: "01234"       # without quotes, parsed as integer 1234',
+  'enabled: "true"        # without quotes, parsed as boolean true',
+  'version: "1.0"         # without quotes, parsed as float 1.0',
+  'empty: ""              # explicit empty string',
+  '',
+  '# Quote when value contains special characters',
+  'message: "Hello: World"   # colon in value needs quoting',
+  'path: "C:\\\\Users\\\\Alice"  # backslashes in double-quoted string'
+].join('\n');
+
+const codeBoolNull = [
+  '# Boolean values (YAML 1.1 — common in older parsers)',
+  'active: true',
+  'active: false',
+  'active: yes    # also true in YAML 1.1 — AVOID for clarity',
+  'active: no     # also false in YAML 1.1 — AVOID',
+  'active: on     # also true in YAML 1.1 — AVOID',
+  'active: off    # also false in YAML 1.1 — AVOID',
+  '',
+  '# Safe practice: only use true/false for booleans',
+  '',
+  '# Null values',
+  'value: null',
+  'value: ~       # also null — AVOID for readability',
+  'value:         # empty value is also null',
+  '',
+  '# Explicit null is clearer',
+  'middleName: null'
+].join('\n');
+
+const codeMultiline = [
+  '# Literal block scalar (|) — preserves newlines',
+  'script: |',
+  '  #!/bin/bash',
+  '  echo "Starting deployment"',
+  '  npm install',
+  '  npm run build',
+  '',
+  '# Folded block scalar (>) — folds newlines into spaces',
+  'description: >',
+  '  This is a long description that wraps',
+  '  across multiple lines in the source file',
+  '  but is folded into a single line when parsed.',
+  '',
+  '# Result: "This is a long description that wraps across multiple lines..."',
+  '',
+  '# Block scalar modifiers',
+  'content: |-   # literal + strip trailing newline',
+  '  Line one',
+  '  Line two',
+  '',
+  'content: |+   # literal + keep all trailing newlines',
+  '  Line one',
+  '  Line two'
+].join('\n');
+
+const codeAnchors = [
+  '# Define an anchor with &',
+  'defaults: &defaults',
+  '  timeout: 30',
+  '  retries: 3',
+  '  log_level: info',
+  '',
+  '# Merge with <<: *',
+  'production:',
+  '  <<: *defaults',
+  '  host: prod.example.com',
+  '  log_level: warn    # override one value',
+  '',
+  'staging:',
+  '  <<: *defaults',
+  '  host: staging.example.com',
+  '',
+  '# Parsed result for production:',
+  '# { timeout: 30, retries: 3, log_level: "warn", host: "prod.example.com" }'
+].join('\n');
+
+const codeLint = [
+  '# Install yamllint (Python)',
+  'pip install yamllint',
+  '',
+  '# Lint a file',
+  'yamllint config.yaml',
+  '',
+  '# Lint with custom rules (.yamllint.yml)',
+  'extends: default',
+  'rules:',
+  '  line-length:',
+  '    max: 120',
+  '  indentation:',
+  '    spaces: 2',
+  '    indent-sequences: true',
+  '  truthy:',
+  '    allowed-values: [\'true\', \'false\']',
+  '    check-keys: true',
+  '',
+  '# Run in CI',
+  'yamllint -c .yamllint.yml **/*.yaml'
+].join('\n');
+---
+
+<BlogLayout
+  title="YAML Formatting Best Practices for Developers in 2026"
+  description="Master YAML formatting best practices: indentation rules, string and boolean gotchas, multi-line strings, anchors, and linting tools for clean config files."
+  slug="yaml-formatting-best-practices"
+  publishDate="2026-03-21"
+  readTime="9 min read"
+>
+
+<p>
+  YAML is everywhere in modern development — Kubernetes manifests, GitHub Actions workflows, Docker Compose files, Ansible playbooks, and application config. Despite its "human-friendly" reputation, YAML is full of subtle traps that cause hard-to-debug parse errors and unexpected behavior. Following solid <strong>YAML formatting best practices</strong> from the start saves hours of frustration. This guide covers everything from indentation rules to anchors, with a focus on the gotchas that trip up even experienced developers.
+</p>
+
+<p>
+  If you need to validate or convert a YAML file right now, use our <a href="/tools/yaml-to-json">YAML to JSON Converter</a> — paste your YAML and instantly see if it parses correctly.
+</p>
+
+<h2>Indentation: The Foundation of Valid YAML</h2>
+
+<p>
+  YAML uses indentation to define structure, similar to Python. The rules are strict:
+</p>
+
+<ul>
+  <li><strong>Use spaces only — never tabs.</strong> YAML parsers treat tab characters as errors. Most editors can be configured to insert spaces when you press Tab.</li>
+  <li><strong>Be consistent within a file.</strong> While YAML allows any number of spaces per level (1, 2, 4, etc.), pick one and stick with it. Two spaces is the community standard.</li>
+  <li><strong>Child keys must be indented further than parent keys.</strong> The exact number doesn't matter as long as it's consistent within a block.</li>
+</ul>
+
+<pre><code>{codeIndent}</code></pre>
+
+<p>
+  Configure your editor: in VS Code, set <code>"editor.insertSpaces": true</code> and <code>"editor.tabSize": 2</code> in your workspace settings. The YAML extension will also highlight indentation errors in real time.
+</p>
+
+<h2>Strings: When to Quote and When Not To</h2>
+
+<p>
+  YAML's automatic type inference is convenient but dangerous. Unquoted values are parsed as strings, booleans, integers, floats, or null depending on their content. The safest rule: <strong>quote values that could be misinterpreted</strong>.
+</p>
+
+<pre><code>{codeStrings}</code></pre>
+
+<p>
+  Use double quotes (<code>"</code>) when you need escape sequences like <code>\n</code>, <code>\t</code>, or Unicode escapes. Use single quotes (<code>'</code>) when the value should be taken literally — single-quoted strings don't process escape sequences. Use no quotes for simple alphanumeric strings that can't be misread.
+</p>
+
+<h2>Booleans and Nulls: The YAML 1.1 Trap</h2>
+
+<p>
+  This is one of the most common sources of bugs in YAML configs. YAML 1.1 (used by many older parsers including PyYAML by default) treats <code>yes</code>, <code>no</code>, <code>on</code>, and <code>off</code> as boolean values. YAML 1.2 (the current spec) only recognizes <code>true</code> and <code>false</code>.
+</p>
+
+<pre><code>{codeBoolNull}</code></pre>
+
+<p>
+  The classic bug: a country code list that contains <code>NO</code> (Norway) or a config key set to <code>on</code>. Always use <code>true</code>/<code>false</code> for booleans, and always quote values that happen to look like these keywords.
+</p>
+
+<h2>Multi-Line Strings: Literal vs. Folded</h2>
+
+<p>
+  YAML provides two block scalar styles for multi-line strings, and choosing the right one matters for readability and correctness:
+</p>
+
+<pre><code>{codeMultiline}</code></pre>
+
+<p>Key differences:</p>
+
+<ul>
+  <li><strong>Literal (<code>|</code>)</strong>: Preserves newlines as-is. Use for shell scripts, SQL queries, or any content where line breaks are meaningful.</li>
+  <li><strong>Folded (<code>&gt;</code>)</strong>: Replaces single newlines with spaces, preserves blank lines as newlines. Use for long prose descriptions that should flow as a single paragraph.</li>
+  <li>The <strong>chomping indicator</strong> (<code>-</code> to strip, <code>+</code> to keep) controls trailing newlines. The default clips to exactly one trailing newline.</li>
+</ul>
+
+<h2>Anchors and Aliases: DRY Config Files</h2>
+
+<p>
+  YAML supports a native reuse mechanism called anchors (<code>&amp;</code>) and aliases (<code>*</code>). Combined with the merge key (<code>&lt;&lt;</code>), this lets you define shared defaults once and extend them per environment — a powerful pattern for multi-environment configs.
+</p>
+
+<pre><code>{codeAnchors}</code></pre>
+
+<p>
+  Anchors are processed by the YAML parser before your application sees the data, so the result is identical to manually duplicating the keys. Use them to eliminate repetition in Docker Compose files, CI matrices, and Kubernetes Helm values.
+</p>
+
+<h2>YAML-Specific Gotchas to Memorize</h2>
+
+<ul>
+  <li><strong>Duplicate keys</strong> — YAML technically allows them but behavior is parser-defined. Most parsers silently keep the last value. Always lint for duplicates.</li>
+  <li><strong>Trailing spaces</strong> — Some parsers are sensitive to trailing whitespace after values. Run a trim on save.</li>
+  <li><strong>Octal integers</strong> — <code>0755</code> is parsed as octal 493, not the integer 755. In YAML 1.2, octal is <code>0o755</code>. Quote file permission strings to be safe.</li>
+  <li><strong>Float ambiguity</strong> — <code>1e2</code> is parsed as float 100.0. If you mean the string "1e2", quote it.</li>
+  <li><strong>Colon in values</strong> — A colon followed by a space (<code>: </code>) is a key-value separator. If your value contains a colon-space sequence, quote the entire value.</li>
+</ul>
+
+<h2>Linting with yamllint and Prettier</h2>
+
+<p>
+  Linting catches formatting issues before they cause runtime failures. Two tools dominate:
+</p>
+
+<pre><code>{codeLint}</code></pre>
+
+<p>
+  For JavaScript/Node.js projects, Prettier with the <code>@prettier/plugin-yaml</code> plugin can auto-format YAML files on save. Add it to your pre-commit hooks via <code>lint-staged</code> so malformed YAML never makes it into the repository.
+</p>
+
+<p>
+  For quick ad-hoc validation, paste your YAML into our <a href="/tools/yaml-to-json">YAML to JSON Converter</a> — if it converts successfully, the YAML is structurally valid.
+</p>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+<h2>Summary</h2>
+
+<ul>
+  <li>Always use spaces (2 per level), never tabs.</li>
+  <li>Quote values that look like booleans, numbers, or nulls but aren't.</li>
+  <li>Use only <code>true</code>/<code>false</code> for booleans to avoid YAML 1.1 / 1.2 differences.</li>
+  <li>Use <code>|</code> for content where newlines matter, <code>&gt;</code> for flowing prose.</li>
+  <li>Use anchors and merge keys (<code>&lt;&lt;</code>) to DRY up multi-environment configs.</li>
+  <li>Lint every YAML file with <code>yamllint</code> and add it to your CI pipeline.</li>
+</ul>
+
+</BlogLayout>

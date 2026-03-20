@@ -1,0 +1,172 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="How to Generate UUIDs in JavaScript and Node.js: Complete Guide"
+  description="Learn how to generate UUID in JavaScript using crypto.randomUUID(), the uuid npm package, UUID v4 vs v7, with browser and Node.js examples."
+  slug="how-to-generate-uuid-javascript"
+  publishDate="2026-03-21"
+  readTime="7 min read"
+>
+
+<p>
+  The ability to generate UUID in JavaScript is something almost every developer needs — whether you're assigning unique IDs to database rows, creating idempotency keys for API requests, or generating filenames for uploaded assets. This guide covers every method available in modern JavaScript and Node.js, explains the differences between UUID versions, and shows you when to use each approach.
+</p>
+
+<h2>The Fastest Way: crypto.randomUUID() (No Dependencies)</h2>
+
+<p>
+  Since Node.js 14.17 and in all modern browsers, the Web Crypto API provides a built-in method for generating UUID v4 strings. No npm install needed:
+</p>
+
+<pre><code>// Node.js 14.17+ and modern browsers
+const id = crypto.randomUUID();
+console.log(id);
+// "f47ac10b-58cc-4372-a567-0e02b2c3d479"</code></pre>
+
+<p>This is now the recommended approach for UUID v4 generation in both Node.js and browser environments. It uses cryptographically secure random bytes under the hood and returns a properly formatted lowercase UUID string.</p>
+
+<h3>Browser Compatibility Check</h3>
+
+<pre><code>function generateId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for very old environments
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}</code></pre>
+
+<h2>The uuid npm Package</h2>
+
+<p>When you need more than just v4, or need to support older Node.js versions, the <code>uuid</code> package is the standard choice:</p>
+
+<pre><code>npm install uuid</code></pre>
+
+<pre><code>import { v4 as uuidv4, v7 as uuidv7, v5 as uuidv5, validate, version } from 'uuid';
+
+// UUID v4 — random
+const id = uuidv4();
+console.log(id); // "110e8400-e29b-41d4-a716-446655440000"
+
+// UUID v7 — sortable by time (new in uuid@9)
+const sortableId = uuidv7();
+console.log(sortableId); // "018e1a3b-4e6c-7000-b8a9-..."
+
+// UUID v5 — deterministic (namespace + name → same UUID every time)
+const NS_URL = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+const pageId = uuidv5('https://example.com/page', NS_URL);
+console.log(pageId); // Always the same for the same URL
+
+// Validation
+validate('not-a-uuid'); // false
+validate(id);           // true
+version(id);            // 4</code></pre>
+
+<h2>UUID v4 vs UUID v7: Which Should You Use?</h2>
+
+<p>This is one of the most common questions when working with UUIDs in databases and distributed systems.</p>
+
+<h3>UUID v4 (Random)</h3>
+<ul>
+  <li>Fully random — no information encoded</li>
+  <li>Great for privacy-sensitive IDs (no timestamp leakage)</li>
+  <li>Poor database index performance at scale — random insertion causes B-tree page splits</li>
+  <li>Default choice for most applications</li>
+</ul>
+
+<h3>UUID v7 (Time-Ordered)</h3>
+<ul>
+  <li>Encodes a Unix millisecond timestamp in the most significant bits</li>
+  <li>Lexicographically sortable — newer IDs always sort after older ones</li>
+  <li>Dramatically better database index performance (sequential insertion)</li>
+  <li>The recommended choice for primary keys in PostgreSQL, MySQL, and SQLite</li>
+  <li>Can reveal approximate creation time — consider this for sensitive data</li>
+</ul>
+
+<pre><code>// Extracting timestamp from UUID v7
+import { v7 as uuidv7 } from 'uuid';
+
+const id = uuidv7();
+// First 12 hex chars (48 bits) encode milliseconds since Unix epoch
+const timestampMs = parseInt(id.replace(/-/g, '').slice(0, 12), 16);
+console.log(new Date(timestampMs).toISOString());</code></pre>
+
+<p>For a deeper comparison, see the <a href="/blog/uuid-vs-ulid">UUID vs ULID guide</a> — ULID is another time-sortable alternative worth knowing about.</p>
+
+<h2>Generating UUIDs in Node.js Without npm</h2>
+
+<p>If you cannot use npm packages (e.g., in a Lambda layer with strict size limits), Node.js's built-in <code>crypto</code> module covers you:</p>
+
+<pre><code>const { randomUUID, randomBytes } = require('crypto');
+
+// UUID v4 — built-in, Node.js 14.17+
+const id = randomUUID();
+
+// Manual UUID v4 from randomBytes (older Node.js)
+function uuidv4() {
+  const bytes = randomBytes(16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant bits
+  const hex = bytes.toString('hex');
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20),
+  ].join('-');
+}</code></pre>
+
+<h2>Generating Bulk UUIDs</h2>
+
+<pre><code>// Generate an array of 1000 UUIDs efficiently
+const ids = Array.from({ length: 1000 }, () => crypto.randomUUID());
+
+// Using uuid package with a loop
+import { v7 as uuidv7 } from 'uuid';
+const sortableIds = Array.from({ length: 1000 }, () => uuidv7());</code></pre>
+
+<h2>UUIDs as Database Primary Keys</h2>
+
+<p>When using UUIDs as primary keys in PostgreSQL:</p>
+
+<pre><code>-- Native UUID type in PostgreSQL
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL
+);
+
+-- Or store as text if portability is needed
+CREATE TABLE events (
+  id TEXT PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);</code></pre>
+
+<p>In Prisma, declare UUID fields like this:</p>
+
+<pre><code>model User {
+  id    String @id @default(uuid()) // v4
+  email String @unique
+}</code></pre>
+
+<h2>Quick Testing Without Code</h2>
+
+<p>For quick UUID generation during development or testing, the <a href="/tools/uuid-generator">UUID generator tool</a> lets you generate single or bulk UUIDs instantly — v4, v7, or v1 — right in the browser with a single click.</p>
+
+<h2>Summary</h2>
+
+<ul>
+  <li>Use <code>crypto.randomUUID()</code> for zero-dependency UUID v4 in Node.js 14.17+ and modern browsers</li>
+  <li>Use the <code>uuid</code> npm package when you need v5 (deterministic), v7 (sortable), or validation utilities</li>
+  <li>Prefer UUID v7 for database primary keys — it gives far better index performance</li>
+  <li>Use UUID v5 when you need the same ID to be generated from the same input every time</li>
+  <li>Never use <code>Math.random()</code>-based UUID generation in production — it is not cryptographically secure</li>
+</ul>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+</BlogLayout>

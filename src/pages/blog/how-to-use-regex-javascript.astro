@@ -1,0 +1,174 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="How to Use Regex in JavaScript: A Complete Developer Guide"
+  description="Learn how to use regex in JavaScript with practical examples covering RegExp, flags, named capture groups, lookaheads, and common patterns."
+  slug="how-to-use-regex-javascript"
+  publishDate="2026-03-21"
+  readTime="8 min read"
+>
+
+<p>Knowing how to use regex in JavaScript is one of those skills that separates productive developers from frustrated ones. Whether you're validating form inputs, parsing log files, or transforming strings at scale, regular expressions let you express complex text-matching logic in a single, compact line. This guide walks through everything from the basics of the <code>RegExp</code> object to advanced features like named capture groups and lookahead assertions — with real examples you can drop straight into your projects.</p>
+
+<h2>The RegExp Object: Two Ways to Create a Regex</h2>
+
+<p>JavaScript gives you two syntaxes for constructing a regular expression:</p>
+
+<pre><code>// Literal syntax — preferred for static patterns
+const pattern = /hello/i;
+
+// Constructor syntax — use when the pattern is dynamic
+const userInput = 'world';
+const dynamic = new RegExp(userInput, 'i');
+</code></pre>
+
+<p>The literal syntax is evaluated at parse time and is slightly faster. Use the constructor when you need to build the pattern from a variable or user input. Just remember to escape any special regex characters in that string first.</p>
+
+<h2>The Core Methods: test, match, replace, and split</h2>
+
+<h3>RegExp.prototype.test()</h3>
+<p><code>test()</code> returns a boolean — perfect for validation gates:</p>
+
+<pre><code>const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+console.log(emailPattern.test('user@example.com')); // true
+console.log(emailPattern.test('not-an-email'));      // false
+</code></pre>
+
+<h3>String.prototype.match()</h3>
+<p><code>match()</code> returns an array of results. Without the <code>g</code> flag it returns the first match plus capture groups; with <code>g</code> it returns all matches:</p>
+
+<pre><code>const sentence = 'The price is $14.99 and $3.50';
+const prices = sentence.match(/\$[\d.]+/g);
+console.log(prices); // ['$14.99', '$3.50']
+</code></pre>
+
+<h3>String.prototype.replace()</h3>
+<p><code>replace()</code> accepts a regex as its first argument. Use <code>$1</code>, <code>$2</code> etc. to reference capture groups in the replacement string:</p>
+
+<pre><code>const date = '2026-03-21';
+const formatted = date.replace(/(\d{4})-(\d{2})-(\d{2})/, '$3/$2/$1');
+console.log(formatted); // '21/03/2026'
+</code></pre>
+
+<h3>String.prototype.split()</h3>
+<p>Split on any whitespace run, not just single spaces:</p>
+
+<pre><code>const messy = 'one   two\tthree\nfour';
+const words = messy.split(/\s+/);
+console.log(words); // ['one', 'two', 'three', 'four']
+</code></pre>
+
+<h2>Understanding Flags</h2>
+
+<p>Flags modify how a regex engine processes text. The most important ones are:</p>
+
+<ul>
+  <li><strong>g (global)</strong> — find all matches, not just the first</li>
+  <li><strong>i (case-insensitive)</strong> — match uppercase and lowercase interchangeably</li>
+  <li><strong>m (multiline)</strong> — make <code>^</code> and <code>$</code> match the start/end of each line, not just the whole string</li>
+  <li><strong>s (dotAll)</strong> — make <code>.</code> match newline characters too</li>
+  <li><strong>u (unicode)</strong> — enable full Unicode mode, required for emoji or astral-plane characters</li>
+  <li><strong>d (indices)</strong> — populate a <code>indices</code> property on match results with start/end positions (ES2022)</li>
+</ul>
+
+<pre><code>// Multiline: match lines starting with a hash
+const markdown = `# Title\nsome text\n# Another`;
+const headings = markdown.match(/^#.+/gm);
+console.log(headings); // ['# Title', '# Another']
+</code></pre>
+
+<h2>Named Capture Groups</h2>
+
+<p>Instead of referencing captures as <code>$1</code> or <code>match[1]</code>, you can name them with <code>(?&lt;name&gt;...)</code>. This makes regex far easier to maintain:</p>
+
+<pre><code>const iso = '2026-03-21T14:30:00Z';
+const re = /(?&lt;year&gt;\d{4})-(?&lt;month&gt;\d{2})-(?&lt;day&gt;\d{2})/;
+const { groups } = iso.match(re);
+
+console.log(groups.year);  // '2026'
+console.log(groups.month); // '03'
+console.log(groups.day);   // '21'
+</code></pre>
+
+<p>Named groups also work in <code>replace()</code> via <code>$&lt;name&gt;</code>:</p>
+
+<pre><code>const reordered = '2026-03-21'.replace(
+  /(?&lt;y&gt;\d{4})-(?&lt;m&gt;\d{2})-(?&lt;d&gt;\d{2})/,
+  '$&lt;d&gt;/$&lt;m&gt;/$&lt;y&gt;'
+);
+console.log(reordered); // '21/03/2026'
+</code></pre>
+
+<h2>Lookahead and Lookbehind Assertions</h2>
+
+<p>Lookarounds let you match text only when it is (or isn't) preceded or followed by something else, without consuming those surrounding characters.</p>
+
+<ul>
+  <li><strong>Positive lookahead</strong> <code>(?=...)</code> — match if followed by pattern</li>
+  <li><strong>Negative lookahead</strong> <code>(?!...)</code> — match if NOT followed by pattern</li>
+  <li><strong>Positive lookbehind</strong> <code>(?&lt;=...)</code> — match if preceded by pattern</li>
+  <li><strong>Negative lookbehind</strong> <code>(?&lt;!...)</code> — match if NOT preceded by pattern</li>
+</ul>
+
+<pre><code>// Extract numbers that are preceded by a dollar sign
+const text = 'USD: $199.99, EUR: €89';
+const usdAmounts = text.match(/(?&lt;=\$)[\d.]+/g);
+console.log(usdAmounts); // ['199.99']
+
+// Match passwords that contain at least one digit
+const strong = /^(?=.*\d).{8,}$/;
+console.log(strong.test('myPass9!')); // true
+console.log(strong.test('mypassword')); // false
+</code></pre>
+
+<h2>Common Real-World Patterns</h2>
+
+<h3>Email Validation</h3>
+<pre><code>const email = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+</code></pre>
+
+<h3>URL Matching</h3>
+<pre><code>const url = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&/=]*)/;
+</code></pre>
+
+<h3>Phone Numbers (US Format)</h3>
+<pre><code>const phone = /^(\+1[\s-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
+console.log(phone.test('(555) 867-5309')); // true
+console.log(phone.test('+1 555-867-5309')); // true
+</code></pre>
+
+<h3>Slug Sanitization</h3>
+<pre><code>function toSlug(str) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+console.log(toSlug('Hello, World! 2026')); // 'hello-world-2026'
+</code></pre>
+
+<h2>Performance Tips</h2>
+
+<p>Regex can be a bottleneck if used carelessly. A few guidelines:</p>
+
+<ul>
+  <li>Compile patterns once outside loops — <code>const re = /pattern/;</code> — rather than recreating inside each iteration.</li>
+  <li>Be specific: <code>/\d{4}/</code> is faster and clearer than <code>/.{4}/</code> when you know you want digits.</li>
+  <li>Avoid catastrophic backtracking by anchoring patterns and avoiding nested quantifiers like <code>(a+)+</code>.</li>
+  <li>Use <code>String.includes()</code> or <code>String.startsWith()</code> for plain substring checks — they're faster than regex when no pattern is needed.</li>
+</ul>
+
+<h2>Test Your Patterns Interactively</h2>
+
+<p>Writing regex blind is painful. Use the <a href="/tools/regex-tester">DevPlaybook Regex Tester</a> to visualize matches, tweak flags, and inspect capture groups in real time before committing to code. You can also pair it with the guide on our <a href="/blog/regex-cheat-sheet">Regex Cheat Sheet</a> for a quick reference on syntax tokens.</p>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+<h2>Conclusion</h2>
+
+<p>Regular expressions in JavaScript are a superpower once you understand the building blocks. Start with <code>test()</code> and <code>match()</code> for simple use cases, reach for named capture groups when readability matters, and leverage lookaheads when you need context-aware matching without consuming characters. Keep your patterns compiled outside loops, and always validate against edge cases — regex is only as reliable as the test suite behind it.</p>
+
+</BlogLayout>

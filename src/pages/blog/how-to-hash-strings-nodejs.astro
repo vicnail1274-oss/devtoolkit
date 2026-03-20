@@ -1,0 +1,201 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="How to Hash Strings in Node.js: MD5, SHA-256, bcrypt Guide"
+  description="Learn how to hash strings in Node.js using the crypto module for SHA-256, MD5, and bcryptjs for passwords. Includes examples and when to use each."
+  slug="how-to-hash-strings-nodejs"
+  publishDate="2026-03-21"
+  readTime="7 min read"
+>
+
+<p>
+  Hashing strings in Node.js is a fundamental skill for building secure applications. Whether you need to hash strings in Node.js for checksums, cache keys, file integrity, or password storage, choosing the right algorithm matters enormously. This guide covers the built-in <code>crypto</code> module for general-purpose hashing (SHA-256, MD5, SHA-512) and <code>bcryptjs</code> for password hashing — and explains clearly when each approach is appropriate.
+</p>
+
+<h2>The Node.js crypto Module (Built-in, No Dependencies)</h2>
+
+<p>
+  Node.js ships with a built-in <code>crypto</code> module that covers nearly every general-purpose hashing need. No npm install required.
+</p>
+
+<h3>SHA-256 Hashing</h3>
+
+<pre><code>const crypto = require('crypto');
+
+function sha256(input) {
+  return crypto.createHash('sha256').update(input).digest('hex');
+}
+
+console.log(sha256('Hello, World!'));
+// "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986d"
+
+// Hash a Buffer (for binary data)
+const fileBuffer = require('fs').readFileSync('package.json');
+const checksum = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+console.log('File SHA-256:', checksum);</code></pre>
+
+<h3>SHA-512 Hashing</h3>
+
+<pre><code>function sha512(input) {
+  return crypto.createHash('sha512').update(input, 'utf8').digest('hex');
+}
+
+// Base64-encoded output (shorter string)
+function sha512Base64(input) {
+  return crypto.createHash('sha512').update(input, 'utf8').digest('base64');
+}</code></pre>
+
+<h3>MD5 Hashing</h3>
+
+<pre><code>function md5(input) {
+  return crypto.createHash('md5').update(input).digest('hex');
+}
+
+console.log(md5('hello'));
+// "5d41402abc4b2a76b9719d911017c592"</code></pre>
+
+<p><strong>Important:</strong> MD5 is cryptographically broken. Never use it for security-sensitive purposes. It is still useful for non-security use cases like cache keys, deduplication hashes, and ETag generation where collision resistance is not required.</p>
+
+<h2>HMAC (Keyed Hash for APIs)</h2>
+
+<p>When you need to verify that a message has not been tampered with — such as webhook signature verification — use HMAC rather than a plain hash:</p>
+
+<pre><code>const crypto = require('crypto');
+
+function createHMAC(message, secret) {
+  return crypto
+    .createHmac('sha256', secret)
+    .update(message)
+    .digest('hex');
+}
+
+// Verify a webhook signature (e.g., Stripe, GitHub)
+function verifyWebhookSignature(payload, receivedSig, secret) {
+  const expectedSig = createHMAC(payload, secret);
+  // Use timingSafeEqual to prevent timing attacks
+  return crypto.timingSafeEqual(
+    Buffer.from(expectedSig, 'hex'),
+    Buffer.from(receivedSig, 'hex')
+  );
+}
+
+const sig = createHMAC('{"event":"payment"}', 'my-webhook-secret');
+console.log('HMAC-SHA256:', sig);</code></pre>
+
+<h2>Password Hashing with bcryptjs</h2>
+
+<p>
+  SHA-256 and SHA-512 are <em>fast</em> hash functions — that is exactly what makes them wrong for password storage. An attacker with a GPU can try billions of SHA-256 guesses per second. Password hashing requires a deliberately slow algorithm with a configurable cost factor: bcrypt, Argon2, or scrypt.
+</p>
+
+<pre><code>npm install bcryptjs</code></pre>
+
+<pre><code>const bcrypt = require('bcryptjs');
+
+// Hash a password (async — preferred)
+async function hashPassword(plaintext) {
+  const saltRounds = 12; // Higher = slower = more secure
+  return bcrypt.hash(plaintext, saltRounds);
+}
+
+// Verify a password against a stored hash
+async function verifyPassword(plaintext, storedHash) {
+  return bcrypt.compare(plaintext, storedHash);
+}
+
+// Usage
+async function example() {
+  const hash = await hashPassword('my-secure-password');
+  console.log('Hash:', hash);
+  // "$2a$12$..."
+
+  const isValid = await verifyPassword('my-secure-password', hash);
+  console.log('Valid:', isValid); // true
+
+  const isWrong = await verifyPassword('wrong-password', hash);
+  console.log('Wrong:', isWrong); // false
+}</code></pre>
+
+<h3>Choosing the Salt Rounds</h3>
+
+<p>The <code>saltRounds</code> (cost factor) controls how slow hashing is. A higher number doubles the work for each increment:</p>
+
+<ul>
+  <li><strong>10</strong> — ~100ms per hash, minimum acceptable for production</li>
+  <li><strong>12</strong> — ~400ms per hash, recommended default in 2026</li>
+  <li><strong>14</strong> — ~1.5s per hash, for high-security applications</li>
+</ul>
+
+<p>Pick a value where hashing takes about 250–500ms on your production hardware. Re-evaluate every year or two as hardware improves.</p>
+
+<h2>scrypt (Built-in Node.js Alternative to bcrypt)</h2>
+
+<p>Node.js 10+ includes <code>crypto.scrypt()</code>, which is another memory-hard password hashing function without any npm dependency:</p>
+
+<pre><code>const crypto = require('crypto');
+const { promisify } = require('util');
+const scrypt = promisify(crypto.scrypt);
+
+async function hashPasswordScrypt(password) {
+  const salt = crypto.randomBytes(32).toString('hex');
+  const derivedKey = await scrypt(password, salt, 64);
+  return `${salt}:${derivedKey.toString('hex')}`;
+}
+
+async function verifyPasswordScrypt(password, stored) {
+  const [salt, keyHex] = stored.split(':');
+  const derivedKey = await scrypt(password, salt, 64);
+  return crypto.timingSafeEqual(
+    Buffer.from(keyHex, 'hex'),
+    derivedKey
+  );
+}</code></pre>
+
+<h2>Hashing Files for Integrity Checks</h2>
+
+<pre><code>const crypto = require('crypto');
+const fs = require('fs');
+
+function hashFile(filePath, algorithm = 'sha256') {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash(algorithm);
+    const stream = fs.createReadStream(filePath);
+    stream.on('data', chunk => hash.update(chunk));
+    stream.on('end', () => resolve(hash.digest('hex')));
+    stream.on('error', reject);
+  });
+}
+
+// Usage
+hashFile('./dist/bundle.js').then(checksum => {
+  console.log('SHA-256:', checksum);
+});</code></pre>
+
+<h2>Algorithm Selection Guide</h2>
+
+<ul>
+  <li><strong>SHA-256</strong> — checksums, file integrity, API request signing, cache keys (non-password)</li>
+  <li><strong>SHA-512</strong> — higher security margin, slightly slower, good for token generation</li>
+  <li><strong>MD5</strong> — legacy compatibility, ETags, non-security deduplication only</li>
+  <li><strong>HMAC-SHA256</strong> — webhook verification, API authentication, message authentication codes</li>
+  <li><strong>bcrypt / scrypt / Argon2</strong> — password storage, always and only</li>
+</ul>
+
+<p>For quick hash generation during development and testing, the <a href="/tools/hash-generator">hash generator tool</a> computes MD5, SHA-1, SHA-256, and SHA-512 hashes instantly in the browser.</p>
+
+<h2>Summary</h2>
+
+<ul>
+  <li>Use Node.js built-in <code>crypto.createHash()</code> for all non-password hashing — no dependencies needed</li>
+  <li>SHA-256 is the safe default for general-purpose cryptographic hashing</li>
+  <li>MD5 is acceptable for checksums and cache keys, never for security</li>
+  <li>Always use bcrypt, scrypt, or Argon2 for password hashing — never SHA-* for passwords</li>
+  <li>Use <code>crypto.timingSafeEqual()</code> for constant-time signature comparison</li>
+  <li>Store the salt alongside the hash — bcrypt encodes it in the output automatically</li>
+</ul>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+</BlogLayout>

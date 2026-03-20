@@ -1,0 +1,187 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="How to Validate YAML in JavaScript and Node.js"
+  description="Learn how to validate YAML in JavaScript using js-yaml and yaml packages, handle schema validation, catch common errors, and parse YAML safely."
+  slug="how-to-validate-yaml-javascript"
+  publishDate="2026-03-21"
+  readTime="7 min read"
+>
+
+<p>
+  Knowing how to validate YAML in JavaScript is essential for any developer working with configuration files, CI/CD pipelines, or data serialization. YAML is widely used in projects like Docker Compose, Kubernetes manifests, and GitHub Actions — and a single misplaced indent can break an entire deployment. This guide covers the two most popular npm packages for parsing and validating YAML in Node.js, common pitfalls to watch for, and practical schema validation techniques.
+</p>
+
+<h2>The Two Main Libraries: js-yaml vs yaml</h2>
+
+<p>
+  Two packages dominate YAML parsing in the JavaScript ecosystem:
+</p>
+
+<ul>
+  <li><strong>js-yaml</strong> — the long-standing, battle-tested choice with over 100 million weekly downloads</li>
+  <li><strong>yaml</strong> — a newer, standards-compliant library with better error messages and TypeScript support</li>
+</ul>
+
+<p>Both are excellent. <code>js-yaml</code> is the default choice for most legacy projects, while <code>yaml</code> is preferred for greenfield TypeScript projects or when you need round-trip editing (preserve comments and formatting).</p>
+
+<h2>Parsing and Validating with js-yaml</h2>
+
+<p>Install the package first:</p>
+
+<pre><code>npm install js-yaml</code></pre>
+
+<p>Basic parsing and catching parse errors:</p>
+
+<pre><code>const yaml = require('js-yaml');
+const fs = require('fs');
+
+try {
+  const doc = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
+  console.log(doc);
+} catch (e) {
+  if (e instanceof yaml.YAMLException) {
+    console.error('YAML parse error:', e.message);
+    console.error('Line:', e.mark?.line);
+    console.error('Column:', e.mark?.column);
+  }
+}</code></pre>
+
+<p>The <code>yaml.load()</code> function parses a single YAML document. For files containing multiple documents separated by <code>---</code>, use <code>yaml.loadAll()</code>:</p>
+
+<pre><code>const docs = yaml.loadAll(multiDocYamlString);
+docs.forEach((doc, i) => {
+  console.log(`Document ${i}:`, doc);
+});</code></pre>
+
+<h2>Parsing and Validating with the yaml Package</h2>
+
+<pre><code>npm install yaml</code></pre>
+
+<p>The <code>yaml</code> package provides richer error information:</p>
+
+<pre><code>import { parse, parseDocument } from 'yaml';
+
+// Simple parse — throws on invalid YAML
+try {
+  const result = parse(yamlString);
+  console.log(result);
+} catch (err) {
+  console.error(err.message); // Detailed message with line/col
+}
+
+// parseDocument — collects warnings without throwing
+const doc = parseDocument(yamlString);
+if (doc.errors.length > 0) {
+  doc.errors.forEach(err => console.error('Error:', err.message));
+}
+if (doc.warnings.length > 0) {
+  doc.warnings.forEach(w => console.warn('Warning:', w.message));
+}
+const data = doc.toJS();</code></pre>
+
+<p>Using <code>parseDocument()</code> is preferable when you want to report all errors at once rather than stopping at the first one.</p>
+
+<h2>Schema Validation with Zod (After Parsing)</h2>
+
+<p>YAML libraries only check syntactic correctness — they cannot tell you whether your parsed object has the right shape. Combine YAML parsing with a schema validator like Zod for full validation:</p>
+
+<pre><code>import { parse } from 'yaml';
+import { z } from 'zod';
+
+const ConfigSchema = z.object({
+  server: z.object({
+    host: z.string(),
+    port: z.number().min(1).max(65535),
+  }),
+  database: z.object({
+    url: z.string().url(),
+    maxConnections: z.number().default(10),
+  }),
+  features: z.array(z.string()).optional(),
+});
+
+function validateConfig(yamlString) {
+  let raw;
+  try {
+    raw = parse(yamlString);
+  } catch (err) {
+    throw new Error(`YAML syntax error: ${err.message}`);
+  }
+
+  const result = ConfigSchema.safeParse(raw);
+  if (!result.success) {
+    const issues = result.error.issues.map(
+      i => `${i.path.join('.')}: ${i.message}`
+    );
+    throw new Error(`Config validation failed:\n${issues.join('\n')}`);
+  }
+  return result.data;
+}</code></pre>
+
+<p>This two-stage approach — parse first, then schema-validate — is the most robust pattern for configuration loading in production Node.js applications.</p>
+
+<h2>Common YAML Errors and How to Fix Them</h2>
+
+<h3>1. Tab Characters Instead of Spaces</h3>
+<p>YAML does not allow tab characters for indentation. Always use spaces.</p>
+<pre><code># WRONG — uses a tab
+key:
+	value: oops
+
+# CORRECT — uses spaces
+key:
+  value: good</code></pre>
+
+<h3>2. Unquoted Special Characters</h3>
+<p>Characters like <code>:</code>, <code>#</code>, <code>@</code>, and <code>`</code> can break YAML when unquoted:</p>
+<pre><code># WRONG
+message: Hello: world
+
+# CORRECT
+message: "Hello: world"</code></pre>
+
+<h3>3. Inconsistent Indentation</h3>
+<p>All sibling keys at the same level must use the same indentation depth. Mixing 2-space and 4-space indentation within a file causes parse failures.</p>
+
+<h3>4. The Norway Problem (Boolean Coercion)</h3>
+<p><code>js-yaml</code> in YAML 1.1 mode interprets <code>NO</code>, <code>YES</code>, <code>ON</code>, <code>OFF</code> as booleans. Country codes like <code>NO</code> (Norway) become <code>false</code>. Use <code>yaml.load(str, { schema: yaml.JSON_SCHEMA })</code> or the newer <code>yaml</code> package (which defaults to YAML 1.2) to avoid this.</p>
+
+<pre><code>// Safe parsing — YAML 1.2 schema avoids boolean coercion
+const doc = yaml.load(input, { schema: yaml.JSON_SCHEMA });</code></pre>
+
+<h2>Validating YAML in the Browser</h2>
+
+<p>Both <code>js-yaml</code> and <code>yaml</code> work in the browser. Bundle them with your frontend to validate YAML client-side before submission. For quick ad-hoc validation during development, the <a href="/tools/yaml-to-json">YAML to JSON converter tool</a> instantly shows parse errors and converts valid YAML to JSON so you can inspect the structure.</p>
+
+<h2>Writing YAML Safely from JavaScript</h2>
+
+<p>To serialize a JavaScript object back to a YAML string:</p>
+
+<pre><code>// js-yaml
+const yamlString = yaml.dump({
+  server: { host: 'localhost', port: 3000 },
+  features: ['auth', 'logging'],
+});
+
+// yaml package
+import { stringify } from 'yaml';
+const yamlString = stringify(myObject);</code></pre>
+
+<p>Never build YAML strings by hand with template literals — always use a library to ensure correct escaping and indentation.</p>
+
+<h2>Summary</h2>
+
+<ul>
+  <li>Use <code>js-yaml</code> for quick, familiar parsing in legacy or CommonJS projects</li>
+  <li>Use the <code>yaml</code> package for TypeScript, YAML 1.2 compliance, and better error messages</li>
+  <li>Always wrap parsing in try/catch and inspect <code>YAMLException</code> details</li>
+  <li>Add Zod or Joi schema validation after parsing to enforce structure</li>
+  <li>Prefer <code>JSON_SCHEMA</code> mode or the <code>yaml</code> package to avoid the Norway boolean problem</li>
+</ul>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+</BlogLayout>

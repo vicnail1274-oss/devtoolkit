@@ -1,0 +1,115 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="MD5 vs SHA-256: Which Hashing Algorithm Should You Use in 2026?"
+  description="MD5 vs SHA-256 compared: security vulnerabilities, performance benchmarks, collision resistance, and exactly when each hashing algorithm is still appropriate."
+  slug="md5-vs-sha256-comparison"
+  publishDate="2026-03-21"
+  readTime="8 min read"
+>
+
+<p>The MD5 vs SHA-256 debate has been mostly settled in security circles for years — but that doesn't stop the question from coming up constantly in real projects. Developers reach for MD5 out of habit, encounter it in legacy codebases, or genuinely wonder whether it's "good enough" for a non-security use case. This guide gives you a clear technical comparison, explains why MD5 is broken for security purposes, and maps out exactly when each algorithm — or a stronger alternative — belongs in your stack.</p>
+
+<h2>How MD5 Works</h2>
+
+<p>MD5 (Message-Digest Algorithm 5) was designed by Ron Rivest in 1991. It processes input in 512-bit blocks and produces a fixed 128-bit (16-byte) hash, typically displayed as a 32-character hex string.</p>
+
+<pre><code>// Node.js
+const crypto = require('crypto');
+
+const md5 = crypto.createHash('md5').update('hello').digest('hex');
+console.log(md5); // '5d41402abc4b2a76b9719d911017c592'
+</code></pre>
+
+<p>The algorithm runs four rounds of bitwise operations over each block, mixing the data through 64 transformation steps. It was designed for speed, and it achieves it — MD5 can hash several gigabytes per second on modern hardware.</p>
+
+<h2>How SHA-256 Works</h2>
+
+<p>SHA-256 is a member of the SHA-2 family, standardised by NIST in 2001. It produces a 256-bit (32-byte) digest — displayed as a 64-character hex string — and processes input in 512-bit blocks through 64 rounds of compression using a mix of bitwise operations, modular additions, and logical functions drawn from the first 64 prime numbers.</p>
+
+<pre><code>// Node.js
+const sha256 = crypto.createHash('sha256').update('hello').digest('hex');
+console.log(sha256);
+// '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
+</code></pre>
+
+<p>The longer digest and more complex round function make SHA-256 significantly harder to reverse or find collisions in.</p>
+
+<h2>Security Comparison: Why MD5 Is Broken</h2>
+
+<p>MD5 is cryptographically broken in two fundamental ways:</p>
+
+<h3>Collision Attacks</h3>
+<p>A collision is when two different inputs produce the same hash output. In 2004, researchers demonstrated practical MD5 collisions. By 2008, researchers had created a rogue Certificate Authority certificate by exploiting MD5 collisions in SSL certificates. Today, generating an MD5 collision takes seconds on consumer hardware using tools like HashClash.</p>
+
+<pre><code>// These two different inputs produce the same MD5 hash
+// (real example from the 2004 Wang et al. paper — truncated for illustration)
+// Input A: d131dd02c5e6eec4...
+// Input B: d131dd02c5e6eec5...
+// Both hash to: 79054025255fb1a26e4bc422aef54eb4
+</code></pre>
+
+<h3>Preimage and Second-Preimage Resistance</h3>
+<p>While full preimage attacks on MD5 aren't yet practical for arbitrary inputs, theoretical weaknesses have been demonstrated, and the small 128-bit output space means brute-force attacks are increasingly feasible with GPU clusters. Rainbow tables covering huge portions of common MD5 hashes exist publicly and can crack unsalted passwords in milliseconds.</p>
+
+<h3>SHA-256 Security Posture</h3>
+<p>As of 2026, no practical collision attacks against SHA-256 exist. NIST continues to recommend SHA-256 as a general-purpose cryptographic hash. SHA-256 provides 128 bits of collision resistance (birthday bound) and 256 bits of preimage resistance — both well beyond current computational capabilities.</p>
+
+<h2>Performance: MD5's One Real Advantage</h2>
+
+<p>MD5 is genuinely faster than SHA-256. Approximate throughput on a modern x86-64 CPU using hardware-optimised implementations:</p>
+
+<ul>
+  <li><strong>MD5</strong>: ~600–800 MB/s</li>
+  <li><strong>SHA-256</strong>: ~300–450 MB/s (software); up to ~3,000 MB/s with Intel SHA Extensions</li>
+  <li><strong>SHA-512</strong>: ~400–600 MB/s on 64-bit systems</li>
+</ul>
+
+<p>On modern hardware with SHA-NI instructions (available on most x86-64 processors since ~2017), SHA-256 speed is competitive with MD5. The performance gap that once justified MD5 in non-security contexts has largely closed.</p>
+
+<h2>When MD5 Is Still Acceptable</h2>
+
+<p>MD5 remains appropriate in a narrow set of non-security scenarios:</p>
+
+<ul>
+  <li><strong>Non-security checksums</strong> — detecting accidental data corruption during file transfers where an adversary is not present. Many torrent clients and package mirrors still provide MD5 checksums for convenience. If integrity against tampering matters, use SHA-256.</li>
+  <li><strong>Hash-based caching keys</strong> — generating a short, fast cache key from a large string or object where collisions would only cause a cache miss, not a security breach.</li>
+  <li><strong>Deduplication identifiers in internal systems</strong> — identifying duplicate files or database records in a closed, trusted environment where an attacker cannot craft inputs.</li>
+  <li><strong>Legacy system compatibility</strong> — interoperating with older APIs or protocols that require MD5 and cannot be changed.</li>
+</ul>
+
+<p>The key test: <em>could an adversary benefit from a collision or preimage attack here?</em> If yes, MD5 is off the table.</p>
+
+<h2>When to Use SHA-256 (or Stronger)</h2>
+
+<ul>
+  <li><strong>Password storage</strong> — neither MD5 nor SHA-256 alone. Use bcrypt, Argon2, or scrypt, which are intentionally slow and incorporate salting. SHA-256 without a work factor is still crackable with GPU rainbow tables.</li>
+  <li><strong>Digital signatures and certificates</strong> — SHA-256 is the current standard for TLS certificates, code-signing, and document signatures. SHA-1 was deprecated; SHA-256 minimum is required.</li>
+  <li><strong>HMAC authentication</strong> — HMAC-SHA256 for API request signing and message authentication codes.</li>
+  <li><strong>Content integrity (public-facing)</strong> — npm's package integrity fields use SHA-512; Docker image digests use SHA-256.</li>
+  <li><strong>File integrity where tampering is a concern</strong> — software downloads, firmware updates, build artifacts.</li>
+</ul>
+
+<pre><code>// HMAC-SHA256 for API signing
+const hmac = crypto.createHmac('sha256', process.env.SECRET_KEY);
+hmac.update(requestBody);
+const signature = hmac.digest('hex');
+</code></pre>
+
+<h2>SHA-256 vs SHA-512: A Quick Note</h2>
+
+<p>SHA-512 produces a 512-bit digest and offers more security margin, but SHA-256 is sufficient for nearly all current applications. SHA-512 is faster than SHA-256 on 64-bit platforms due to its wider internal word size, making it a reasonable choice for hashing large files. Both are considered secure in 2026.</p>
+
+<h2>Generate and Compare Hashes</h2>
+
+<p>Use the <a href="/tools/hash-generator">DevPlaybook Hash Generator</a> to compute MD5, SHA-256, SHA-512, and other digests side by side. It's useful for verifying file checksums, testing HMAC signatures, and understanding how digest length varies across algorithms.</p>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+<h2>Conclusion</h2>
+
+<p>In the MD5 vs SHA-256 comparison, the answer is unambiguous for security work: always use SHA-256 (or stronger). MD5's collision vulnerabilities make it unsuitable for anything where an adversary could exploit a hash match. Reserve MD5 strictly for legacy compatibility and non-security checksums where performance is paramount and adversarial manipulation is impossible. When in doubt, SHA-256 is the safe default — and with SHA-NI hardware acceleration, the performance penalty is minimal.</p>
+
+</BlogLayout>

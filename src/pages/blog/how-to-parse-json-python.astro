@@ -1,0 +1,227 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="How to Parse and Format JSON in Python: Complete Guide"
+  description="Learn how to parse JSON in Python using json.loads and json.dumps, pretty printing, error handling, reading JSON files, and working with nested objects."
+  slug="how-to-parse-json-python"
+  publishDate="2026-03-21"
+  readTime="7 min read"
+>
+
+<p>
+  Knowing how to parse JSON in Python is a core skill — Python's built-in <code>json</code> module handles virtually every use case without any third-party dependencies. Whether you're reading API responses, loading configuration files, or transforming data between services, this guide covers everything from basic parsing to error handling, pretty printing, nested objects, and custom serialization of types the <code>json</code> module does not support by default.
+</p>
+
+<h2>Basic Parsing with json.loads()</h2>
+
+<p>
+  <code>json.loads()</code> (load string) parses a JSON string and returns a Python object:
+</p>
+
+<pre><code>import json
+
+json_string = '{"name": "Alice", "age": 30, "active": true, "score": null}'
+
+data = json.loads(json_string)
+print(data)          # {'name': 'Alice', 'age': 30, 'active': True, 'score': None}
+print(type(data))    # <class 'dict'>
+print(data['name'])  # "Alice"</code></pre>
+
+<p>JSON types map to Python types as follows:</p>
+
+<ul>
+  <li><code>object</code> → <code>dict</code></li>
+  <li><code>array</code> → <code>list</code></li>
+  <li><code>string</code> → <code>str</code></li>
+  <li><code>number (int)</code> → <code>int</code></li>
+  <li><code>number (float)</code> → <code>float</code></li>
+  <li><code>true</code> / <code>false</code> → <code>True</code> / <code>False</code></li>
+  <li><code>null</code> → <code>None</code></li>
+</ul>
+
+<h2>Serializing Python Objects with json.dumps()</h2>
+
+<p>
+  <code>json.dumps()</code> (dump string) converts a Python object to a JSON string:
+</p>
+
+<pre><code>import json
+
+data = {
+    "name": "Bob",
+    "scores": [95, 87, 92],
+    "metadata": {"active": True, "rank": None},
+}
+
+json_string = json.dumps(data)
+print(json_string)
+# '{"name": "Bob", "scores": [95, 87, 92], "metadata": {"active": true, "rank": null}}'</code></pre>
+
+<h2>Pretty Printing JSON</h2>
+
+<p>Use the <code>indent</code> parameter to produce human-readable output:</p>
+
+<pre><code>pretty = json.dumps(data, indent=2)
+print(pretty)
+# {
+#   "name": "Bob",
+#   "scores": [
+#     95,
+#     87,
+#     92
+#   ],
+#   ...
+# }
+
+# Sort keys alphabetically
+sorted_json = json.dumps(data, indent=2, sort_keys=True)
+
+# Compact output (no spaces) for network transmission
+compact = json.dumps(data, separators=(',', ':'))</code></pre>
+
+<h2>Reading and Writing JSON Files</h2>
+
+<p>Use <code>json.load()</code> and <code>json.dump()</code> (without the "s") when working with file objects:</p>
+
+<pre><code>import json
+
+# Read JSON from a file
+with open('config.json', 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+print(config['database']['host'])
+
+# Write JSON to a file
+with open('output.json', 'w', encoding='utf-8') as f:
+    json.dump(config, f, indent=2, ensure_ascii=False)
+    # ensure_ascii=False preserves Unicode characters (e.g., Chinese, emoji)</code></pre>
+
+<p>Always specify <code>encoding='utf-8'</code> explicitly — the default encoding is platform-dependent and will cause problems on Windows if your JSON contains non-ASCII characters.</p>
+
+<h2>Error Handling</h2>
+
+<p>Parsing untrusted JSON without error handling will crash your program. Always wrap <code>json.loads()</code> in a try/except:</p>
+
+<pre><code>import json
+
+def safe_parse(json_string):
+    try:
+        return json.loads(json_string)
+    except json.JSONDecodeError as e:
+        print(f"JSON parse error: {e.msg}")
+        print(f"At line {e.lineno}, column {e.colno}")
+        print(f"Document snippet: ...{e.doc[max(0, e.pos-20):e.pos+20]}...")
+        return None
+
+# JSONDecodeError attributes
+result = safe_parse('{"bad": json}')
+# JSON parse error: Expecting value
+# At line 1, column 9</code></pre>
+
+<p><code>json.JSONDecodeError</code> is a subclass of <code>ValueError</code>, so you can also catch it with <code>except ValueError</code> for broader compatibility.</p>
+
+<h2>Working with Nested Objects</h2>
+
+<pre><code>import json
+
+api_response = '''
+{
+  "status": "ok",
+  "users": [
+    {"id": 1, "name": "Alice", "address": {"city": "Taipei", "zip": "100"}},
+    {"id": 2, "name": "Bob",   "address": {"city": "Tokyo",  "zip": "100-0001"}}
+  ]
+}
+'''
+
+data = json.loads(api_response)
+
+# Access nested values
+for user in data['users']:
+    print(f"{user['name']} lives in {user['address']['city']}")
+
+# Safe access for optional keys
+city = data.get('users', [{}])[0].get('address', {}).get('city', 'Unknown')</code></pre>
+
+<h2>Custom Serialization for Unsupported Types</h2>
+
+<p>By default, <code>json.dumps()</code> raises a <code>TypeError</code> for types it does not know about (datetime, Decimal, custom classes, etc.). Use a custom encoder:</p>
+
+<pre><code>import json
+from datetime import datetime, date
+from decimal import Decimal
+
+class ExtendedEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        if isinstance(obj, Decimal):
+            return float(obj)
+        if hasattr(obj, '__dict__'):
+            return obj.__dict__
+        return super().default(obj)
+
+data = {
+    "created_at": datetime.now(),
+    "price": Decimal("9.99"),
+}
+
+print(json.dumps(data, cls=ExtendedEncoder, indent=2))
+# {
+#   "created_at": "2026-03-21T14:30:00.123456",
+#   "price": 9.99
+# }</code></pre>
+
+<h2>Parsing JSON from API Responses</h2>
+
+<pre><code>import json
+import urllib.request
+
+def fetch_json(url):
+    with urllib.request.urlopen(url) as response:
+        raw = response.read().decode('utf-8')
+        return json.loads(raw)
+
+# With the requests library (more common in practice)
+import requests
+
+def fetch_json_requests(url):
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+    return response.json()  # requests calls json.loads() internally</code></pre>
+
+<h2>Performance Tips for Large JSON Files</h2>
+
+<ul>
+  <li>Use <code>json.load(file)</code> (streaming from file) instead of reading the entire file into a string with <code>read()</code> first</li>
+  <li>For very large JSON files (hundreds of MB), consider <code>ijson</code> for streaming item-by-item parsing</li>
+  <li>For high-performance scenarios, the <code>orjson</code> library is a drop-in replacement that is 10–20x faster than the standard library</li>
+</ul>
+
+<pre><code># orjson — fastest JSON library for Python
+# pip install orjson
+import orjson
+
+data = orjson.loads(json_bytes)  # input can be bytes or str
+json_bytes = orjson.dumps(data, option=orjson.OPT_INDENT_2)</code></pre>
+
+<h2>Quick Formatting During Development</h2>
+
+<p>When working with API responses or debugging, the <a href="/tools/json-formatter">JSON formatter tool</a> lets you paste raw JSON and instantly view it pretty-printed and validated. See also the <a href="/blog/guide-to-json-formatting-and-validation">guide to JSON formatting and validation</a> for a broader overview of JSON tooling.</p>
+
+<h2>Summary</h2>
+
+<ul>
+  <li>Use <code>json.loads()</code> to parse a JSON string; <code>json.load()</code> to parse from a file object</li>
+  <li>Use <code>json.dumps()</code> with <code>indent=2</code> for human-readable output</li>
+  <li>Always specify <code>encoding='utf-8'</code> when opening JSON files</li>
+  <li>Always wrap parsing in <code>try/except json.JSONDecodeError</code> for untrusted input</li>
+  <li>Use a custom <code>JSONEncoder</code> to handle datetime, Decimal, and custom objects</li>
+  <li>Use <code>orjson</code> when performance matters for large datasets</li>
+</ul>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+</BlogLayout>

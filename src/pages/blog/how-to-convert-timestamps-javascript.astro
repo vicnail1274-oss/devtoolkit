@@ -1,0 +1,270 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeDateBasics = [
+  '// Create Date objects',
+  'const now = new Date();                    // Current time',
+  'const fromUnix = new Date(1711000000000);  // From Unix ms',
+  'const fromISO = new Date("2024-03-21T12:00:00Z");',
+  'const fromParts = new Date(2024, 2, 21, 12, 0, 0); // Month is 0-indexed!',
+  '',
+  '// Get current Unix timestamp (milliseconds)',
+  'Date.now();          // 1711000000000',
+  '',
+  '// Get current Unix timestamp (seconds)',
+  'Math.floor(Date.now() / 1000);  // 1711000000',
+  '',
+  '// Convert Date to Unix seconds',
+  'Math.floor(new Date("2024-03-21").getTime() / 1000);'
+].join('\n');
+
+const codeUnixConvert = [
+  '// Unix timestamp (seconds) → human-readable',
+  'const unixSeconds = 1711000000;',
+  'const date = new Date(unixSeconds * 1000);  // Must multiply by 1000!',
+  '',
+  'date.toISOString();          // "2024-03-21T06:13:20.000Z"',
+  'date.toLocaleDateString();   // "3/21/2024" (locale-dependent)',
+  'date.toLocaleString();       // "3/21/2024, 6:13:20 AM"',
+  '',
+  '// Unix timestamp (milliseconds) → human-readable',
+  'const unixMs = 1711000000000;',
+  'const date2 = new Date(unixMs);  // No multiplication needed',
+  'date2.toISOString();  // "2024-03-21T06:13:20.000Z"',
+  '',
+  '// Quick check: Unix seconds are ~10 digits, Unix ms are ~13 digits',
+  '1711000000    // seconds (10 digits)',
+  '1711000000000 // milliseconds (13 digits)'
+].join('\n');
+
+const codeISO8601 = [
+  '// ISO 8601 formats',
+  '"2024-03-21"                    // Date only',
+  '"2024-03-21T06:13:20"           // Local datetime (no timezone)',
+  '"2024-03-21T06:13:20Z"          // UTC (Z suffix)',
+  '"2024-03-21T06:13:20+08:00"     // With timezone offset',
+  '"2024-03-21T06:13:20.000Z"      // With milliseconds',
+  '',
+  '// Always use ISO 8601 when storing/transmitting dates',
+  'const stored = new Date().toISOString();  // "2024-03-21T06:13:20.000Z"',
+  '',
+  '// Parse ISO string',
+  'const d = new Date("2024-03-21T06:13:20Z");',
+  'd.getTime();  // 1711001600000 (milliseconds)',
+  '',
+  '// Avoid ambiguous formats — these may parse differently per browser/environment',
+  'new Date("03/21/2024");  // Ambiguous',
+  'new Date("21-03-2024");  // May fail in some engines'
+].join('\n');
+
+const codeTimezone = [
+  '// Intl.DateTimeFormat — the modern way to format with timezones',
+  'const date = new Date("2024-03-21T06:13:20Z");',
+  '',
+  '// Format in a specific timezone',
+  'const formatter = new Intl.DateTimeFormat("en-US", {',
+  '  timeZone: "America/New_York",',
+  '  year: "numeric",',
+  '  month: "long",',
+  '  day: "numeric",',
+  '  hour: "2-digit",',
+  '  minute: "2-digit",',
+  '  timeZoneName: "short"',
+  '});',
+  'formatter.format(date);',
+  '// "March 21, 2024 at 02:13 AM EDT"',
+  '',
+  '// Get UTC components (avoid local timezone surprises)',
+  'date.getUTCFullYear()  // 2024',
+  'date.getUTCMonth()     // 2 (March — remember: 0-indexed)',
+  'date.getUTCDate()      // 21',
+  'date.getUTCHours()     // 6',
+  '',
+  '// Common timezone IDs',
+  '// "UTC", "America/New_York", "America/Los_Angeles",',
+  '// "Europe/London", "Asia/Tokyo", "Asia/Shanghai"'
+].join('\n');
+
+const codeDateFns = [
+  'npm install date-fns',
+  '',
+  '// date-fns — functional, tree-shakeable, no classes',
+  'import { format, parseISO, fromUnixTime, formatDistanceToNow } from \'date-fns\';',
+  '',
+  '// Format a date',
+  'format(new Date(), "yyyy-MM-dd HH:mm:ss");  // "2024-03-21 06:13:20"',
+  '',
+  '// Parse ISO string',
+  'const d = parseISO("2024-03-21T06:13:20Z");',
+  '',
+  '// Convert Unix timestamp (seconds) to Date',
+  'const d2 = fromUnixTime(1711000000);',
+  '',
+  '// Relative time',
+  'formatDistanceToNow(new Date("2024-03-21"), { addSuffix: true });',
+  '// "3 days ago"'
+].join('\n');
+
+const codeDayjs = [
+  'npm install dayjs',
+  '',
+  '// dayjs — lightweight (2KB), Moment-compatible API',
+  'import dayjs from \'dayjs\';',
+  'import utc from \'dayjs/plugin/utc\';',
+  'import timezone from \'dayjs/plugin/timezone\';',
+  '',
+  'dayjs.extend(utc);',
+  'dayjs.extend(timezone);',
+  '',
+  '// Parse and format',
+  'dayjs().format("YYYY-MM-DD");         // "2024-03-21"',
+  'dayjs(1711000000000).toISOString();   // "2024-03-21T06:13:20.000Z"',
+  '',
+  '// Unix timestamp (seconds)',
+  'dayjs.unix(1711000000).format();      // "2024-03-21T06:13:20+00:00"',
+  '',
+  '// With timezone',
+  'dayjs("2024-03-21T06:13:20Z")',
+  '  .tz("America/New_York")',
+  '  .format("MMM D, YYYY h:mm A z");   // "Mar 21, 2024 2:13 AM EDT"'
+].join('\n');
+
+const codeCommonConversions = [
+  '// Cheat sheet: most common timestamp conversions',
+  '',
+  '// Current Unix seconds',
+  'Math.floor(Date.now() / 1000)',
+  '',
+  '// Current Unix ms',
+  'Date.now()',
+  '',
+  '// Unix seconds → ISO string',
+  'new Date(unix * 1000).toISOString()',
+  '',
+  '// ISO string → Unix seconds',
+  'Math.floor(new Date(isoString).getTime() / 1000)',
+  '',
+  '// Date object → ISO string',
+  'date.toISOString()',
+  '',
+  '// ISO string → Date object',
+  'new Date(isoString)',
+  '',
+  '// Date → start of day (midnight UTC)',
+  'new Date(date.toISOString().slice(0, 10) + "T00:00:00Z")',
+  '',
+  '// Add N days to a date',
+  'new Date(date.getTime() + n * 24 * 60 * 60 * 1000)'
+].join('\n');
+---
+
+<BlogLayout
+  title="How to Convert Timestamps in JavaScript: Unix, ISO 8601, and More"
+  description="Learn how to convert timestamps in JavaScript — Unix to ISO 8601, timezone handling, Date.now(), and when to use date-fns vs dayjs. Includes a full cheat sheet."
+  slug="how-to-convert-timestamps-javascript"
+  publishDate="2026-03-21"
+  readTime="9 min read"
+>
+
+<p>
+  Timestamp handling is one of those things every JavaScript developer does constantly but rarely thinks about systematically — until a bug caused by a missing <code>* 1000</code> or an unexpected timezone shift hits production. This guide is a complete reference for how to <strong>convert timestamps in JavaScript</strong>: Unix seconds to ISO 8601, the Date object API, timezone formatting with <code>Intl.DateTimeFormat</code>, and when to reach for a library like date-fns or dayjs.
+</p>
+
+<p>
+  For quick conversions between Unix timestamps and human-readable dates, use our <a href="/tools/timestamp-converter">Timestamp Converter</a> — no code required.
+</p>
+
+<h2>The JavaScript Date Object</h2>
+
+<p>
+  The built-in <code>Date</code> object is JavaScript's foundation for time. All timestamps internally are stored as milliseconds since the Unix epoch (January 1, 1970, 00:00:00 UTC):
+</p>
+
+<pre><code>{codeDateBasics}</code></pre>
+
+<p>
+  The most common gotcha: the <code>Date</code> constructor's month parameter is <strong>0-indexed</strong> (January = 0, December = 11). This is a legacy quirk you cannot avoid — just memorize it.
+</p>
+
+<h2>Unix Timestamps: Seconds vs. Milliseconds</h2>
+
+<p>
+  Unix timestamps traditionally count seconds since the epoch. JavaScript's <code>Date</code> object works in milliseconds. This mismatch is the source of countless bugs:
+</p>
+
+<pre><code>{codeUnixConvert}</code></pre>
+
+<p>
+  Quick way to tell them apart: a Unix timestamp in seconds is ~10 digits (<code>1711000000</code>). In milliseconds it's ~13 digits (<code>1711000000000</code>). If you get a timestamp from a language like Python, Go, or a database, it's almost certainly in seconds — multiply by 1000 before passing to <code>new Date()</code>.
+</p>
+
+<h2>ISO 8601: The Right Format for Storing and Transmitting Dates</h2>
+
+<p>
+  When storing dates in databases, sending them in API responses, or serializing them to JSON, always use ISO 8601. It's unambiguous, sortable as a string, and universally parseable:
+</p>
+
+<pre><code>{codeISO8601}</code></pre>
+
+<p>
+  The critical rule: <strong>always include the timezone designator</strong> (<code>Z</code> for UTC, or <code>+HH:MM</code> offset) when storing datetimes. An ISO string without a timezone is ambiguous — different environments will interpret it as local time, which changes value depending on where the code runs.
+</p>
+
+<h2>Timezone Handling</h2>
+
+<p>
+  Timezone bugs are among the hardest to reproduce because they depend on the machine's local settings. The safest approach: store all times in UTC, convert to local time only at display time.
+</p>
+
+<pre><code>{codeTimezone}</code></pre>
+
+<p>
+  The <code>Intl.DateTimeFormat</code> API is built into all modern browsers and Node.js 12+. It uses the IANA timezone database (e.g., <code>America/New_York</code>), which handles daylight saving time automatically. Avoid using numeric UTC offsets (<code>+05:30</code>) for timezone IDs — they don't account for DST.
+</p>
+
+<p>
+  When you need to inspect a specific Unix timestamp in a different timezone, our <a href="/tools/timestamp-converter">Timestamp Converter</a> handles all the conversions with a visual interface.
+</p>
+
+<h2>date-fns: The Functional Approach</h2>
+
+<p>
+  For projects that need more than the native Date API offers, <strong>date-fns</strong> is the most popular modern choice. It's fully tree-shakeable — you only bundle the functions you actually import:
+</p>
+
+<pre><code>{codeDateFns}</code></pre>
+
+<p>
+  date-fns treats all Date objects as immutable (no mutation), and its functions are pure — given the same inputs, you always get the same output. This makes it predictable in React components and easy to test. The timezone support is in a separate <code>date-fns-tz</code> package.
+</p>
+
+<h2>dayjs: The Lightweight Moment Replacement</h2>
+
+<p>
+  If you're migrating from Moment.js (which is now in maintenance mode), <strong>dayjs</strong> has a nearly identical API but weighs only ~2KB. Plugins extend it with UTC, timezone, and relative time support:
+</p>
+
+<pre><code>{codeDayjs}</code></pre>
+
+<p>
+  Choose dayjs when you want a familiar chained API and need to keep bundle size minimal. Choose date-fns when you want pure functions, TypeScript-first design, and fine-grained tree-shaking.
+</p>
+
+<h2>Common Conversion Cheat Sheet</h2>
+
+<pre><code>{codeCommonConversions}</code></pre>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+<h2>Summary</h2>
+
+<ul>
+  <li>JavaScript's <code>Date</code> uses milliseconds; APIs and databases often use Unix seconds — always check which you have.</li>
+  <li>Use <code>Date.now()</code> for current Unix milliseconds; divide by 1000 for seconds.</li>
+  <li>Always include a timezone designator (<code>Z</code> or offset) in ISO 8601 strings.</li>
+  <li>Use <code>Intl.DateTimeFormat</code> with IANA timezone IDs for DST-aware display formatting.</li>
+  <li>Use <strong>date-fns</strong> for functional/immutable patterns; use <strong>dayjs</strong> for a lightweight Moment-like API.</li>
+  <li>For ad-hoc conversions, use our <a href="/tools/timestamp-converter">Timestamp Converter</a>.</li>
+</ul>
+
+</BlogLayout>

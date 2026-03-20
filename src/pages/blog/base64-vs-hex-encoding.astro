@@ -1,0 +1,119 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+---
+
+<BlogLayout
+  title="Base64 vs Hex Encoding: Which Should You Use and When?"
+  description="Base64 vs hex encoding compared: how each works, size overhead, URL safety, use cases in cryptography, data URIs, and when to pick one over the other."
+  slug="base64-vs-hex-encoding"
+  publishDate="2026-03-21"
+  readTime="7 min read"
+>
+
+<p>When you need to represent binary data as printable text, two encodings dominate the landscape: base64 and hex. Understanding base64 vs hex encoding is not just academic — choosing the wrong one can bloat your payloads, break your URLs, or make cryptographic output harder to work with downstream. This guide explains exactly how each encoding works, quantifies the size trade-offs, and maps out the real-world scenarios where each one shines.</p>
+
+<h2>How Hex Encoding Works</h2>
+
+<p>Hex encoding (also called Base16) converts every byte into exactly two hexadecimal characters from the alphabet <code>0–9</code> and <code>a–f</code>. Since a byte holds 8 bits and a hex digit holds 4 bits, the math is simple: one byte always becomes two characters.</p>
+
+<pre><code>// Node.js
+const buf = Buffer.from('Hi');
+console.log(buf.toString('hex')); // '4869'
+
+// Browser
+function toHex(str) {
+  return Array.from(new TextEncoder().encode(str))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+console.log(toHex('Hi')); // '4869'
+</code></pre>
+
+<p>The resulting string is 100% ASCII — every character is either a digit or a lowercase letter a–f (or uppercase, depending on the library). This makes hex trivially safe for display, logging, and copy-paste workflows.</p>
+
+<h2>How Base64 Encoding Works</h2>
+
+<p>Base64 takes every 3 bytes of input (24 bits) and encodes them as 4 characters drawn from a 64-character alphabet: <code>A–Z</code>, <code>a–z</code>, <code>0–9</code>, <code>+</code>, and <code>/</code>. If the input isn't a multiple of 3 bytes, padding characters (<code>=</code>) are appended.</p>
+
+<pre><code>// Node.js
+const buf = Buffer.from('Hello, World!');
+console.log(buf.toString('base64')); // 'SGVsbG8sIFdvcmxkIQ=='
+
+// Browser
+console.log(btoa('Hello, World!')); // 'SGVsbG8sIFdvcmxkIQ=='
+
+// Decode
+console.log(atob('SGVsbG8sIFdvcmxkIQ==')); // 'Hello, World!'
+</code></pre>
+
+<h2>Size Comparison: The Numbers That Matter</h2>
+
+<p>Both encodings increase size relative to raw binary, but by different amounts:</p>
+
+<ul>
+  <li><strong>Hex</strong>: always 2× the original byte count. A 1 KB binary becomes a 2 KB hex string.</li>
+  <li><strong>Base64</strong>: approximately 1.33× (4 characters per 3 bytes), rounded up to the nearest 4-character block with padding. A 1 KB binary becomes roughly 1.37 KB base64.</li>
+</ul>
+
+<p>Concretely, for a 256-byte hash digest: hex produces 512 characters; base64 produces 344 characters (including padding). Base64 is about 33% more compact than hex, which matters at scale — for example when embedding thousands of thumbnails as data URIs or transmitting bulk cryptographic material over a rate-limited API.</p>
+
+<h2>URL Safety Considerations</h2>
+
+<p>Standard base64 uses <code>+</code> and <code>/</code>, both of which are reserved characters in URLs. If you embed standard base64 in a query string without encoding it, <code>+</code> gets interpreted as a space and <code>/</code> can break path parsing.</p>
+
+<p>The solution is <strong>Base64url</strong> (RFC 4648 §5), which replaces <code>+</code> with <code>-</code> and <code>/</code> with <code>_</code> and omits padding:</p>
+
+<pre><code>function toBase64url(base64) {
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+// Node.js shortcut
+Buffer.from('Hello').toString('base64url'); // 'SGVsbG8'
+</code></pre>
+
+<p>Hex, by contrast, uses only characters that are already URL-safe, so no transformation is needed. This is one reason hex is common in URL tokens and API keys where developers want zero ambiguity.</p>
+
+<h2>Use Cases: When to Choose Each</h2>
+
+<h3>Choose Hex When:</h3>
+<ul>
+  <li><strong>Displaying cryptographic output</strong> — hash digests (MD5, SHA-256), HMAC signatures, and key fingerprints are nearly always shown in hex. The format is human-readable and pairs naturally with debugging tools.</li>
+  <li><strong>Logging and auditing</strong> — hex strings are easy to grep, diff, and compare visually, even in monospace terminals.</li>
+  <li><strong>Color codes</strong> — CSS hex colors (<code>#ff6600</code>) are a specialised subset of hex encoding.</li>
+  <li><strong>Low-level protocol work</strong> — network packet dumps, bytecode, and memory addresses are conventionally hex.</li>
+</ul>
+
+<h3>Choose Base64 When:</h3>
+<ul>
+  <li><strong>Data URIs</strong> — embedding images, fonts, or other binary assets directly in HTML/CSS requires base64. Browsers understand <code>data:image/png;base64,...</code> natively.</li>
+  <li><strong>Email attachments (MIME)</strong> — the MIME standard specifies base64 for encoding binary email attachments.</li>
+  <li><strong>JSON payloads containing binary</strong> — base64 is the idiomatic way to carry binary blobs (certificates, avatars, audio clips) inside JSON without escaping every byte.</li>
+  <li><strong>JWTs</strong> — JSON Web Tokens use Base64url for both the header/payload sections and the signature.</li>
+  <li><strong>Bandwidth-sensitive applications</strong> — when you must encode large volumes of binary data as text, base64's ~33% overhead beats hex's 100% overhead.</li>
+</ul>
+
+<h2>Performance Considerations</h2>
+
+<p>In most applications encoding speed is not the bottleneck, but for completeness: hex encoding is marginally faster to encode and decode because the per-byte operation is a simple 4-bit shift and lookup, with no grouping logic. Base64 must group 3 bytes at a time and handle padding edge cases. On modern hardware the difference is negligible for typical payload sizes (kilobytes to low megabytes), but if you're encoding gigabytes of streaming data, hex's simplicity wins.</p>
+
+<h2>A Quick Decision Flowchart</h2>
+
+<ul>
+  <li>Need to embed in a URL without percent-encoding? → Base64url or hex</li>
+  <li>Need to embed binary in JSON or HTML? → Base64</li>
+  <li>Need to display a hash for human verification? → Hex</li>
+  <li>Minimising encoded size is critical? → Base64</li>
+  <li>Simplest possible implementation? → Hex</li>
+</ul>
+
+<h2>Try It Yourself</h2>
+
+<p>Use the <a href="/tools/base64">DevPlaybook Base64 Encoder/Decoder</a> to convert text or files to base64 and back, and the <a href="/tools/hash-generator">Hash Generator</a> to see SHA-256 and MD5 output in hex format side by side. For a deeper dive into base64 specifically, see our <a href="/blog/base64-encoding-explained">Base64 Encoding Explained</a> guide.</p>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+<h2>Conclusion</h2>
+
+<p>Base64 vs hex encoding comes down to context: hex is readable, debuggable, and universally safe in URLs — but doubles your data size. Base64 is more compact and essential for MIME and data URIs — but needs URL-safe variants in some contexts. Know the trade-offs and you'll reach for the right tool every time.</p>
+
+</BlogLayout>

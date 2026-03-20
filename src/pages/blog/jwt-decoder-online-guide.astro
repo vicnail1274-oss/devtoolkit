@@ -1,0 +1,238 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeJwtStructure = [
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
+  '.',
+  'eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFsaWNlIiwiaWF0IjoxNzExMDAwMDAwLCJleHAiOjE3MTEwODY0MDB9',
+  '.',
+  'SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+].join('');
+
+const codeHeader = [
+  '{',
+  '  "alg": "HS256",',
+  '  "typ": "JWT"',
+  '}'
+].join('\n');
+
+const codePayload = [
+  '{',
+  '  "sub": "1234567890",',
+  '  "name": "Alice",',
+  '  "iat": 1711000000,',
+  '  "exp": 1711086400,',
+  '  "iss": "https://auth.example.com",',
+  '  "aud": "https://api.example.com"',
+  '}'
+].join('\n');
+
+const codeBase64Decode = [
+  '// Decode JWT payload in the browser (never for verification!)',
+  'function decodeJwtPayload(token) {',
+  '  const base64Url = token.split(\'.\')[1];',
+  '  const base64 = base64Url.replace(/-/g, \'+\').replace(/_/g, \'/\');',
+  '  const jsonPayload = decodeURIComponent(',
+  '    atob(base64)',
+  '      .split(\'\')',
+  '      .map(c => \'%\' + (\'00\' + c.charCodeAt(0).toString(16)).slice(-2))',
+  '      .join(\'\')',
+  '  );',
+  '  return JSON.parse(jsonPayload);',
+  '}',
+  '',
+  'const payload = decodeJwtPayload(token);',
+  'console.log(payload.exp);  // Unix timestamp',
+  'console.log(new Date(payload.exp * 1000));  // Human-readable'
+].join('\n');
+
+const codeVerify = [
+  '// Node.js — verify signature with jsonwebtoken',
+  'const jwt = require(\'jsonwebtoken\');',
+  '',
+  'try {',
+  '  const decoded = jwt.verify(token, process.env.JWT_SECRET);',
+  '  console.log(decoded.sub);   // User ID',
+  '  console.log(decoded.exp);   // Expiry',
+  '} catch (err) {',
+  '  if (err.name === \'TokenExpiredError\') {',
+  '    console.error(\'Token has expired\');',
+  '  } else if (err.name === \'JsonWebTokenError\') {',
+  '    console.error(\'Invalid signature\');',
+  '  }',
+  '}'
+].join('\n');
+
+const codeExpCheck = [
+  '// Check if a token is expired (client-side, no verification)',
+  'function isTokenExpired(token) {',
+  '  const { exp } = decodeJwtPayload(token);',
+  '  return Date.now() >= exp * 1000;',
+  '}',
+  '',
+  '// Check time remaining',
+  'function tokenSecondsRemaining(token) {',
+  '  const { exp } = decodeJwtPayload(token);',
+  '  return Math.floor((exp * 1000 - Date.now()) / 1000);',
+  '}'
+].join('\n');
+---
+
+<BlogLayout
+  title="Free JWT Decoder Online: How to Decode and Debug JWT Tokens"
+  description="Learn how to decode JWT tokens instantly with a free JWT decoder online. Understand header, payload, signature, and debug common auth issues."
+  slug="jwt-decoder-online-guide"
+  publishDate="2026-03-21"
+  readTime="8 min read"
+>
+
+<p>
+  If you've ever stared at a string of random-looking characters in an Authorization header and wondered what's inside, you need a <strong>free JWT decoder online</strong>. JSON Web Tokens (JWTs) are base64url-encoded, not encrypted — which means you can read the contents instantly without a key. This guide covers JWT structure, the claims you'll find inside, how to debug authentication issues, and when it's safe (or not safe) to paste a token into a decoder.
+</p>
+
+<p>
+  Want to decode a token right now? Paste it into our <a href="/tools/jwt-decoder">JWT Decoder</a> and see the header, payload, and expiry time in one click — no sign-up required.
+</p>
+
+<h2>What Is a JWT?</h2>
+
+<p>
+  A JSON Web Token is a compact, URL-safe string that represents a set of claims — statements about a user or session. JWTs are defined in RFC 7519 and are the most common format for stateless authentication in REST APIs, OAuth 2.0 flows, and single-sign-on systems.
+</p>
+
+<p>A raw JWT looks like this:</p>
+
+<pre><code>{codeJwtStructure}</code></pre>
+
+<p>
+  Three Base64URL-encoded segments separated by dots. The first is the <strong>header</strong>, the second is the <strong>payload</strong>, and the third is the <strong>signature</strong>. Decoding is simply reversing the base64url encoding on the first two parts.
+</p>
+
+<h2>JWT Structure: Header, Payload, Signature</h2>
+
+<h3>Header</h3>
+
+<p>
+  The header describes the token type and the signing algorithm used:
+</p>
+
+<pre><code>{codeHeader}</code></pre>
+
+<p>
+  Common algorithm values: <code>HS256</code> (HMAC-SHA256, symmetric key), <code>RS256</code> (RSA-SHA256, asymmetric), <code>ES256</code> (ECDSA). The algorithm matters because it tells the verifier what key material to use.
+</p>
+
+<h3>Payload (Claims)</h3>
+
+<p>
+  The payload is where the actual data lives. A typical payload looks like:
+</p>
+
+<pre><code>{codePayload}</code></pre>
+
+<p>These are the registered claim names you'll encounter most often:</p>
+
+<ul>
+  <li><code>sub</code> — Subject. The principal the token is about (usually a user ID).</li>
+  <li><code>iss</code> — Issuer. The server that created the token.</li>
+  <li><code>aud</code> — Audience. The intended recipient(s) of the token.</li>
+  <li><code>exp</code> — Expiration time. Unix timestamp after which the token is invalid.</li>
+  <li><code>iat</code> — Issued at. Unix timestamp when the token was created.</li>
+  <li><code>nbf</code> — Not before. Token is invalid before this timestamp.</li>
+  <li><code>jti</code> — JWT ID. Unique identifier, used to prevent replay attacks.</li>
+</ul>
+
+<h3>Signature</h3>
+
+<p>
+  The signature is computed by the server using the algorithm specified in the header and a secret key. It covers both the header and the payload, so any modification to either part invalidates the signature. Crucially, <strong>decoding a JWT does not verify the signature</strong> — that requires the server's secret or public key.
+</p>
+
+<h2>How to Decode a JWT in JavaScript</h2>
+
+<p>
+  Since the payload is just base64url-encoded JSON, you can decode it client-side without any library. This is useful for reading claims like <code>exp</code> to check if a token has expired before making an API call:
+</p>
+
+<pre><code>{codeBase64Decode}</code></pre>
+
+<p>
+  Note the <code>replace(/-/g, '+').replace(/_/g, '/')</code> step — base64url uses <code>-</code> and <code>_</code> instead of <code>+</code> and <code>/</code>, so you must convert before calling <code>atob()</code>.
+</p>
+
+<h2>Verifying a JWT (Server-Side)</h2>
+
+<p>
+  Decoding is not verification. To properly authenticate a request, always verify the signature server-side with a trusted library:
+</p>
+
+<pre><code>{codeVerify}</code></pre>
+
+<p>
+  Never trust a decoded payload without signature verification on the server. A JWT decoder online is for debugging and inspection, not for granting access.
+</p>
+
+<h2>Debugging Common JWT Auth Issues</h2>
+
+<h3>Token Expired (401 Unauthorized)</h3>
+
+<p>
+  Paste the token into the <a href="/tools/jwt-decoder">JWT Decoder</a> and check the <code>exp</code> claim. Compare it to the current Unix timestamp (use our <a href="/tools/timestamp-converter">Timestamp Converter</a>). If <code>exp</code> is in the past, the token is expired and your application needs to refresh it.
+</p>
+
+<pre><code>{codeExpCheck}</code></pre>
+
+<h3>Wrong Audience or Issuer (403 Forbidden)</h3>
+
+<p>
+  Many auth libraries validate <code>iss</code> and <code>aud</code> claims. Decode the token and confirm these match what your server expects. A common mistake when moving between environments (dev/staging/prod) is generating tokens with the wrong <code>aud</code>.
+</p>
+
+<h3>Algorithm Mismatch</h3>
+
+<p>
+  Inspect the <code>alg</code> field in the header. If your server expects RS256 but the token was signed with HS256 (or vice versa), verification will fail. This is also an attack vector — the "alg: none" attack — which is why libraries refuse tokens where <code>alg</code> is <code>none</code>.
+</p>
+
+<h3>Clock Skew</h3>
+
+<p>
+  If tokens expire immediately after issuance, check server clock synchronization. Many libraries allow a small <code>clockTolerance</code> (e.g., 60 seconds) to account for minor drift between servers.
+</p>
+
+<h2>Security Warnings: When NOT to Paste a Token</h2>
+
+<p>
+  A JWT payload is <strong>not encrypted</strong> — it's only encoded. Anyone who can read the token can read the claims. Before pasting a JWT into any online decoder:
+</p>
+
+<ul>
+  <li>Never paste production tokens containing real user data (PII) into third-party sites.</li>
+  <li>Never paste tokens from live systems that haven't expired yet — they can be reused.</li>
+  <li>For debugging production issues, redact or expire the token first, or use a local decoder.</li>
+  <li>Our <a href="/tools/jwt-decoder">JWT Decoder</a> runs entirely in your browser — the token is never sent to any server.</li>
+</ul>
+
+<p>
+  For learning and development with test tokens, online decoders are perfectly safe and far more convenient than writing a script. For production tokens, prefer browser-side decoding or a local tool.
+</p>
+
+<h2>Related Reading</h2>
+
+<p>
+  If you want to go deeper, read our guide on <a href="/blog/jwt-token-explained">JWT Tokens Explained</a> — it covers token lifecycle, refresh token patterns, and how to store JWTs securely in browser applications.
+</p>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+<h2>Summary</h2>
+
+<ul>
+  <li>A JWT is three base64url-encoded parts: header, payload, signature.</li>
+  <li>Common claims: <code>sub</code>, <code>iss</code>, <code>aud</code>, <code>exp</code>, <code>iat</code>.</li>
+  <li>Decoding is not verification — always verify signatures server-side.</li>
+  <li>Use an online decoder for debugging test tokens; avoid pasting live production tokens.</li>
+  <li>Check <code>exp</code>, <code>aud</code>, <code>iss</code>, and <code>alg</code> when troubleshooting 401/403 errors.</li>
+</ul>
+
+</BlogLayout>

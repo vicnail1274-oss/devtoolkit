@@ -1,0 +1,230 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const codeBeforeAfter = [
+  '/* Before — 312 bytes */',
+  '.button {',
+  '  display: inline-flex;',
+  '  align-items: center;',
+  '  padding: 8px 16px;',
+  '  background-color: #2563eb;',
+  '  color: #ffffff;',
+  '  border-radius: 6px;',
+  '  font-weight: 700;',
+  '  font-size: 14px;',
+  '  border: none;',
+  '  cursor: pointer;',
+  '}',
+  '',
+  '/* After — 131 bytes (58% smaller) */',
+  '.button{display:inline-flex;align-items:center;padding:8px 16px;background-color:#2563eb;color:#fff;border-radius:6px;font-weight:700;font-size:14px;border:none;cursor:pointer}'
+].join('\n');
+
+const codeCssnano = [
+  'npm install cssnano postcss postcss-cli --save-dev',
+  '',
+  '# Create postcss.config.js',
+  'module.exports = {',
+  '  plugins: [',
+  '    require(\'cssnano\')({',
+  '      preset: [\'default\', {',
+  '        discardComments: { removeAll: true },',
+  '      }]',
+  '    })',
+  '  ]',
+  '};',
+  '',
+  '# Run',
+  'npx postcss src/styles.css -o dist/styles.min.css'
+].join('\n');
+
+const codeCleanCss = [
+  '# Install clean-css CLI',
+  'npm install -g clean-css-cli',
+  '',
+  '# Minify a single file',
+  'cleancss -o output.min.css input.css',
+  '',
+  '# Minify multiple files into one',
+  'cleancss -o bundle.min.css reset.css base.css components.css',
+  '',
+  '# With source map',
+  'cleancss --source-map -o output.min.css input.css'
+].join('\n');
+
+const codeWebpack = [
+  '// webpack.config.js',
+  'const MiniCssExtractPlugin = require(\'mini-css-extract-plugin\');',
+  'const CssMinimizerPlugin = require(\'css-minimizer-webpack-plugin\');',
+  '',
+  'module.exports = {',
+  '  mode: \'production\',',
+  '  plugins: [new MiniCssExtractPlugin()],',
+  '  optimization: {',
+  '    minimizer: [',
+  '      `...`,   // keep existing JS minimizer',
+  '      new CssMinimizerPlugin(),',
+  '    ],',
+  '  },',
+  '};'
+].join('\n');
+
+const codeVite = [
+  '// vite.config.js — Vite uses esbuild by default, but you can override',
+  'import { defineConfig } from \'vite\';',
+  '',
+  'export default defineConfig({',
+  '  build: {',
+  '    cssMinify: \'lightningcss\',  // faster than esbuild for CSS',
+  '    // or cssMinify: \'esbuild\'  (default)',
+  '  }',
+  '});'
+].join('\n');
+
+const codeCritical = [
+  '&lt;head&gt;',
+  '  &lt;!-- Critical CSS — inlined, renders above-the-fold content immediately --&gt;',
+  '  &lt;style&gt;',
+  '    body{margin:0;font-family:system-ui}.header{display:flex;padding:16px}',
+  '    .hero{font-size:clamp(32px,5vw,56px);margin-top:80px}',
+  '  &lt;/style&gt;',
+  '',
+  '  &lt;!-- Full CSS loaded asynchronously --&gt;',
+  '  &lt;link rel="preload" href="/styles.min.css" as="style"',
+  '        onload="this.onload=null;this.rel=\'stylesheet\'"&gt;',
+  '  &lt;noscript&gt;&lt;link rel="stylesheet" href="/styles.min.css"&gt;&lt;/noscript&gt;',
+  '&lt;/head&gt;'
+].join('\n');
+---
+
+<BlogLayout
+  title="How to Minify CSS Online: Tools, Techniques, and Best Practices"
+  description="Learn how to minify CSS online and in your build pipeline. Compare cssnano, clean-css, and PostCSS, and see real performance gains from CSS minification."
+  slug="how-to-minify-css-online"
+  publishDate="2026-03-21"
+  readTime="8 min read"
+>
+
+<p>
+  CSS minification is one of the highest-ROI optimizations in web performance. A single command can reduce your stylesheet by 30–60%, cutting load times and improving Core Web Vitals scores with almost zero effort. Whether you want to <strong>minify CSS online</strong> for a quick one-off task or integrate minification into a full build pipeline, this guide covers every approach — from browser-based tools to PostCSS, Webpack, and Vite.
+</p>
+
+<p>
+  For a quick one-off minification with no setup, paste your CSS into our <a href="/tools/css-minifier">CSS Minifier</a> and get the compressed output instantly.
+</p>
+
+<h2>What CSS Minification Actually Does</h2>
+
+<p>
+  A CSS minifier performs several lossless transformations — the output is functionally identical to the input, just smaller:
+</p>
+
+<ul>
+  <li><strong>Removes whitespace</strong> — spaces, tabs, and newlines between declarations</li>
+  <li><strong>Strips comments</strong> — all <code>/* */</code> blocks removed</li>
+  <li><strong>Shortens values</strong> — <code>#ffffff</code> → <code>#fff</code>, <code>0px</code> → <code>0</code>, <code>font-weight: bold</code> → <code>font-weight:700</code></li>
+  <li><strong>Merges shorthand</strong> — <code>margin: 10px 10px 10px 10px</code> → <code>margin:10px</code></li>
+  <li><strong>Removes overridden properties</strong> — duplicate declarations in the same rule are deduplicated</li>
+  <li><strong>Normalizes selectors</strong> — removes redundant universal selectors and simplifies combinators</li>
+</ul>
+
+<pre><code>{codeBeforeAfter}</code></pre>
+
+<p>
+  The whitespace alone accounts for most of the savings. For a real-world stylesheet with extensive comments and multi-line formatting, 40–60% reduction is typical.
+</p>
+
+<h2>Performance Impact: Why This Matters</h2>
+
+<p>
+  CSS is render-blocking. Before the browser can display anything, it must download, parse, and apply all stylesheets in the <code>&lt;head&gt;</code>. Smaller CSS means:
+</p>
+
+<ul>
+  <li>Faster download on slow connections (100KB → 50KB saves ~500ms on 3G)</li>
+  <li>Less parse time, directly improving Time to First Contentful Paint (FCP)</li>
+  <li>Better Largest Contentful Paint (LCP) and overall Core Web Vitals scores</li>
+  <li>Reduced bandwidth costs, especially relevant for high-traffic sites</li>
+</ul>
+
+<p>
+  For context, Google's PageSpeed Insights and Lighthouse both flag unminified CSS as an opportunity. It's a checkbox item that eliminates a performance warning with minimal effort.
+</p>
+
+<h2>Online CSS Minification: No Setup Required</h2>
+
+<p>
+  For quick tasks, ad-hoc minification, or when you don't have a build tool set up, an online minifier is the fastest option. Our <a href="/tools/css-minifier">CSS Minifier</a> runs entirely in the browser — paste your CSS, click minify, copy the output. No files uploaded to any server, no sign-up required.
+</p>
+
+<p>
+  Online tools are ideal for: small projects without a build step, minifying a single third-party CSS file you want to self-host, and quickly checking how much a stylesheet can be compressed.
+</p>
+
+<h2>cssnano: The PostCSS-Based Standard</h2>
+
+<p>
+  For project integration, <strong>cssnano</strong> is the most widely used CSS minifier in the Node.js ecosystem. It runs as a PostCSS plugin and has sensible defaults that are safe for production:
+</p>
+
+<pre><code>{codeCssnano}</code></pre>
+
+<p>
+  cssnano's default preset applies conservative optimizations. For maximum compression, the <code>advanced</code> preset applies more aggressive transforms like deduplicating <code>@keyframes</code> and reducing <code>calc()</code> expressions — but test thoroughly before using <code>advanced</code> in production.
+</p>
+
+<h2>clean-css: Fast, Configurable CLI</h2>
+
+<p>
+  <strong>clean-css</strong> is a battle-tested minifier with an easy-to-use CLI. It's particularly useful for build scripts that concatenate and minify multiple CSS files:
+</p>
+
+<pre><code>{codeCleanCss}</code></pre>
+
+<p>
+  clean-css supports compatibility targets (like Browserslist) so it knows which optimizations are safe for your target browsers. It also generates source maps, which are essential for debugging minified CSS in production.
+</p>
+
+<h2>Build Tool Integration</h2>
+
+<h3>Webpack</h3>
+
+<pre><code>{codeWebpack}</code></pre>
+
+<h3>Vite</h3>
+
+<pre><code>{codeVite}</code></pre>
+
+<p>
+  Both Webpack and Vite handle CSS minification automatically in production builds (<code>mode: 'production'</code> or <code>vite build</code>). You generally don't need to configure anything — minification is on by default. The configuration above is only needed if you want to switch minifiers or add custom options.
+</p>
+
+<h2>Beyond Minification: Critical CSS and Async Loading</h2>
+
+<p>
+  The biggest CSS performance win isn't just minification — it's reducing render-blocking. The pattern is to extract the CSS needed for above-the-fold content ("critical CSS"), inline it in the <code>&lt;head&gt;</code>, and load the full stylesheet asynchronously:
+</p>
+
+<pre><code>{codeCritical}</code></pre>
+
+<p>
+  Tools like <code>critical</code> (npm package) can automate critical CSS extraction. Combined with minification, this eliminates render-blocking CSS entirely and significantly improves LCP scores.
+</p>
+
+<p>
+  For more background on minification techniques and why they work, see our related guide: <a href="/blog/css-minification-why-it-matters">CSS Minification: Why It Matters and How to Do It</a>.
+</p>
+
+<p>Want these tools available offline? The <a href="https://vicnail.gumroad.com/l/devtoolkit">DevToolkit Bundle ($9 on Gumroad)</a> packages 40+ developer tools into a single downloadable kit — no internet required.</p>
+
+<h2>Summary</h2>
+
+<ul>
+  <li>CSS minification removes whitespace, comments, and redundant declarations — typically 30–60% size reduction.</li>
+  <li>Use our <a href="/tools/css-minifier">CSS Minifier</a> for quick one-off tasks with no setup.</li>
+  <li>Use <strong>cssnano</strong> (PostCSS plugin) or <strong>clean-css</strong> (CLI) for project integration.</li>
+  <li>Webpack and Vite minify CSS automatically in production mode.</li>
+  <li>For maximum performance, combine minification with critical CSS inlining and async stylesheet loading.</li>
+</ul>
+
+</BlogLayout>
