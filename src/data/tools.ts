@@ -416,6 +416,14 @@ export const tools: Tool[] = [
     category: 'AI',
   },
   {
+    title: 'IP Address Lookup',
+    description: 'Detect your public IP and look up geolocation data for any IP address.',
+    href: '/tools/ip-lookup',
+    slug: 'ip-lookup',
+    icon: '🌐',
+    category: 'Data',
+  },
+  {
     title: 'AI Code Review',
     description: 'Get instant AI-powered code reviews with bug detection, security analysis, and performance tips.',
     href: '/tools/ai-code-review',

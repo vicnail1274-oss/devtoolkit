@@ -48,6 +48,7 @@ const pages = [
   { url: '/tools/og-image-preview', changefreq: 'monthly', priority: '0.8' },
   { url: '/tools/qr-code-generator', changefreq: 'monthly', priority: '0.8' },
   { url: '/tools/svg-to-png', changefreq: 'monthly', priority: '0.8' },
+  { url: '/tools/ip-lookup', changefreq: 'monthly', priority: '0.8' },
   // Pages
   { url: '/tools', changefreq: 'weekly', priority: '0.9' },
   { url: '/api-docs', changefreq: 'monthly', priority: '0.6' },
