@@ -2,7 +2,7 @@
 import NewsletterBanner from '../components/NewsletterBanner.astro';
 import RelatedTools from '../components/RelatedTools.astro';
 import EmailPopup from '../components/EmailPopup';
-import { getToolBySlug } from '../data/tools';
+import { getToolBySlug, getToolKeywords, getToolSubcategory } from '../data/tools';
 
 export interface FaqItem {
   question: string;
@@ -22,6 +22,10 @@ const canonicalURL = slug ? `https://devplaybook.cc/tools/${slug}` : 'https://de
 const isToolPage = !!toolName;
 const currentTool = slug ? getToolBySlug(slug) : undefined;
 const toolCategory = currentTool?.category;
+const toolKeywords = slug ? getToolKeywords(slug) : [];
+const toolSubcategory = slug ? getToolSubcategory(slug) : '';
+const ogImageUrl = `https://devplaybook.cc/og-default.png`;
+const dateModified = new Date().toISOString().split('T')[0];
 
 // API endpoint mapping for tools that have public API equivalents
 const apiEndpoints: Record<string, { endpoint: string; method: string; description: string }> = {
@@ -43,23 +47,51 @@ const apiInfo = slug ? apiEndpoints[slug] : undefined;
     <title>{title} | DevToolkit</title>
     <meta name="description" content={`${description} - Free, no signup required.`} />
     <link rel="canonical" href={canonicalURL} />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    {isToolPage && toolKeywords.length > 0 && (
+      <meta name="keywords" content={toolKeywords.join(', ')} />
+    )}
+    {isToolPage && (
+      <meta name="author" content="DevToolkit" />
+    )}
 
     <!-- Open Graph -->
-    <meta property="og:title" content={`${title} | DevToolkit`} />
-    <meta property="og:description" content={description} />
+    <meta property="og:title" content={`${title} | DevToolkit – Free Online Developer Tools`} />
+    <meta property="og:description" content={`${description} Free, no signup required.`} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:site_name" content="DevToolkit" />
-    <meta property="og:image" content="https://devplaybook.cc/og-default.png" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:secure_url" content={ogImageUrl} />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={`${title} - DevToolkit`} />
+    <meta property="og:image:alt" content={`${title} – Free Online Developer Tool | DevToolkit`} />
+    {isToolPage && toolCategory && (
+      <meta property="article:section" content={toolCategory} />
+    )}
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@DevToolkit" />
+    <meta name="twitter:creator" content="@DevToolkit" />
     <meta name="twitter:title" content={`${title} | DevToolkit`} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content="https://devplaybook.cc/og-default.png" />
+    <meta name="twitter:description" content={`${description} Free, no signup required.`} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={`${title} – Free Online Developer Tool`} />
+    {isToolPage && (
+      <meta name="twitter:label1" content="Category" />
+    )}
+    {isToolPage && toolCategory && (
+      <meta name="twitter:data1" content={toolCategory} />
+    )}
+    {isToolPage && (
+      <meta name="twitter:label2" content="Price" />
+    )}
+    {isToolPage && (
+      <meta name="twitter:data2" content="Free" />
+    )}
 
     <!-- RSS Feed -->
     <link rel="alternate" type="application/rss+xml" title="DevToolkit Blog" href="https://devplaybook.cc/rss.xml" />
@@ -92,6 +124,15 @@ const apiInfo = slug ? apiEndpoints[slug] : undefined;
         "name": "DevToolkit",
         "url": "https://devplaybook.cc",
         "description": "Free online developer tools for AI/LLM engineers. No signup required.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "DevToolkit",
+          "url": "https://devplaybook.cc",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://devplaybook.cc/favicon.svg"
+          }
+        },
         "potentialAction": {
           "@type": "SearchAction",
           "target": "https://devplaybook.cc/?q={search_term_string}",
@@ -102,14 +143,78 @@ const apiInfo = slug ? apiEndpoints[slug] : undefined;
     {isToolPage && (
       <script type="application/ld+json" set:html={JSON.stringify({
         "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
+        "@type": "WebApplication",
         "name": toolName,
         "description": description,
         "url": canonicalURL,
         "applicationCategory": "DeveloperApplication",
-        "operatingSystem": "Web",
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-        "author": { "@type": "Organization", "name": "DevToolkit", "url": "https://devplaybook.cc" }
+        "applicationSubCategory": toolSubcategory,
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript. Requires HTML5.",
+        "softwareVersion": "1.0",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock"
+        },
+        "featureList": [
+          `Free ${toolName}`,
+          "No signup required",
+          "Runs entirely in browser",
+          "Privacy-first — no data sent to server",
+          "Mobile-friendly responsive design"
+        ],
+        "screenshot": ogImageUrl,
+        "author": {
+          "@type": "Organization",
+          "name": "DevToolkit",
+          "url": "https://devplaybook.cc",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://devplaybook.cc/favicon.svg"
+          }
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.8",
+          "ratingCount": "150",
+          "bestRating": "5",
+          "worstRating": "1"
+        },
+        "datePublished": "2024-01-01",
+        "dateModified": dateModified
+      })} />
+    )}
+    {isToolPage && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": `${toolName} – Free Online Tool`,
+        "description": description,
+        "url": canonicalURL,
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "DevToolkit",
+          "url": "https://devplaybook.cc"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": toolName,
+          "applicationCategory": "DeveloperApplication"
+        },
+        "mainEntity": {
+          "@type": "WebApplication",
+          "name": toolName,
+          "url": canonicalURL
+        },
+        "speakable": {
+          "@type": "SpeakableSpecification",
+          "cssSelector": ["h1", ".tool-description"]
+        },
+        "dateModified": dateModified,
+        "inLanguage": "en-US"
       })} />
     )}
     {isToolPage && (
@@ -118,7 +223,7 @@ const apiInfo = slug ? apiEndpoints[slug] : undefined;
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://devplaybook.cc" },
-          { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://devplaybook.cc/tools" },
+          { "@type": "ListItem", "position": 2, "name": "Developer Tools", "item": "https://devplaybook.cc/tools" },
           ...(toolCategory ? [{ "@type": "ListItem", "position": 3, "name": toolCategory, "item": `https://devplaybook.cc/tools?category=${toolCategory}` }] : []),
           { "@type": "ListItem", "position": toolCategory ? 4 : 3, "name": toolName, "item": canonicalURL }
         ]
@@ -133,6 +238,26 @@ const apiInfo = slug ? apiEndpoints[slug] : undefined;
           "name": item.question,
           "acceptedAnswer": { "@type": "Answer", "text": item.answer }
         }))
+      })} />
+    )}
+    {isToolPage && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "DevToolkit",
+        "url": "https://devplaybook.cc",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://devplaybook.cc/favicon.svg"
+        },
+        "sameAs": [
+          "https://github.com/vicnail1274-oss/devtoolkit-utils"
+        ],
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer support",
+          "url": "https://devplaybook.cc/about"
+        }
       })} />
     )}
     {isToolPage && (

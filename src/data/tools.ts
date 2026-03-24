@@ -505,3 +505,40 @@ export function getRelatedTools(slug: string, count = 4): Tool[] {
   );
   return [...sameCategory, ...others].slice(0, count);
 }
+
+const categoryKeywords: Record<string, string[]> = {
+  Code: ['code formatter', 'developer tools', 'code editor', 'programming utilities', 'code quality'],
+  Data: ['data converter', 'data formatter', 'data transformation', 'JSON tools', 'data processing'],
+  Encoding: ['encoding tools', 'decoding tools', 'text encoding', 'data encoding', 'character encoding'],
+  Security: ['security tools', 'password tools', 'hashing', 'token decoder', 'cybersecurity'],
+  Content: ['content tools', 'markdown tools', 'text tools', 'writing tools', 'documentation'],
+  DevOps: ['devops tools', 'CI/CD', 'infrastructure', 'deployment', 'automation'],
+  Design: ['design tools', 'color tools', 'CSS tools', 'visual design', 'web design'],
+  AI: ['AI tools', 'LLM tools', 'machine learning', 'artificial intelligence', 'GPT tools'],
+};
+
+const categorySubcategories: Record<string, string> = {
+  Code: 'Code Formatting & Analysis',
+  Data: 'Data Conversion & Processing',
+  Encoding: 'Encoding & Decoding',
+  Security: 'Security & Cryptography',
+  Content: 'Content & Documentation',
+  DevOps: 'DevOps & Infrastructure',
+  Design: 'Design & Visual Tools',
+  AI: 'AI & Machine Learning',
+};
+
+export function getToolKeywords(slug: string): string[] {
+  const tool = getToolBySlug(slug);
+  if (!tool) return ['developer tools', 'free online tools', 'DevToolkit'];
+  const base = ['free online tool', 'developer tool', 'DevToolkit', 'no signup'];
+  const catKw = categoryKeywords[tool.category] ?? [];
+  const titleWords = tool.title.toLowerCase().split(/[\s/&,]+/).filter(w => w.length > 2);
+  return [...new Set([...titleWords, ...catKw, ...base])];
+}
+
+export function getToolSubcategory(slug: string): string {
+  const tool = getToolBySlug(slug);
+  if (!tool) return 'Developer Tools';
+  return categorySubcategories[tool.category] ?? 'Developer Tools';
+}
