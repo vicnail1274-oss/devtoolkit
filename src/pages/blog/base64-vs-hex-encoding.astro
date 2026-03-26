@@ -16,7 +16,7 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
 
 <p>Hex encoding (also called Base16) converts every byte into exactly two hexadecimal characters from the alphabet <code>0–9</code> and <code>a–f</code>. Since a byte holds 8 bits and a hex digit holds 4 bits, the math is simple: one byte always becomes two characters.</p>
 
-<pre><code>// Node.js
+<pre><code>{`// Node.js
 const buf = Buffer.from('Hi');
 console.log(buf.toString('hex')); // '4869'
 
@@ -26,8 +26,7 @@ function toHex(str) {
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
-console.log(toHex('Hi')); // '4869'
-</code></pre>
+console.log(toHex('Hi')); // '4869'`}</code></pre>
 
 <p>The resulting string is 100% ASCII — every character is either a digit or a lowercase letter a–f (or uppercase, depending on the library). This makes hex trivially safe for display, logging, and copy-paste workflows.</p>
 
@@ -35,7 +34,7 @@ console.log(toHex('Hi')); // '4869'
 
 <p>Base64 takes every 3 bytes of input (24 bits) and encodes them as 4 characters drawn from a 64-character alphabet: <code>A–Z</code>, <code>a–z</code>, <code>0–9</code>, <code>+</code>, and <code>/</code>. If the input isn't a multiple of 3 bytes, padding characters (<code>=</code>) are appended.</p>
 
-<pre><code>// Node.js
+<pre><code>{`// Node.js
 const buf = Buffer.from('Hello, World!');
 console.log(buf.toString('base64')); // 'SGVsbG8sIFdvcmxkIQ=='
 
@@ -43,8 +42,7 @@ console.log(buf.toString('base64')); // 'SGVsbG8sIFdvcmxkIQ=='
 console.log(btoa('Hello, World!')); // 'SGVsbG8sIFdvcmxkIQ=='
 
 // Decode
-console.log(atob('SGVsbG8sIFdvcmxkIQ==')); // 'Hello, World!'
-</code></pre>
+console.log(atob('SGVsbG8sIFdvcmxkIQ==')); // 'Hello, World!'`}</code></pre>
 
 <h2>Size Comparison: The Numbers That Matter</h2>
 
@@ -63,13 +61,12 @@ console.log(atob('SGVsbG8sIFdvcmxkIQ==')); // 'Hello, World!'
 
 <p>The solution is <strong>Base64url</strong> (RFC 4648 §5), which replaces <code>+</code> with <code>-</code> and <code>/</code> with <code>_</code> and omits padding:</p>
 
-<pre><code>function toBase64url(base64) {
-  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+<pre><code>{`function toBase64url(base64) {
+  return base64.replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=/g, '');
 }
 
 // Node.js shortcut
-Buffer.from('Hello').toString('base64url'); // 'SGVsbG8'
-</code></pre>
+Buffer.from('Hello').toString('base64url'); // 'SGVsbG8'`}</code></pre>
 
 <p>Hex, by contrast, uses only characters that are already URL-safe, so no transformation is needed. This is one reason hex is common in URL tokens and API keys where developers want zero ambiguity.</p>
 
