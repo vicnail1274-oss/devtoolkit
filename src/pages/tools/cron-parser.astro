@@ -1,0 +1,89 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import CronParser from '../../components/tools/CronParser';
+
+const faq = [
+  { question: "What is a cron expression?", answer: "A cron expression is a string of five fields (minute, hour, day of month, month, day of week) that defines a schedule for recurring tasks. It's used in Unix/Linux cron jobs, CI/CD pipelines, cloud schedulers, and task automation." },
+  { question: "What's the difference between the Cron Parser and Cron Generator?", answer: "The Cron Parser takes an existing cron expression and breaks it down: it explains each field, gives a human-readable description, and shows the next execution times. The Cron Generator helps you build a cron expression visually from scratch." },
+  { question: "How do I read a cron expression like '0 9 * * 1-5'?", answer: "Read left to right: minute=0, hour=9, any day of month, any month, days 1-5 (Mon-Fri). This means 'At 9:00 AM, Monday through Friday'. The parser does this breakdown automatically for you." },
+  { question: "What special characters are supported?", answer: "Standard cron supports: * (any value), */N (every N units), N-M (range), N,M (list), and N-M/S (range with step). This parser handles all of these." },
+  { question: "Can I see when the job will run next?", answer: "Yes! The parser shows up to 20 next execution times with relative time indicators, so you can verify your schedule is correct before deploying." },
+  { question: "Is this tool free and private?", answer: "Yes, completely free with no signup required. Everything runs in your browser — no data is sent to any server." },
+];
+---
+
+<ToolLayout
+  title="Cron Expression Parser"
+  description="Parse and explain cron expressions with human-readable descriptions and next execution times. Free online tool."
+  slug="cron-parser"
+  toolName="Cron Expression Parser"
+  faq={faq}
+>
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      Cron Expression Parser
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Paste any cron expression to get a human-readable explanation, field-by-field breakdown, and next execution times. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <CronParser client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Human-Readable Output</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Instantly translates cryptic cron syntax into plain English descriptions you can understand at a glance.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Next Execution Preview</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        See up to 20 upcoming execution times with relative time indicators to verify your schedule is correct.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Field-by-Field Breakdown</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Each cron field is analyzed individually with its value, valid range, and meaning clearly displayed.
+      </p>
+    </div>
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="mt-12">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Frequently Asked Questions</h2>
+    <div class="space-y-4">
+      {faq.map(item => (
+        <details class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 group">
+          <summary class="font-semibold text-gray-900 dark:text-gray-100 cursor-pointer list-none flex items-center justify-between">
+            {item.question}
+            <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</ToolLayout>

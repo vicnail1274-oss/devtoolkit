@@ -1,0 +1,90 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import SvgOptimizer from '../../components/tools/SvgOptimizer';
+
+const faq = [
+  { question: "Why should I optimize SVG files?", answer: "SVG files often contain unnecessary metadata, comments, default attribute values, and verbose formatting from design tools. Optimizing reduces file size, speeds up page loads, and improves web performance without any visual changes." },
+  { question: "Will optimization change how my SVG looks?", answer: "No. The optimizations only remove redundant data like comments, metadata, default values, and whitespace. The visual appearance of your SVG remains exactly the same." },
+  { question: "What optimizations are performed?", answer: "The tool can remove XML declarations, DOCTYPE, comments, metadata, empty attributes, default values, minify inline CSS, shorten hex colors, round decimal numbers, remove whitespace, and optionally strip width/height attributes." },
+  { question: "How much file size reduction can I expect?", answer: "It depends on the SVG. Files exported from design tools like Illustrator, Figma, or Sketch often contain 20-60% unnecessary data. Simple icons may see 10-30% reduction, while complex illustrations can see even more." },
+  { question: "Is this the same as SVGO?", answer: "This tool performs many of the same optimizations as SVGO (SVG Optimizer) but runs entirely in your browser. For production pipelines, you may want to use SVGO as a build step. This tool is great for quick optimizations and one-off files." },
+  { question: "Is my SVG data safe?", answer: "Yes. Everything runs 100% in your browser. Your SVG code is never uploaded to any server. No tracking, no cookies, no data collection." },
+];
+---
+
+<ToolLayout
+  title="SVG Optimizer"
+  description="Optimize and minify SVG files to reduce file size without losing quality. Free online tool."
+  slug="svg-optimizer"
+  toolName="SVG Optimizer"
+  faq={faq}
+>
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      SVG Optimizer
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">
+      Optimize and minify SVG files by removing unnecessary metadata, comments, and default values. Reduce file size without losing visual quality. Everything runs in your browser &mdash; no data is sent to any server.
+    </p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+    <SvgOptimizer client:load />
+  </div>
+
+  <!-- Features Section -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Instant Optimization</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Real-time optimization as you paste. See file size savings and applied optimizations immediately.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Configurable Options</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Toggle individual optimizations to control exactly what gets removed. Select all or fine-tune for your needs.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-950 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Live Preview</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        See the optimized SVG rendered in real-time. Verify your SVG still looks perfect after optimization.
+      </p>
+    </div>
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="mt-12">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Frequently Asked Questions</h2>
+    <div class="space-y-4">
+      {faq.map(item => (
+        <details class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 group">
+          <summary class="font-semibold text-gray-900 dark:text-gray-100 cursor-pointer list-none flex items-center justify-between">
+            {item.question}
+            <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</ToolLayout>
